@@ -17,7 +17,7 @@ class QueryService:
   async def process_user_query(self, user_query: str, session_id: str, postures: list, current_posture_name, chat_history: list):
     prompt = _get_user_query_prompt(postures=postures, current_posture=current_posture_name, chat_history=chat_history, user_query=user_query)
     llm_response = self.yoga_agent.generate_text(prompt=prompt)
-    llm_response_message_id = llm_response["messageId"]
+    llm_response_message_id = llm_response["message_id"]
     llm_response_text = llm_response["text"]
 
     # self._save_audio_response(llm_response_text, llm_response_message_id)
@@ -43,7 +43,7 @@ class QueryService:
 
     prompt = _get_transition_query_prompt(transition_from_idx=transition_from_idx, postures=postures, chat_history=chat_history)
     llm_response = self.yoga_agent.generate_text(prompt=prompt)
-    llm_response_message_id = llm_response["messageId"]
+    llm_response_message_id = llm_response["message_id"]
     llm_response_text = llm_response["text"]
 
     # self._save_audio_response(llm_response_text, llm_response_message_id)
@@ -70,7 +70,7 @@ class QueryService:
 
     prompt = _get_start_user_session_prompt(sequence_name=sequence["name"])
     llm_response = self.yoga_agent.generate_text(prompt=prompt)
-    llm_response_message_id = llm_response["messageId"]
+    llm_response_message_id = llm_response["message_id"]
     llm_response_text = llm_response["text"]
 
     chat_history = {"messages": [{"human": "Please start the yoga session", "ai": llm_response_text, "message_id": llm_response_message_id}]}
@@ -88,7 +88,7 @@ class QueryService:
 
     prompt = self._get_end_user_session_prompt(session_name=session["sequence"]["name"])
     llm_response = self.yoga_agent.generate_text(prompt=prompt)
-    llm_response_message_id = llm_response["messageId"]
+    llm_response_message_id = llm_response["message_id"]
     llm_response_text = llm_response["text"]
 
     await self.session_service.end_session(session_id)

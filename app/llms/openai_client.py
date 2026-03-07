@@ -7,7 +7,7 @@ from app.prompts.prompts import DEVELOPER_PROMPT
 
 class OpenAIClient:
   def __init__(self, openai_api_key: str):
-    self.is_api_enabled = False
+    self.is_api_enabled = True
     self.api_key = openai_api_key
     self.text_model = "gpt-4o-mini"
     self.audio_model = "gpt-4o-mini-tts"

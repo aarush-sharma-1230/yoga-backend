@@ -14,13 +14,20 @@ class YogaAgent:
     self.max_words = max_words
 
   def generate_text(self, prompt: str) -> Dict[str, Any]:
-    response = self.llm_client.generate_text(prompt=prompt, developer_prompt=self.developer_prompt, model=self.model, temperature=self.temperature)
+    response = self.llm_client.generate_text(prompt=prompt, developer_prompt=self.developer_prompt)
     text = self._extract_text(response)
     return {
         **response,
         "text": text,
         "message_id": response.get("output", [{}])[0].get("id"),
     }
+
+  def generate_audio(self, prompt: str):
+    response = self.generate_text(prompt)
+    text = response["text"]
+
+    for chunk in self.llm_client.generate_audio(text=text):
+      yield chunk
 
   def _extract_text(self, response: Dict[str, Any]) -> str:
     output = response.get("output", [])

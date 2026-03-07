@@ -3,7 +3,7 @@ from langchain_core.prompts import PromptTemplate
 DEVELOPER_PROMPT = "You are a calm and professional yoga instructor guiding a user through a yoga session"
 
 
-def _get_transition_query_prompt(self, transition_from_idx: int, postures, chat_history):
+def _get_transition_query_prompt(transition_from_idx: int, postures, chat_history):
   postures_context = ", ".join([f"{posture['name']}" for posture in postures])
   chat_context = "\n".join([f"User: {msg['human']}\nAI: {msg['ai']}" for msg in chat_history])
 
@@ -39,7 +39,7 @@ Ensure your response is under 100 words
   return prompt_template.format()
 
 
-def _get_user_query_prompt(self, postures, current_posture: str, chat_history, user_query: str):
+def _get_user_query_prompt(postures, current_posture: str, chat_history, user_query: str):
   postures_context = ", ".join([f"{posture['name']}" for posture in postures])
   chat_context = "\n".join([f"User: {msg['human']}\nAI: {msg['ai']}" for msg in chat_history])
 
@@ -61,7 +61,7 @@ Ensure your response is under 100 words
   return prompt_template.format()
 
 
-def _get_start_user_session_prompt(self, sequence_name: str):
+def _get_start_user_session_prompt(sequence_name: str):
   template = f"""Begin by welcoming the user to the session "{sequence_name}",
     setting a mindful tone, and guiding them to focus on their breath.
     
