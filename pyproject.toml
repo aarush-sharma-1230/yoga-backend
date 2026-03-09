@@ -16,3 +16,13 @@ dependencies = [
     "google-genai>=1.66.0",
     "email-validator>=2.3.0",
 ]
+
+[tool.black]
+line-length = 120
+target-version = ['py310']
+include = '\.pyi?$'
+
+[dependency-groups]
+dev = [
+    "black>=26.3.0",
+]

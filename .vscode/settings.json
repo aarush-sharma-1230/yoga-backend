@@ -1,4 +1,13 @@
 {
   "python.analysis.autoImportCompletions": true,
-  "python-envs.pythonProjects": []
+  "python-envs.pythonProjects": [],
+  "editor.tabSize": 4,
+  "editor.insertSpaces": true,
+  "editor.detectIndentation": false,
+  "[python]": {
+    "editor.tabSize": 4,
+    "editor.insertSpaces": true,
+    "editor.defaultFormatter": "ms-python.black-formatter",
+    "editor.formatOnSave": true
+  }
 }

@@ -9,18 +9,18 @@ router = APIRouter()
 
 @router.post("/user/user_registration")
 async def user_registration(user: CreateUser, service: AuthService = Depends(DependencyInjector.get_auth_service)):
-  try:
-    return await service.create_user(user)
+    try:
+        return await service.create_user(user)
 
-  except Exception:
-    raise CustomException()
+    except Exception:
+        raise CustomException()
 
 
 @router.post("/user/get_user_data")
 async def get_user_data(user_data: GetUserData, service: AuthService = Depends(DependencyInjector.get_auth_service)):
-  try:
-    response = await service.get_user_data(user_data)
-    return response
+    try:
+        response = await service.get_user_data(user_data)
+        return response
 
-  except Exception:
-    raise CustomException()
+    except Exception:
+        raise CustomException()

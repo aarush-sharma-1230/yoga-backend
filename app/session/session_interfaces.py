@@ -2,4 +2,4 @@ from pydantic import BaseModel
 
 
 class SeriesData(BaseModel):
-  sequence_id: str
+    sequence_id: str

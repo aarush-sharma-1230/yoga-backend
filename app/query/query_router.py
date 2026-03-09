@@ -8,9 +8,9 @@ router = APIRouter()
 
 @router.post("/query/get_user_query_response")
 async def get_user_query_response(user_query, service: QueryService = Depends(DependencyInjector.get_query_service)):
-  try:
-    response = await service.get_user_query_response(user_query)
-    return response
+    try:
+        response = await service.get_user_query_response(user_query)
+        return response
 
-  except Exception:
-    raise CustomException()
+    except Exception:
+        raise CustomException()
