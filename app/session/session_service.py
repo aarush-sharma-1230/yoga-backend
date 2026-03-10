@@ -1,4 +1,6 @@
 import asyncio
+import os
+from pathlib import Path
 from motor.motor_asyncio import AsyncIOMotorDatabase
 from bson import ObjectId
 from datetime import datetime
@@ -95,6 +97,38 @@ class SessionService:
         response = self.yoga_agent.generate_text(prompt=prompt)
         return {"type": "ending", "text": response["text"], "message_id": response["message_id"]}
 
+    def _save_audio_to_file(self, session_id: str, message_id: str, audio_chunks) -> str:
+        """Save audio chunks to file and return the file path."""
+        audio_dir = Path("audio_files") / session_id
+        audio_dir.mkdir(parents=True, exist_ok=True)
+
+        audio_path = audio_dir / f"{message_id}.mp3"
+
+        with open(audio_path, "wb") as audio_file:
+            for chunk in audio_chunks:
+                audio_file.write(chunk)
+
+        return str(audio_path)
+
+    def _generate_and_save_audio(self, session_id: str, text: str, message_id: str) -> str:
+        """Generate audio from text and save to file."""
+        audio_chunks = self.yoga_agent.generate_audio_from_text(text)
+        return self._save_audio_to_file(session_id, message_id, audio_chunks)
+
+    async def _generate_and_save_intro_audio(self, session_id: str, intro: dict) -> dict:
+        """Generate intro audio, save to file, and update database."""
+        intro_audio_path = self._generate_and_save_audio(
+            session_id, intro["text"], intro["message_id"]
+        )
+        intro["audio_path"] = intro_audio_path
+
+        await self.db["session"].update_one(
+            {"_id": ObjectId(session_id)},
+            {"$set": {"instructions.0.audio_path": intro_audio_path}},
+        )
+
+        return intro
+
     def _create_session_document(self, user_id: str, sequence: dict, intro: dict) -> dict:
         """Create session document with intro only"""
         current_timestamp = datetime.utcnow()
@@ -110,7 +144,7 @@ class SessionService:
         }
 
     async def _generate_remaining_guidance_background(self, session_id: str, postures: list, sequence_name: str):
-        """Generate transitions and ending in background, append to instructions array."""
+        """Generate transitions and ending text, then generate audio in background."""
         try:
             transitions = self._generate_transition_texts(postures)
             ending = self._generate_ending_text(sequence_name)
@@ -119,20 +153,44 @@ class SessionService:
                 {"_id": ObjectId(session_id)},
                 {
                     "$push": {"instructions": {"$each": transitions + [ending]}},
-                    "$set": {"generation_status": "completed"},
+                    "$set": {"generation_status": "text_completed"},
                 },
             )
+
+            asyncio.create_task(self._generate_audio_background(session_id, transitions + [ending]))
         except Exception as e:
             await self.db["session"].update_one(
                 {"_id": ObjectId(session_id)}, {"$set": {"generation_status": "failed", "generation_error": str(e)}}
             )
 
+    async def _generate_audio_background(self, session_id: str, instructions: list):
+        """Generate and save audio for instructions in background."""
+        try:
+            for instruction in instructions:
+                audio_path = self._generate_and_save_audio(session_id, instruction["text"], instruction["message_id"])
+
+                await self.db["session"].update_one(
+                    {
+                        "_id": ObjectId(session_id),
+                        "instructions.message_id": instruction["message_id"],
+                    },
+                    {"$set": {"instructions.$.audio_path": audio_path}},
+                )
+
+            await self.db["session"].update_one(
+                {"_id": ObjectId(session_id)}, {"$set": {"generation_status": "completed"}}
+            )
+        except Exception as e:
+            await self.db["session"].update_one(
+                {"_id": ObjectId(session_id)},
+                {"$set": {"generation_status": "audio_failed", "audio_error": str(e)}},
+            )
+
     async def start_user_session(self, user_id: str, sequence_id: str):
         """
-        Start a new yoga session by pre-generating all guidance texts
-        and creating a session document with precomputed guidance.
+        Start a new yoga session by pre-generating intro text and audio,
+        then scheduling background generation for transitions and ending.
         """
-
         sequence = await self.get_sequence_by_id(sequence_id)
         postures = sequence["postures"]
 
@@ -140,15 +198,27 @@ class SessionService:
         session_doc = self._create_session_document(user_id, sequence, intro)
         session_created = await self.db["session"].insert_one(session_doc)
 
-        asyncio.create_task(
-            self._generate_remaining_guidance_background(str(session_created.inserted_id), postures, sequence["name"])
-        )
+        if not session_created:
+            raise RuntimeError("Failed to create session")
 
-        return {
-            "status": True,
-            "type": "session_started",
-            "session_id": str(session_created.inserted_id),
-            "instructions": [intro],  # Just intro for now
-            "sequence": sequence,
-            "generation_status": "in_progress",
-        }
+        session_id_str = str(session_created.inserted_id)
+
+        try:
+            intro = await self._generate_and_save_intro_audio(session_id_str, intro)
+
+            asyncio.create_task(self._generate_remaining_guidance_background(session_id_str, postures, sequence["name"]))
+
+            return {
+                "status": True,
+                "type": "session_started",
+                "session_id": session_id_str,
+                "instructions": [intro],
+                "sequence": sequence,
+                "generation_status": "in_progress",
+            }
+        except Exception as e:
+            await self.db["session"].update_one(
+                {"_id": ObjectId(session_id_str)},
+                {"$set": {"generation_status": "failed", "generation_error": str(e)}},
+            )
+            raise

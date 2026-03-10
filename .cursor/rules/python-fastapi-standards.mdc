@@ -1,0 +1,134 @@
+---
+description: Python FastAPI coding standards and best practices for yoga-backend
+alwaysApply: true
+---
+
+# Python FastAPI Standards
+
+## Code Style
+
+- Use 4-space indentation (matching Black formatter)
+- Line length: 120 characters
+- Follow PEP 8 conventions
+- Use type hints for function parameters and return types
+- Prefer descriptive variable and function names
+
+## Documentation
+
+- **Always include docstrings** for functions, classes, and methods
+- Use triple-quoted docstrings ("""...""")
+- Docstrings should explain what the function does, not how it does it
+- **Do NOT add inline comments** that simply restate what the code does
+- Only add comments when explaining "why" something is done, not "what" is being done
+- Avoid comments like `# Generate text` or `# Update database` - the code is self-explanatory
+- Comments should explain non-obvious behavior, edge cases, or business logic rationale
+
+## Function Design
+
+- Keep functions focused on a single responsibility
+- Prefer smaller, modular functions over large monolithic ones
+- Extract complex logic into separate helper methods
+- Use descriptive function names that clearly indicate purpose
+
+## Async/Await Patterns
+
+- Use `async/await` for all database operations (Motor/MongoDB)
+- Use `asyncio.create_task()` for background tasks
+- Properly handle exceptions in background tasks
+- Update database with error status before raising exceptions
+
+## FastAPI Specific
+
+- Use Pydantic models for request/response validation
+- Use dependency injection via FastAPI's `Depends()`
+- Keep router endpoints focused on HTTP concerns
+- Move business logic to service classes
+- Use appropriate HTTP status codes
+
+## Error Handling
+
+- Use custom exception classes from `app.globals.errors`
+- Update database state before raising exceptions
+- Provide meaningful error messages
+- Log errors appropriately (when logging is implemented)
+
+## Database Patterns
+
+- Use Motor's async methods for MongoDB operations
+- Store ObjectIds as strings in API responses (convert with `str()`)
+- Use proper MongoDB update operators (`$set`, `$push`, `$each`)
+- Handle missing documents gracefully
+
+## File Organization
+
+- Store audio files in `audio_files/{session_id}/` directory structure
+- Use `Path` from `pathlib` for file operations
+- Create directories with `mkdir(parents=True, exist_ok=True)`
+
+## Background Tasks
+
+- Use `asyncio.create_task()` for fire-and-forget background operations
+- Always handle exceptions in background tasks
+- Update database with status indicators (`generation_status`, etc.)
+- Don't await background tasks in the main request flow
+
+## Code Examples
+
+### Good: Docstring with no unnecessary comments
+```python
+async def start_user_session(self, user_id: str, sequence_id: str):
+    """
+    Start a new yoga session by pre-generating intro text and audio,
+    then scheduling background generation for transitions and ending.
+    """
+    sequence = await self.get_sequence_by_id(sequence_id)
+    intro = self._generate_intro_text(sequence["name"])
+    intro = await self._generate_and_save_intro_audio(session_id_str, intro)
+    
+    asyncio.create_task(
+        self._generate_remaining_guidance_background(session_id_str, postures, sequence["name"])
+    )
+    
+    return {...}
+```
+
+### Bad: Unnecessary comments everywhere
+```python
+async def start_user_session(self, user_id: str, sequence_id: str):
+    """
+    Start a new yoga session by pre-generating intro text and audio,
+    then scheduling background generation for transitions and ending.
+    """
+    # Get sequence from database
+    sequence = await self.get_sequence_by_id(sequence_id)
+    
+    # Generate intro text
+    intro = self._generate_intro_text(sequence["name"])
+    
+    # Generate and save intro audio
+    intro = await self._generate_and_save_intro_audio(session_id_str, intro)
+    
+    # Schedule background task
+    asyncio.create_task(
+        self._generate_remaining_guidance_background(session_id_str, postures, sequence["name"])
+    )
+    
+    # Return response
+    return {...}
+```
+
+### Good: Comment only when explaining why
+```python
+def _generate_transition_texts(self, postures: list) -> list:
+    """Generate all transition texts for the sequence."""
+    transitions = []
+    
+    # Start from -1 to handle initial transition from start to first posture
+    for from_idx in range(-1, len(postures) - 1):
+        to_idx = from_idx + 1
+        transition_prompt = _get_transition_query_prompt(transition_from_idx=from_idx, postures=postures)
+        transition_response = self.yoga_agent.generate_text(prompt=transition_prompt)
+        transitions.append({...})
+    
+    return transitions
+```

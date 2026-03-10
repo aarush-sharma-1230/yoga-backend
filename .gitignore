@@ -10,6 +10,9 @@ wheels/
 # Virtual environments
 .venv
 
+# Audio files
+audio_files/
+
 Audio_Files_Yoga
 .python-version
 output.mp3

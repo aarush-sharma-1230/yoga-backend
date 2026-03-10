@@ -25,6 +25,11 @@ class YogaAgent:
         for chunk in self.llm_client.generate_audio(text=text):
             yield chunk
 
+    def generate_audio_from_text(self, text: str):
+        """Generate audio from already-generated text."""
+        for chunk in self.llm_client.generate_audio(text=text):
+            yield chunk
+
     def _extract_text(self, response: Dict[str, Any]) -> str:
         output = response.get("output", [])
         if not output:

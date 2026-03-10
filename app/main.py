@@ -1,5 +1,6 @@
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi import encoders
 from app.health import health_router
 from app.auth import auth_router
 from app.query import query_router
@@ -9,8 +10,11 @@ from app.websocket import websocket_router
 from app.database.mongo import MongoDB
 from fastapi.responses import JSONResponse
 from app.globals.errors import CustomException
+from app.core.json_encoder import jsonable_encoder
 from dotenv import load_dotenv
 import os
+
+encoders.jsonable_encoder = jsonable_encoder
 
 app = FastAPI(title="Yoga API", version="1.0")
 load_dotenv()
