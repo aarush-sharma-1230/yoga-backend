@@ -1,4 +1,5 @@
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, HTTPException
+from fastapi.responses import StreamingResponse
 from app.session.session_service import SessionService
 from app.session.session_interfaces import SeriesData
 from app.dependency_injector import DependencyInjector
@@ -28,5 +29,23 @@ async def start_user_session(
     except RuntimeError as e:
         raise CustomException(str(e))
 
+    except Exception as e:
+        raise CustomException(str(e))
+
+
+@router.get("/session/{session_id}/audio/{message_id}")
+async def get_audio(
+    session_id: str,
+    message_id: str,
+    service: SessionService = Depends(DependencyInjector.get_session_service),
+):
+    """Stream audio chunks for a session instruction. Generates on-demand if file is missing."""
+    try:
+        chunk_stream = service.get_audio_chunks(session_id=session_id, message_id=message_id)
+        return StreamingResponse(chunk_stream, media_type="audio/mpeg")
+    except RuntimeError as e:
+        if "not found" in str(e).lower():
+            raise HTTPException(status_code=404, detail=str(e))
+        raise CustomException(str(e))
     except Exception as e:
         raise CustomException(str(e))

@@ -25,6 +25,89 @@ class SessionService:
 
         return session
 
+    def _find_instruction(self, session: dict, message_id: str) -> dict:
+        """Return the instruction matching message_id, or raise if not found."""
+        instructions = session.get("instructions") or []
+        instruction = next((i for i in instructions if i.get("message_id") == message_id), None)
+        if not instruction:
+            raise RuntimeError("The given instruction was not found")
+        return instruction
+
+    def _build_audio_path(self, session_id: str, message_id: str) -> Path:
+        """Build the canonical file path for an instruction's audio."""
+        return Path("audio_files") / session_id / f"{message_id}.mp3"
+
+    async def _stream_chunks_from_file(self, file_path: Path, chunk_size: int = 8192):
+        """Async generator that reads a file and yields raw bytes in fixed-size chunks."""
+        with open(file_path, "rb") as f:
+            while chunk := f.read(chunk_size):
+                yield chunk
+
+    def _generate_audio_and_enqueue(self, text: str, file_path: Path, queue: asyncio.Queue, sentinel: object) -> None:
+        """
+        Sync worker or Producer: generate audio from text, write to file, enqueue each chunk.
+        Runs in a thread to avoid blocking the event loop.
+        """
+        with open(file_path, "wb") as audio_file:
+            for chunk in self.yoga_agent.generate_audio_from_text(text):
+                audio_file.write(chunk)
+                queue.put_nowait(chunk)
+        queue.put_nowait(sentinel)
+
+    async def _stream_generated_audio(self, session_id: str, message_id: str, text: str, file_path: Path):
+        """
+        Async generator or Consumer: run TTS in a thread, yield chunks as they are produced,
+        then update the session document with the saved path.
+        """
+        queue = asyncio.Queue()
+        sentinel = object()
+        task = asyncio.create_task(asyncio.to_thread(self._generate_audio_and_enqueue, text, file_path, queue, sentinel))
+
+        while True:
+            chunk = await queue.get()
+            if chunk is sentinel:
+                break
+            yield chunk
+
+        await task
+        await self.db["session"].update_one(
+            {"_id": ObjectId(session_id), "instructions.message_id": message_id},
+            {"$set": {"instructions.$.audio_path": str(file_path)}},
+        )
+
+    async def _stream_audio_when_missing(self, session_id: str, message_id: str, instruction: dict, audio_path: Path):
+        """
+        Async generator for the case when the audio file does not exist yet.
+        Validates instruction has text, creates directory, generates and streams audio.
+        """
+        text = instruction.get("text")
+
+        if not text:
+            raise RuntimeError("Instruction has no text to generate audio from")
+
+        audio_path.parent.mkdir(parents=True, exist_ok=True)
+        async for chunk in self._stream_generated_audio(session_id, message_id, text, audio_path):
+            yield chunk
+
+    async def get_audio_chunks(self, session_id: str, message_id: str):
+        """
+        Async generator yielding audio chunks. Serves from disk if present,
+        otherwise generates on-demand, saves, and streams chunks in real time.
+        """
+        audio_path = self._build_audio_path(session_id, message_id)
+
+        if audio_path.exists():
+            async for chunk in self._stream_chunks_from_file(audio_path):
+                yield chunk
+
+            return
+
+        session = await self.get_session_by_id(session_id)
+        instruction = self._find_instruction(session, message_id)
+
+        async for chunk in self._stream_audio_when_missing(session_id, message_id, instruction, audio_path):
+            yield chunk
+
     async def get_sequence_by_id(self, sequence_id: str):
         sequence = await self.db["sequences"].find_one({"_id": ObjectId(sequence_id)})
 
