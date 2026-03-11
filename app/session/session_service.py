@@ -34,6 +34,12 @@ class SessionService:
 
         return session
 
+    async def get_instructions(self, session_id: str) -> list:
+        """Return instructions for a session, excluding audio_path from each instruction."""
+        session = await self.get_session_by_id(session_id)
+        instructions = session.get("instructions") or []
+        return [{k: v for k, v in i.items() if k != "audio_path"} for i in instructions]
+
     def _find_instruction(self, session: dict, message_id: str) -> dict:
         """Return the instruction matching message_id, or raise if not found."""
         instructions = session.get("instructions") or []

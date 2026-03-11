@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import StreamingResponse
 from app.session.session_service import SessionService
-from app.session.session_interfaces import SeriesData
+from app.session.session_interfaces import SeriesData, GetInstructionsData
 from app.dependency_injector import DependencyInjector
 from app.globals.errors import CustomException
 from bson import ObjectId
@@ -29,6 +29,22 @@ async def start_user_session(
     except RuntimeError as e:
         raise CustomException(str(e))
 
+    except Exception as e:
+        raise CustomException(str(e))
+
+
+@router.post("/session/get_instructions")
+async def get_instructions(
+    data: GetInstructionsData, service: SessionService = Depends(DependencyInjector.get_session_service)
+):
+    """Return instructions for a session. Excludes audio_path from each instruction."""
+    try:
+        instructions = await service.get_instructions(data.session_id)
+        return {"status": True, "instructions": instructions}
+    except RuntimeError as e:
+        if "not found" in str(e).lower():
+            raise HTTPException(status_code=404, detail=str(e))
+        raise CustomException(str(e))
     except Exception as e:
         raise CustomException(str(e))
 
