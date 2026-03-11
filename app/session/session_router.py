@@ -33,6 +33,22 @@ async def start_user_session(
         raise CustomException(str(e))
 
 
+@router.get("/session/{session_id}")
+async def get_session(
+    session_id: str, service: SessionService = Depends(DependencyInjector.get_session_service)
+):
+    """Return session info by session_id. Excludes instructions."""
+    try:
+        response = await service.get_session_info(session_id)
+        return response
+    except RuntimeError as e:
+        if "not found" in str(e).lower():
+            raise HTTPException(status_code=404, detail=str(e))
+        raise CustomException(str(e))
+    except Exception as e:
+        raise CustomException(str(e))
+
+
 @router.post("/session/get_instructions")
 async def get_instructions(
     data: GetInstructionsData, service: SessionService = Depends(DependencyInjector.get_session_service)

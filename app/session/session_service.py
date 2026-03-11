@@ -38,6 +38,12 @@ class SessionService:
         """Build the canonical file path for an instruction's audio."""
         return Path("audio_files") / session_id / f"{message_id}.mp3"
 
+    async def get_session_info(self, session_id: str) -> dict:
+        """Return session document excluding the instructions field."""
+        session = await self.get_session_by_id(session_id)
+        session = {k: v for k, v in session.items() if k != "instructions"}
+        return {"status": True, "result": session}
+
     async def get_instructions(self, session_id: str) -> list:
         """Return instructions for a session, excluding audio_path from each instruction."""
         session = await self.get_session_by_id(session_id)
@@ -48,7 +54,7 @@ class SessionService:
         """Return the instruction matching message_id, or raise if not found."""
         instructions = session.get("instructions") or []
         instruction = next((i for i in instructions if i.get("message_id") == message_id), None)
-        
+
         if not instruction:
             raise RuntimeError("The given instruction was not found")
 
