@@ -34,6 +34,10 @@ class SessionService:
 
         return session
 
+    def _build_audio_path(self, session_id: str, message_id: str) -> Path:
+        """Build the canonical file path for an instruction's audio."""
+        return Path("audio_files") / session_id / f"{message_id}.mp3"
+
     async def get_instructions(self, session_id: str) -> list:
         """Return instructions for a session, excluding audio_path from each instruction."""
         session = await self.get_session_by_id(session_id)
@@ -44,13 +48,11 @@ class SessionService:
         """Return the instruction matching message_id, or raise if not found."""
         instructions = session.get("instructions") or []
         instruction = next((i for i in instructions if i.get("message_id") == message_id), None)
+        
         if not instruction:
             raise RuntimeError("The given instruction was not found")
-        return instruction
 
-    def _build_audio_path(self, session_id: str, message_id: str) -> Path:
-        """Build the canonical file path for an instruction's audio."""
-        return Path("audio_files") / session_id / f"{message_id}.mp3"
+        return instruction
 
     async def _stream_chunks_from_file(self, file_path: Path, chunk_size: int = 8192):
         """Async generator that reads a file and yields raw bytes in fixed-size chunks."""
@@ -67,6 +69,7 @@ class SessionService:
             for chunk in self.yoga_agent.generate_audio_from_text(text):
                 audio_file.write(chunk)
                 queue.put_nowait(chunk)
+                
         queue.put_nowait(sentinel)
 
     async def _stream_generated_audio(self, session_id: str, message_id: str, text: str, file_path: Path):
