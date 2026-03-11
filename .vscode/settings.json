@@ -1,6 +1,10 @@
 {
   "python.analysis.autoImportCompletions": true,
   "python-envs.pythonProjects": [],
+  "editor.inlineSuggest.enabled": false,
+  "editor.quickSuggestions": { "other": false, "comments": false, "strings": false },
+  "editor.suggestOnTriggerCharacters": false,
+  "editor.wordBasedSuggestions": "off",
   "editor.tabSize": 4,
   "editor.insertSpaces": true,
   "editor.detectIndentation": false,

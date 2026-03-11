@@ -10,12 +10,21 @@ from app.prompts.prompts import (
     _get_transition_query_prompt,
     _get_end_user_session_prompt,
 )
+from app.session.session_trace_logger import trace
 
 
 class SessionService:
     def __init__(self, db: AsyncIOMotorDatabase, yoga_agent):
         self.db = db
         self.yoga_agent = yoga_agent
+
+    async def get_sequence_by_id(self, sequence_id: str):
+        sequence = await self.db["sequences"].find_one({"_id": ObjectId(sequence_id)})
+
+        if not sequence:
+            raise RuntimeError("The given sequence was not found")
+
+        return sequence
 
     async def get_session_by_id(self, session_id: str):
         session = await self.db["session"].find_one({"_id": ObjectId(session_id)})
@@ -108,83 +117,10 @@ class SessionService:
         async for chunk in self._stream_audio_when_missing(session_id, message_id, instruction, audio_path):
             yield chunk
 
-    async def get_sequence_by_id(self, sequence_id: str):
-        sequence = await self.db["sequences"].find_one({"_id": ObjectId(sequence_id)})
-
-        if not sequence:
-            raise RuntimeError("The given sequence was not found")
-
-        return sequence
-
-    async def create_new_session(self, user_id: str, sequence, chat_history):
-        current_timestamp = datetime.utcnow()
-        current_posture = None  # {**sequence["postures"][0], "idx": 0, "started_on": current_timestamp}
-
-        session = {
-            "user_id": user_id,
-            "sequence": sequence,
-            "created_on": current_timestamp,
-            "chat_history": chat_history,
-            "current_posture": current_posture,
-            "total_number_of_postures": len(sequence["postures"]),
-        }
-
-        session_created = await self.db["session"].insert_one(session)
-
-        if not session_created:
-            raise RuntimeError("Failed to create session")
-
-        return session_created.inserted_id
-
-    async def update_session(self, session_id: str, update_argument):
-        await self.db["session"].update_one({"_id": ObjectId(session_id)}, update_argument)
-
-    async def end_session(self, session_id: str):
-        update_argument = {
-            "ended_on": datetime.utcnow(),
-            "status": "completed",
-            "current_posture": None,
-        }
-
-        await self.update_session(session_id=session_id, update_argument=update_argument)
-
-    def _generate_intro_text(self, sequence_name: str) -> dict:
-        """Generate introduction text for the session."""
-        prompt = _get_start_user_session_prompt(sequence_name=sequence_name)
-        response = self.yoga_agent.generate_text(prompt=prompt)
-        return {"type": "intro", "text": response["text"], "message_id": response["message_id"]}
-
-    def _generate_transition_texts(self, postures: list) -> list:
-        """Generate all transition texts for the sequence."""
-        transitions = []
-
-        for from_idx in range(-1, len(postures) - 1):
-            to_idx = from_idx + 1
-            transition_prompt = _get_transition_query_prompt(transition_from_idx=from_idx, postures=postures)
-            transition_response = self.yoga_agent.generate_text(prompt=transition_prompt)
-            transitions.append(
-                {
-                    "type": "transition",
-                    "from_idx": from_idx,
-                    "to_idx": to_idx,
-                    "text": transition_response["text"],
-                    "message_id": transition_response["message_id"],
-                }
-            )
-
-        return transitions
-
-    def _generate_ending_text(self, sequence_name: str) -> dict:
-        """Generate ending text for the session."""
-        prompt = _get_end_user_session_prompt(sequence_name=sequence_name)
-        response = self.yoga_agent.generate_text(prompt=prompt)
-        return {"type": "ending", "text": response["text"], "message_id": response["message_id"]}
-
     def _save_audio_to_file(self, session_id: str, message_id: str, audio_chunks) -> str:
         """Save audio chunks to file and return the file path."""
         audio_dir = Path("audio_files") / session_id
         audio_dir.mkdir(parents=True, exist_ok=True)
-
         audio_path = audio_dir / f"{message_id}.mp3"
 
         with open(audio_path, "wb") as audio_file:
@@ -193,26 +129,64 @@ class SessionService:
 
         return str(audio_path)
 
-    def _generate_and_save_audio(self, session_id: str, text: str, message_id: str) -> str:
-        """Generate audio from text and save to file."""
+    async def _generate_intro(self, sequence_name: str, session_id: str) -> dict:
+        """Generate introduction text and audio for the session."""
+
+        prompt = _get_start_user_session_prompt(sequence_name=sequence_name)
+        response = self.yoga_agent.generate_text(prompt=prompt)
+        text = response["text"]
+        message_id = response["message_id"]
         audio_chunks = self.yoga_agent.generate_audio_from_text(text)
-        return self._save_audio_to_file(session_id, message_id, audio_chunks)
+        audio_path = self._save_audio_to_file(session_id, message_id, audio_chunks)
 
-    async def _generate_and_save_intro_audio(self, session_id: str, intro: dict) -> dict:
-        """Generate intro audio, save to file, and update database."""
-        intro_audio_path = self._generate_and_save_audio(
-            session_id, intro["text"], intro["message_id"]
-        )
-        intro["audio_path"] = intro_audio_path
-
+        trace("Saving intro", session_id=session_id)
         await self.db["session"].update_one(
             {"_id": ObjectId(session_id)},
-            {"$set": {"instructions.0.audio_path": intro_audio_path}},
+            {"$push": {"instructions": {"type": "intro", "text": text, "message_id": message_id, "audio_path": audio_path}}},
         )
 
-        return intro
+    async def _generate_transitions(self, postures: list, session_id: str) -> list:
+        """Generate all transition texts and audio for the sequence and save to database synchronously."""
 
-    def _create_session_document(self, user_id: str, sequence: dict, intro: dict) -> dict:
+        for from_idx in range(-1, len(postures) - 1):
+            transition_prompt = _get_transition_query_prompt(transition_from_idx=from_idx, postures=postures)
+            transition_response = self.yoga_agent.generate_text(prompt=transition_prompt)
+            transition_text = transition_response["text"]
+            transition_message_id = transition_response["message_id"]
+            transition_audio_chunks = self.yoga_agent.generate_audio_from_text(transition_text)
+            transition_audio_path = self._save_audio_to_file(session_id, transition_message_id, transition_audio_chunks)
+
+            trace(f"Saving transition : from_idx={from_idx}", session_id=session_id)
+            await self.db["session"].update_one(
+                {"_id": ObjectId(session_id)},
+                {"$push": {"instructions": {"type": "transition", "text": transition_text, "message_id": transition_message_id, "audio_path": transition_audio_path}}},
+            )
+
+    async def _generate_ending_note(self, sequence_name: str, session_id: str) -> dict:
+        """Generate ending text for the session."""
+        prompt = _get_end_user_session_prompt(sequence_name=sequence_name)
+        response = self.yoga_agent.generate_text(prompt=prompt)
+        text = response["text"]
+        message_id = response["message_id"]
+        audio_chunks = self.yoga_agent.generate_audio_from_text(text)
+        audio_path = self._save_audio_to_file(session_id, message_id, audio_chunks)
+
+        trace("Saving ending note", session_id=session_id)
+        await self.db["session"].update_one(
+            {"_id": ObjectId(session_id)},
+            {
+                "$push": {"instructions": {"type": "ending", "text": text, "message_id": message_id, "audio_path": audio_path}}, 
+                "$set": {"generation_status": "completed"}
+            }
+        )
+
+    async def _generate_remaining_guidance_background(self, session_id: str, postures: list, sequence_name: str):
+        """Generate transitions and ending text, then generate audio in background."""
+        await self._generate_intro(sequence_name, session_id)
+        await self._generate_transitions(postures, session_id)
+        await self._generate_ending_note(sequence_name, session_id)
+
+    def _create_session_document(self, user_id: str, sequence: dict) -> dict:
         """Create session document with intro only"""
         current_timestamp = datetime.utcnow()
         postures = sequence["postures"]
@@ -223,62 +197,20 @@ class SessionService:
             "created_on": current_timestamp,
             "current_posture": None,
             "total_number_of_postures": len(postures),
-            "instructions": [intro],
+            "generation_status": "in_progress",
+            "instructions": [],
         }
-
-    async def _generate_remaining_guidance_background(self, session_id: str, postures: list, sequence_name: str):
-        """Generate transitions and ending text, then generate audio in background."""
-        try:
-            transitions = self._generate_transition_texts(postures)
-            ending = self._generate_ending_text(sequence_name)
-
-            await self.db["session"].update_one(
-                {"_id": ObjectId(session_id)},
-                {
-                    "$push": {"instructions": {"$each": transitions + [ending]}},
-                    "$set": {"generation_status": "text_completed"},
-                },
-            )
-
-            asyncio.create_task(self._generate_audio_background(session_id, transitions + [ending]))
-        except Exception as e:
-            await self.db["session"].update_one(
-                {"_id": ObjectId(session_id)}, {"$set": {"generation_status": "failed", "generation_error": str(e)}}
-            )
-
-    async def _generate_audio_background(self, session_id: str, instructions: list):
-        """Generate and save audio for instructions in background."""
-        try:
-            for instruction in instructions:
-                audio_path = self._generate_and_save_audio(session_id, instruction["text"], instruction["message_id"])
-
-                await self.db["session"].update_one(
-                    {
-                        "_id": ObjectId(session_id),
-                        "instructions.message_id": instruction["message_id"],
-                    },
-                    {"$set": {"instructions.$.audio_path": audio_path}},
-                )
-
-            await self.db["session"].update_one(
-                {"_id": ObjectId(session_id)}, {"$set": {"generation_status": "completed"}}
-            )
-        except Exception as e:
-            await self.db["session"].update_one(
-                {"_id": ObjectId(session_id)},
-                {"$set": {"generation_status": "audio_failed", "audio_error": str(e)}},
-            )
 
     async def start_user_session(self, user_id: str, sequence_id: str):
         """
         Start a new yoga session by pre-generating intro text and audio,
         then scheduling background generation for transitions and ending.
         """
+        trace("Session starting now", session_id=None)
         sequence = await self.get_sequence_by_id(sequence_id)
         postures = sequence["postures"]
 
-        intro = self._generate_intro_text(sequence["name"])
-        session_doc = self._create_session_document(user_id, sequence, intro)
+        session_doc = self._create_session_document(user_id, sequence)
         session_created = await self.db["session"].insert_one(session_doc)
 
         if not session_created:
@@ -286,22 +218,12 @@ class SessionService:
 
         session_id_str = str(session_created.inserted_id)
 
-        try:
-            intro = await self._generate_and_save_intro_audio(session_id_str, intro)
+        asyncio.create_task(self._generate_remaining_guidance_background(session_id_str, postures, sequence["name"]))
 
-            asyncio.create_task(self._generate_remaining_guidance_background(session_id_str, postures, sequence["name"]))
-
-            return {
+        trace("Session started", session_id=session_id_str)
+        return {
                 "status": True,
-                "type": "session_started",
                 "session_id": session_id_str,
-                "instructions": [intro],
                 "sequence": sequence,
                 "generation_status": "in_progress",
-            }
-        except Exception as e:
-            await self.db["session"].update_one(
-                {"_id": ObjectId(session_id_str)},
-                {"$set": {"generation_status": "failed", "generation_error": str(e)}},
-            )
-            raise
+        }
