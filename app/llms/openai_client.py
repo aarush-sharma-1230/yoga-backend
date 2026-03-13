@@ -2,7 +2,7 @@ import traceback
 import openai
 import asyncio
 
-from app.prompts.prompts import DEVELOPER_PROMPT
+from app.prompts.developer import DEVELOPER_PROMPT
 
 
 class OpenAIClient:

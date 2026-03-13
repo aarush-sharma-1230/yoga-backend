@@ -19,8 +19,9 @@ async def start_user_session(
     """
     try:
         sequence_id = series_data.sequence_id
+        user_name = "Aarush"
         user_id = ObjectId("67d5632a3a9bdddef290e127")  # TODO: Get from authentication
-        response = await service.start_user_session(user_id=user_id, sequence_id=sequence_id)
+        response = await service.start_user_session(user_id=user_id, sequence_id=sequence_id, user_name=user_name)
         return response
 
     except ValueError as e:

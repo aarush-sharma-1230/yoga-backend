@@ -3,8 +3,6 @@ from bson import ObjectId
 from pathlib import Path
 from datetime import datetime
 
-from app.prompts.prompts import _get_transition_query_prompt, _get_start_user_session_prompt, _get_user_query_prompt
-
 from app.globals.functions import serialize_mongo_output
 
 

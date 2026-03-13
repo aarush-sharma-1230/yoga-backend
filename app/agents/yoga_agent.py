@@ -1,6 +1,6 @@
 from typing import Any, Dict
 
-from app.prompts.prompts import DEVELOPER_PROMPT
+from app.prompts.developer import DEVELOPER_PROMPT
 
 
 class YogaAgent:

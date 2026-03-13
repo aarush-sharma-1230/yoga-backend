@@ -4,7 +4,7 @@ import uuid
 from google import genai
 from google.genai import types
 
-from app.prompts.prompts import DEVELOPER_PROMPT
+from app.prompts.developer import DEVELOPER_PROMPT
 
 
 class GeminiService:

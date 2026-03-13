@@ -5,11 +5,9 @@ from motor.motor_asyncio import AsyncIOMotorDatabase
 from bson import ObjectId
 from datetime import datetime
 
-from app.prompts.prompts import (
-    _get_start_user_session_prompt,
-    _get_transition_query_prompt,
-    _get_end_user_session_prompt,
-)
+from app.prompts.ending import get_ending_prompt
+from app.prompts.introduction import get_introduction_prompt
+from app.prompts.transition import get_transition_prompt
 from app.session.session_trace_logger import trace
 
 
@@ -144,10 +142,10 @@ class SessionService:
 
         return str(audio_path)
 
-    async def _generate_intro(self, sequence_name: str, session_id: str) -> dict:
+    async def _generate_intro(self, sequence_name: str, session_id: str, user_name: str) -> dict:
         """Generate introduction text and audio for the session."""
 
-        prompt = _get_start_user_session_prompt(sequence_name=sequence_name)
+        prompt = get_introduction_prompt(sequence_name=sequence_name, user_name=user_name)
         response = self.yoga_agent.generate_text(prompt=prompt)
         text = response["text"]
         message_id = response["message_id"]
@@ -164,7 +162,7 @@ class SessionService:
         """Generate all transition texts and audio for the sequence and save to database synchronously."""
 
         for from_idx in range(-1, len(postures) - 1):
-            transition_prompt = _get_transition_query_prompt(transition_from_idx=from_idx, postures=postures)
+            transition_prompt = get_transition_prompt(transition_from_idx=from_idx, postures=postures)
             transition_response = self.yoga_agent.generate_text(prompt=transition_prompt)
             transition_text = transition_response["text"]
             transition_message_id = transition_response["message_id"]
@@ -179,7 +177,7 @@ class SessionService:
 
     async def _generate_ending_note(self, sequence_name: str, session_id: str) -> dict:
         """Generate ending text for the session."""
-        prompt = _get_end_user_session_prompt(sequence_name=sequence_name)
+        prompt = get_ending_prompt(sequence_name=sequence_name)
         response = self.yoga_agent.generate_text(prompt=prompt)
         text = response["text"]
         message_id = response["message_id"]
@@ -195,9 +193,9 @@ class SessionService:
             }
         )
 
-    async def _generate_remaining_guidance_background(self, session_id: str, postures: list, sequence_name: str):
+    async def _generate_remaining_guidance_background(self, session_id: str, postures: list, sequence_name: str, user_name: str):
         """Generate transitions and ending text, then generate audio in background."""
-        await self._generate_intro(sequence_name, session_id)
+        await self._generate_intro(sequence_name, session_id, user_name)
         await self._generate_transitions(postures, session_id)
         await self._generate_ending_note(sequence_name, session_id)
 
@@ -216,7 +214,7 @@ class SessionService:
             "instructions": [],
         }
 
-    async def start_user_session(self, user_id: str, sequence_id: str):
+    async def start_user_session(self, user_id: str, sequence_id: str, user_name: str):
         """
         Start a new yoga session by pre-generating intro text and audio,
         then scheduling background generation for transitions and ending.
@@ -233,7 +231,7 @@ class SessionService:
 
         session_id_str = str(session_created.inserted_id)
 
-        asyncio.create_task(self._generate_remaining_guidance_background(session_id_str, postures, sequence["name"]))
+        asyncio.create_task(self._generate_remaining_guidance_background(session_id_str, postures, sequence["name"], user_name))
 
         trace("Session started", session_id=session_id_str)
         return {
