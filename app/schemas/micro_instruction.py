@@ -13,7 +13,6 @@ MicroInstructionType = Literal[
 class MicroInstruction(BaseModel):
     type: MicroInstructionType
     text: str
-    wait_time_in_seconds: int
 
 
 class MicroInstructionList(BaseModel):

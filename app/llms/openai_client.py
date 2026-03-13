@@ -9,7 +9,7 @@ from app.schemas.micro_instruction import MicroInstructionList
 
 class OpenAIClient:
     def __init__(self, openai_api_key: str):
-        self.is_api_enabled = False
+        self.is_api_enabled = True
         self.api_key = openai_api_key
         self.text_model = "gpt-4o-mini"
         self.audio_model = "gpt-4o-mini-tts"
@@ -27,18 +27,6 @@ class OpenAIClient:
         temperature: float = 0.7,
     ) -> dict:
         """Return structured micro-instructions as a list of dicts with type, text, wait_time_in_seconds."""
-        if not self.is_api_enabled:
-            return {
-                "instructions": [
-                    {
-                        "type": "movement_instruction",
-                        "text": "Sit comfortably and close your eyes.",
-                        "wait_time_in_seconds": 15,
-                    }
-                ],
-                "message_id": f"msg_{uuid.uuid4().hex}",
-            }
-
         completion = self._client.chat.completions.parse(
             model=model,
             messages=[
