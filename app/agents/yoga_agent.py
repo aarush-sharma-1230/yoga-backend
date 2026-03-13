@@ -9,6 +9,12 @@ class YogaAgent:
         self.developer_prompt = DEVELOPER_PROMPT
         self.max_words = max_words
 
+    def generate_structured_text(self, prompt: str) -> Dict[str, Any]:
+        """Return structured micro-instructions from the LLM."""
+        return self.llm_client.generate_structured_text(
+            prompt=prompt, developer_prompt=self.developer_prompt
+        )
+
     def generate_text(self, prompt: str) -> Dict[str, Any]:
         response = self.llm_client.generate_text(prompt=prompt, developer_prompt=self.developer_prompt)
         text = self._extract_text(response)

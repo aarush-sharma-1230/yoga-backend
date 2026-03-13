@@ -38,11 +38,19 @@ Then guide their attention inward again by suggesting where the gaze may rest an
 
 Encourage the practitioner to take a few calm breaths in this first posture before continuing the sequence.
 
-OUTPUT REQUIREMENTS
+OUTPUT FORMAT
 
-120–170 words.
+Return a JSON array of micro-instructions. Each object must have:
+- type: One of "movement_instruction", "alignment_instruction", "breath_instruction", "awareness_instruction"
+- text: The spoken guidance for that step
 
-The guidance should smoothly shift the practitioner from stillness into the first posture of the yoga practice.
+Type meanings:
+- movement_instruction: Body positioning, how to move into the posture
+- alignment_instruction: Posture refinement cues
+- breath_instruction: Breathing guidance
+- awareness_instruction: Attention to sensations, gaze, inner focus
+
+Split the transition into 4 micro-instructions. The guidance should smoothly shift from stillness into the first posture.
         """
 
     else:
@@ -85,11 +93,19 @@ Suggest where the gaze may rest and invite them to notice sensations in the body
 
 Encourage a few slow and steady breaths in the posture.
 
-OUTPUT REQUIREMENTS
+OUTPUT FORMAT
 
-120–180 words.
+Return a JSON array of micro-instructions. Each object must have:
+- type: One of "movement_instruction", "alignment_instruction", "breath_instruction", "awareness_instruction"
+- text: The spoken guidance for that step
 
-The instructions should clearly guide the movement while allowing the practitioner to settle into the final posture.
+Type meanings:
+- movement_instruction: Body positioning during the transition
+- alignment_instruction: Posture refinement in the new pose
+- breath_instruction: Breathing guidance
+- awareness_instruction: Attention to sensations, gaze, settling
+
+Split the transition into 4 micro-instructions. Clearly guide movement and allow the practitioner to settle into the final posture.
 """
     prompt_template = PromptTemplate(template=template)
     return prompt_template.format()

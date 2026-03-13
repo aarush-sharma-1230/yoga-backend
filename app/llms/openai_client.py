@@ -1,8 +1,10 @@
 import traceback
+import uuid
 import openai
-import asyncio
+from openai import OpenAI
 
 from app.prompts.developer import DEVELOPER_PROMPT
+from app.schemas.micro_instruction import MicroInstructionList
 
 
 class OpenAIClient:
@@ -15,6 +17,45 @@ class OpenAIClient:
         self.developer_prompt = DEVELOPER_PROMPT
 
         openai.api_key = openai_api_key
+        self._client = OpenAI(api_key=openai_api_key)
+
+    def generate_structured_text(
+        self,
+        prompt: str,
+        developer_prompt: str = DEVELOPER_PROMPT,
+        model: str = "gpt-4o-mini",
+        temperature: float = 0.7,
+    ) -> dict:
+        """Return structured micro-instructions as a list of dicts with type, text, wait_time_in_seconds."""
+        if not self.is_api_enabled:
+            return {
+                "instructions": [
+                    {
+                        "type": "movement_instruction",
+                        "text": "Sit comfortably and close your eyes.",
+                        "wait_time_in_seconds": 15,
+                    }
+                ],
+                "message_id": f"msg_{uuid.uuid4().hex}",
+            }
+
+        completion = self._client.chat.completions.parse(
+            model=model,
+            messages=[
+                {"role": "system", "content": developer_prompt},
+                {"role": "user", "content": prompt},
+            ],
+            response_format=MicroInstructionList,
+            temperature=temperature,
+        )
+
+        parsed = completion.choices[0].message.parsed
+        message_id = getattr(completion, "id", None) or f"msg_{uuid.uuid4().hex}"
+
+        return {
+            "instructions": [m.model_dump() for m in parsed.instructions],
+            "message_id": message_id,
+        }
 
     def generate_text(
         self,

@@ -142,40 +142,64 @@ class SessionService:
 
         return str(audio_path)
 
-    async def _generate_intro(self, sequence_name: str, session_id: str, user_name: str) -> dict:
-        """Generate introduction text and audio for the session."""
+    async def _generate_intro(self, sequence_name: str, session_id: str, user_name: str) -> None:
+        """Generate introduction micro-instructions and audio, store as flat array with category=introduction."""
 
         prompt = get_introduction_prompt(sequence_name=sequence_name, user_name=user_name)
-        response = self.yoga_agent.generate_text(prompt=prompt)
-        text = response["text"]
-        message_id = response["message_id"]
-        audio_chunks = self.yoga_agent.generate_audio_from_text(text)
-        audio_path = self._save_audio_to_file(session_id, message_id, audio_chunks)
+        response = self.yoga_agent.generate_structured_text(prompt=prompt)
+        instructions = response["instructions"]
+        base_message_id = response["message_id"]
+
+        flat_items = []
+        for i, micro in enumerate(instructions):
+            message_id = f"{base_message_id}_{i}"
+            audio_chunks = self.yoga_agent.generate_audio_from_text(micro["text"])
+            audio_path = self._save_audio_to_file(session_id, message_id, audio_chunks)
+            flat_items.append({
+                "category": "introduction",
+                "type": micro["type"],
+                "text": micro["text"],
+                "message_id": message_id,
+                "audio_path": audio_path,
+            })
 
         trace("Saving intro", session_id=session_id)
         await self.db["session"].update_one(
             {"_id": ObjectId(session_id)},
-            {"$push": {"instructions": {"type": "intro", "text": text, "message_id": message_id, "audio_path": audio_path}}},
+            {"$push": {"instructions": {"$each": flat_items}}},
         )
 
-    async def _generate_transitions(self, postures: list, session_id: str) -> list:
-        """Generate all transition texts and audio for the sequence and save to database synchronously."""
+    async def _generate_transitions(self, postures: list, session_id: str) -> None:
+        """Generate transition micro-instructions and audio, store as flat array with category=transition."""
 
         for from_idx in range(-1, len(postures) - 1):
             transition_prompt = get_transition_prompt(transition_from_idx=from_idx, postures=postures)
-            transition_response = self.yoga_agent.generate_text(prompt=transition_prompt)
-            transition_text = transition_response["text"]
-            transition_message_id = transition_response["message_id"]
-            transition_audio_chunks = self.yoga_agent.generate_audio_from_text(transition_text)
-            transition_audio_path = self._save_audio_to_file(session_id, transition_message_id, transition_audio_chunks)
+            response = self.yoga_agent.generate_structured_text(prompt=transition_prompt)
+            instructions = response["instructions"]
+            base_message_id = response["message_id"]
 
-            trace(f"Saving transition : from_idx={from_idx}", session_id=session_id)
+            flat_items = []
+            for i, micro in enumerate(instructions):
+                message_id = f"{base_message_id}_{i}"
+                audio_chunks = self.yoga_agent.generate_audio_from_text(micro["text"])
+                audio_path = self._save_audio_to_file(session_id, message_id, audio_chunks)
+                flat_items.append({
+                    "category": "transition",
+                    "type": micro["type"],
+                    "text": micro["text"],
+                    "wait_time_in_seconds": micro["wait_time_in_seconds"],
+                    "message_id": message_id,
+                    "audio_path": audio_path,
+                })
+
+            trace(f"Saving transition: from_idx={from_idx}", session_id=session_id)
             await self.db["session"].update_one(
                 {"_id": ObjectId(session_id)},
-                {"$push": {"instructions": {"type": "transition", "text": transition_text, "message_id": transition_message_id, "audio_path": transition_audio_path}}},
+                {"$push": {"instructions": {"$each": flat_items}}},
             )
 
-    async def _generate_ending_note(self, sequence_name: str, session_id: str) -> dict:
+    async def _generate_ending_note(self, sequence_name: str, session_id: str) -> None:
+        """Generate ending micro-instructions and audio, store as flat array with category=ending."""
         """Generate ending text for the session."""
         prompt = get_ending_prompt(sequence_name=sequence_name)
         response = self.yoga_agent.generate_text(prompt=prompt)

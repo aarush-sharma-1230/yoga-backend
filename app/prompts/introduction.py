@@ -44,21 +44,19 @@ While guiding the breath:
 5. Independent Practice
    Tell the user to continue this breathing rhythm on their own for about 2–3 minutes before beginning the sequence.
 
-OUTPUT REQUIREMENTS
+STRUCTURED OUTPUT FORMAT
 
-* 120–180 words
-* Written as spoken guidance
-* No bullet points
-* No numbered lists
-* Natural pacing suitable for voice narration
+Return a JSON array of micro-instructions. Each object must have:
+- type: One of "movement_instruction", "alignment_instruction", "breath_instruction", "awareness_instruction"
+- text: The spoken guidance for that step
 
-EXAMPLE STYLE (not to be copied verbatim)
-“Alright… welcome to today’s session. I’m really glad you’re here…”
-    """
-    
+Type meanings:
+- movement_instruction: Body positioning, how to move into the posture
+- alignment_instruction: Posture refinement cues
+- breath_instruction: Breathing guidance
+- awareness_instruction: Attention to sensations, gaze, inner focus
+
+Split the introduction into multiple micro-instructions. Use the type that best fits each part (e.g., movement for "sit comfortably", breath for "inhale slowly", awareness for "notice sensations").
+"""
     prompt_template = PromptTemplate(template=template)
     return prompt_template.format()
-
-
-
-
