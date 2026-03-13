@@ -1,13 +1,13 @@
 from langchain_core.prompts import PromptTemplate
 
 
-def get_introduction_prompt(sequence_name: str, user_name: str):
+def get_introduction_prompt(sequence_name: str, user_name: str, first_posture_name: str = ""):
+    """first_posture_name: name of first posture in sequence, for pose_instruction teaser."""
     template = f"""Your task is to generate a short spoken introduction for a yoga sequence.
 
 INPUT
 Sequence Name: {sequence_name}
 User's Name: {user_name}
-
 GOAL
 Welcome the user into the session and guide them into a relaxed mental state before beginning the sequence.
 
@@ -46,14 +46,20 @@ While guiding the breath:
 
 STRUCTURED OUTPUT FORMAT
 
-Return a JSON object with up to four optional fields. Each field, if present, must have "text" and "wait_time_in_seconds".
+Return a JSON object with up to five optional fields. Each field, if present, must have "text".
 
-- movement_instruction: All body positioning and movement guidance in one combined text (e.g., "sit comfortably", "close your eyes")
+Keep each instruction to one or two short lines maximum (roughly 15–25 words each).
+
+- movement_instruction (required): All body positioning and movement guidance in one combined text (e.g., "sit comfortably", "close your eyes"). May use transitional phrases like "now", "alright", "let's" since it marks a new phase.
 - alignment_instruction: Posture refinement cues
 - breath_instruction: All breathing guidance in one combined text
 - awareness_instruction: Attention to sensations, gaze, inner focus
 
-Use at most one object per type. Combine all guidance of the same intent into a single text. Choose wait_time_in_seconds (15-60) based on complexity. Order: movement, alignment, breath, awareness.
+PHRASING RULES
+
+- movement_instruction: May use "now", "alright", "let's", "so" or similar phrases that signal a new phase or change. It comes first and can set the scene.
+- alignment_instruction, breath_instruction, awareness_instruction: Do NOT use "now", "alright", "let's", "so", "next" or words that imply a new beginning. These are continuous refinements within the same moment—flow directly into the guidance without transitional openers.
+</think>
 """
     prompt_template = PromptTemplate(template=template)
     return prompt_template.format()

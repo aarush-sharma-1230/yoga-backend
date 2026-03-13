@@ -42,6 +42,7 @@ class OpenAIClient:
 
         instructions = []
         for type_name, block in [
+            ("pose_instruction", parsed.pose_instruction),
             ("movement_instruction", parsed.movement_instruction),
             ("alignment_instruction", parsed.alignment_instruction),
             ("breath_instruction", parsed.breath_instruction),

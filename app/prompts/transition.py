@@ -40,15 +40,22 @@ Encourage the practitioner to take a few calm breaths in this first posture befo
 
 OUTPUT FORMAT
 
-Return a JSON object with up to four optional fields. Each field, if present, must have "text" and "wait_time_in_seconds".
+Return a JSON object with up to five optional fields. Each field, if present, must have "text".
 Use at most one object per type. Combine all guidance of the same intent into a single text.
 
-- movement_instruction: All body positioning and movement guidance in one combined text (how to move into the posture)
+Keep each instruction to one or two short lines maximum (roughly 15–25 words each).
+
+- pose_instruction (required): One line only. Names the upcoming posture, e.g. "Next up: Warrior One." or "We'll move into Downward Dog." May use "now", "alright", "let's" since it marks a new posture or phase.
+- movement_instruction (required): All body positioning and movement guidance in one combined text (how to move into the posture). 
 - alignment_instruction: All posture refinement cues in one combined text
 - breath_instruction: All breathing guidance in one combined text
 - awareness_instruction: Attention to sensations, gaze, inner focus
 
-Choose wait_time_in_seconds (15-60) based on complexity. Order: movement, alignment, breath, awareness.
+PHRASING RULES
+
+- pose_instruction: One line only. Simply state the next posture name. May use "now", "alright", "let's", "so" to signal the transition into a new posture.
+- movement_instruction, alignment_instruction, breath_instruction, awareness_instruction: Do NOT use "now", "alright", "let's", "so", "next". These are refinements within the same posture—flow directly without transitional openers.
+
 The guidance should smoothly shift from stillness into the first posture.
         """
 
@@ -94,15 +101,22 @@ Encourage a few slow and steady breaths in the posture.
 
 OUTPUT FORMAT
 
-Return a JSON object with up to four optional fields. Each field, if present, must have "text" and "wait_time_in_seconds".
+Return a JSON object with up to five optional fields. Each field, if present, must have "text".
 Use at most one object per type. Combine all guidance of the same intent into a single text.
 
-- movement_instruction: All body positioning during the transition in one combined text
-- alignment_instruction: All posture refinement in the new pose in one combined text
-- breath_instruction: All breathing guidance in one combined text
-- awareness_instruction: Attention to sensations, gaze, settling
+Keep each instruction to one or two short lines maximum (roughly 15–25 words each).
 
-Choose wait_time_in_seconds (15-60) based on complexity. Order: movement, alignment, breath, awareness.
+- pose_instruction (required): One line only. Names the upcoming posture, e.g. "Next up: Warrior One." or "We'll move into Downward Dog." May use "now", "alright", "let's" since it marks a new posture or phase.
+- movement_instruction (required): All body positioning and movement guidance in one combined text (how to move into the posture). 
+- alignment_instruction: All posture refinement cues in one combined text
+- breath_instruction: All breathing guidance in one combined text
+- awareness_instruction: Attention to sensations, gaze, inner focus
+
+PHRASING RULES
+
+- pose_instruction: One line only. Simply state the next posture name. May use "now", "alright", "let's", "so" to signal the transition into a new posture.
+- movement_instruction, alignment_instruction, breath_instruction, awareness_instruction: Do NOT use "now", "alright", "let's", "so", "next". These are refinements within the same posture—flow directly without transitional openers.
+
 Clearly guide movement and allow the practitioner to settle into the final posture.
 """
     prompt_template = PromptTemplate(template=template)
