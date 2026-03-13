@@ -46,17 +46,14 @@ While guiding the breath:
 
 STRUCTURED OUTPUT FORMAT
 
-Return a JSON array of micro-instructions. Each object must have:
-- type: One of "movement_instruction", "alignment_instruction", "breath_instruction", "awareness_instruction"
-- text: The spoken guidance for that step
+Return a JSON object with up to four optional fields. Each field, if present, must have "text" and "wait_time_in_seconds".
 
-Type meanings:
-- movement_instruction: Body positioning, how to move into the posture
+- movement_instruction: All body positioning and movement guidance in one combined text (e.g., "sit comfortably", "close your eyes")
 - alignment_instruction: Posture refinement cues
-- breath_instruction: Breathing guidance
+- breath_instruction: All breathing guidance in one combined text
 - awareness_instruction: Attention to sensations, gaze, inner focus
 
-Split the introduction into multiple micro-instructions. Use the type that best fits each part (e.g., movement for "sit comfortably", breath for "inhale slowly", awareness for "notice sensations").
+Use at most one object per type. Combine all guidance of the same intent into a single text. Choose wait_time_in_seconds (15-60) based on complexity. Order: movement, alignment, breath, awareness.
 """
     prompt_template = PromptTemplate(template=template)
     return prompt_template.format()

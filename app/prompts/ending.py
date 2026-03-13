@@ -27,6 +27,5 @@ Offer a short reflection that appreciates the time they gave to their practice a
 
 End the session with a gentle closing message that leaves the practitioner feeling grounded and ready to return to the rest of their day.
 """
-
     prompt_template = PromptTemplate(template=template)
     return prompt_template.format()

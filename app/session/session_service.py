@@ -187,7 +187,6 @@ class SessionService:
                     "category": "transition",
                     "type": micro["type"],
                     "text": micro["text"],
-                    "wait_time_in_seconds": micro["wait_time_in_seconds"],
                     "message_id": message_id,
                     "audio_path": audio_path,
                 })
@@ -212,7 +211,7 @@ class SessionService:
         await self.db["session"].update_one(
             {"_id": ObjectId(session_id)},
             {
-                "$push": {"instructions": {"type": "ending", "text": text, "message_id": message_id, "audio_path": audio_path}}, 
+                "$push": {"instructions": {"category": "ending", "text": text, "message_id": message_id, "audio_path": audio_path}}, 
                 "$set": {"generation_status": "completed"}
             }
         )

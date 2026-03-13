@@ -40,17 +40,16 @@ Encourage the practitioner to take a few calm breaths in this first posture befo
 
 OUTPUT FORMAT
 
-Return a JSON array of micro-instructions. Each object must have:
-- type: One of "movement_instruction", "alignment_instruction", "breath_instruction", "awareness_instruction"
-- text: The spoken guidance for that step
+Return a JSON object with up to four optional fields. Each field, if present, must have "text" and "wait_time_in_seconds".
+Use at most one object per type. Combine all guidance of the same intent into a single text.
 
-Type meanings:
-- movement_instruction: Body positioning, how to move into the posture
-- alignment_instruction: Posture refinement cues
-- breath_instruction: Breathing guidance
+- movement_instruction: All body positioning and movement guidance in one combined text (how to move into the posture)
+- alignment_instruction: All posture refinement cues in one combined text
+- breath_instruction: All breathing guidance in one combined text
 - awareness_instruction: Attention to sensations, gaze, inner focus
 
-Split the transition into 4 micro-instructions. The guidance should smoothly shift from stillness into the first posture.
+Choose wait_time_in_seconds (15-60) based on complexity. Order: movement, alignment, breath, awareness.
+The guidance should smoothly shift from stillness into the first posture.
         """
 
     else:
@@ -95,17 +94,16 @@ Encourage a few slow and steady breaths in the posture.
 
 OUTPUT FORMAT
 
-Return a JSON array of micro-instructions. Each object must have:
-- type: One of "movement_instruction", "alignment_instruction", "breath_instruction", "awareness_instruction"
-- text: The spoken guidance for that step
+Return a JSON object with up to four optional fields. Each field, if present, must have "text" and "wait_time_in_seconds".
+Use at most one object per type. Combine all guidance of the same intent into a single text.
 
-Type meanings:
-- movement_instruction: Body positioning during the transition
-- alignment_instruction: Posture refinement in the new pose
-- breath_instruction: Breathing guidance
+- movement_instruction: All body positioning during the transition in one combined text
+- alignment_instruction: All posture refinement in the new pose in one combined text
+- breath_instruction: All breathing guidance in one combined text
 - awareness_instruction: Attention to sensations, gaze, settling
 
-Split the transition into 4 micro-instructions. Clearly guide movement and allow the practitioner to settle into the final posture.
+Choose wait_time_in_seconds (15-60) based on complexity. Order: movement, alignment, breath, awareness.
+Clearly guide movement and allow the practitioner to settle into the final posture.
 """
     prompt_template = PromptTemplate(template=template)
     return prompt_template.format()

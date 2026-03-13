@@ -4,7 +4,7 @@ import openai
 from openai import OpenAI
 
 from app.prompts.developer import DEVELOPER_PROMPT
-from app.schemas.micro_instruction import MicroInstructionList
+from app.schemas.micro_instruction import StructuredInstructionOutput
 
 
 class OpenAIClient:
@@ -26,24 +26,31 @@ class OpenAIClient:
         model: str = "gpt-4o-mini",
         temperature: float = 0.7,
     ) -> dict:
-        """Return structured micro-instructions as a list of dicts with type, text, wait_time_in_seconds."""
+        """Return structured micro-instructions: at most one per type (movement, alignment, awareness, breath)."""
         completion = self._client.chat.completions.parse(
             model=model,
             messages=[
                 {"role": "system", "content": developer_prompt},
                 {"role": "user", "content": prompt},
             ],
-            response_format=MicroInstructionList,
+            response_format=StructuredInstructionOutput,
             temperature=temperature,
         )
 
         parsed = completion.choices[0].message.parsed
         message_id = getattr(completion, "id", None) or f"msg_{uuid.uuid4().hex}"
 
-        return {
-            "instructions": [m.model_dump() for m in parsed.instructions],
-            "message_id": message_id,
-        }
+        instructions = []
+        for type_name, block in [
+            ("movement_instruction", parsed.movement_instruction),
+            ("alignment_instruction", parsed.alignment_instruction),
+            ("breath_instruction", parsed.breath_instruction),
+            ("awareness_instruction", parsed.awareness_instruction),
+        ]:
+            if block is not None:
+                instructions.append({"type": type_name, "text": block.text})
+
+        return {"instructions": instructions, "message_id": message_id}
 
     def generate_text(
         self,
