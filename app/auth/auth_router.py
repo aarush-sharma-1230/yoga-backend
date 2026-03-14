@@ -26,13 +26,28 @@ async def get_user_data(user_data: GetUserData, service: AuthService = Depends(D
         raise CustomException()
 
 
+USER_ID_TEMP = "67d5632a3a9bdddef290e127"
+
+
 @router.post("/user/profile")
 async def save_profile(
     profile: UserProfilePayload, service: AuthService = Depends(DependencyInjector.get_auth_service)
 ):
     """Save user profile for personalized yoga sessions."""
     try:
-        user_id = "67d5632a3a9bdddef290e127"
-        return await service.save_profile(user_id=user_id, profile=profile)
+        return await service.save_profile(user_id=USER_ID_TEMP, profile=profile)
+    except Exception as e:
+        raise CustomException(str(e))
+
+
+@router.get("/user/profile")
+async def get_profile(service: AuthService = Depends(DependencyInjector.get_auth_service)):
+    """Fetch user profile. Returns MongoDB document structure."""
+    try:
+        return await service.get_profile(user_id=USER_ID_TEMP)
+    except RuntimeError as e:
+        if "not found" in str(e).lower():
+            raise CustomException(str(e))
+        raise CustomException(str(e))
     except Exception as e:
         raise CustomException(str(e))

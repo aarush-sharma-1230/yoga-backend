@@ -1,6 +1,20 @@
-from typing import Optional
+from typing import Literal, Optional
 
 from pydantic import BaseModel, EmailStr
+
+MedicalCondition = Literal[
+    "hypertension",
+    "glaucoma",
+    "vertigo",
+    "herniated_disc",
+    "osteoporosis",
+    "heart_condition",
+    "pregnancy",
+]
+ChronicPainArea = Literal["neck", "shoulders", "lower_back", "wrists", "knees", "ankles"]
+ExperienceLevel = Literal["beginner", "intermediate", "advanced"]
+ActivityLevel = Literal["sedentary", "active", "fleet"]
+PrimaryGoal = Literal["flexibility", "strength", "stress_relief", "spiritual"]
 
 
 class CreateUser(BaseModel):
@@ -14,16 +28,15 @@ class GetUserData(BaseModel):
 
 
 class HardPriorityStrategy(BaseModel):
-    medical_conditions: list[str]
-    chronic_pain_areas: list[str]
-    recent_surgery: Optional[str] = None
+    medical_conditions: list[MedicalCondition]
+    chronic_pain_areas: list[ChronicPainArea]
+    recent_surgery: Optional[bool] = None  # frontend sends true/false
 
 
 class MediumPriorityStrategy(BaseModel):
-    experience_level: Optional[str] = None
-    activity_level: Optional[str] = None
-    primary_goal: list[str]
-    mobility_limitations: list[str]
+    experience_level: Optional[ExperienceLevel] = None
+    activity_level: Optional[ActivityLevel] = None
+    primary_goal: list[PrimaryGoal]
 
 
 class UserProfilePayload(BaseModel):

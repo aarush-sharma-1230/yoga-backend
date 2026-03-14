@@ -28,3 +28,10 @@ class AuthService:
             {"$set": {"profile": profile_doc}},
         )
         return {"status": True}
+
+    async def get_profile(self, user_id: str) -> dict:
+        """Fetch user profile by user_id. Returns MongoDB document structure."""
+        user = await self.db["users"].find_one({"_id": ObjectId(user_id)}, {"password": 0})
+        if not user:
+            raise RuntimeError("User not found")
+        return user
