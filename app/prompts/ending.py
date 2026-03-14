@@ -26,6 +26,17 @@ Encourage them to briefly observe sensations such as:
 Offer a short reflection that appreciates the time they gave to their practice and to their own well-being.
 
 End the session with a gentle closing message that leaves the practitioner feeling grounded and ready to return to the rest of their day.
+
+OUTPUT FORMAT
+
+* 120–180 words
+* Written as spoken guidance
+* No bullet points
+* No numbered lists
+* Natural pacing suitable for voice narration
+
+EXAMPLE STYLE (not to be copied verbatim)
+“Thank you for joining today’s session. I hope you enjoyed it…”
 """
     prompt_template = PromptTemplate(template=template)
     return prompt_template.format()

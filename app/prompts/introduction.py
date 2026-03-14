@@ -1,8 +1,8 @@
 from langchain_core.prompts import PromptTemplate
 
 
-def get_introduction_prompt(sequence_name: str, user_name: str, first_posture_name: str = ""):
-    """first_posture_name: name of first posture in sequence, for pose_instruction teaser."""
+def get_introduction_prompt(sequence_name: str, user_name: str):
+    """Introduction to yoga session prompt"""
     template = f"""Your task is to generate a short spoken introduction for a yoga sequence.
 
 INPUT
@@ -44,22 +44,16 @@ While guiding the breath:
 5. Independent Practice
    Tell the user to continue this breathing rhythm on their own for about 2–3 minutes before beginning the sequence.
 
-STRUCTURED OUTPUT FORMAT
+OUTPUT REQUIREMENTS
 
-Return a JSON object with up to five optional fields. Each field, if present, must have "text".
+* 120–180 words
+* Written as spoken guidance
+* No bullet points
+* No numbered lists
+* Natural pacing suitable for voice narration
 
-Keep each instruction to one or two short lines maximum (roughly 15–25 words each).
-
-- movement_instruction (required): All body positioning and movement guidance in one combined text (e.g., "sit comfortably", "close your eyes"). May use transitional phrases like "now", "alright", "let's" since it marks a new phase.
-- alignment_instruction: Posture refinement cues
-- breath_instruction: All breathing guidance in one combined text
-- awareness_instruction: Attention to sensations, gaze, inner focus
-
-PHRASING RULES
-
-- movement_instruction: May use "now", "alright", "let's", "so" or similar phrases that signal a new phase or change. It comes first and can set the scene.
-- alignment_instruction, breath_instruction, awareness_instruction: Do NOT use "now", "alright", "let's", "so", "next" or words that imply a new beginning. These are continuous refinements within the same moment—flow directly into the guidance without transitional openers.
-</think>
+EXAMPLE STYLE (not to be copied verbatim)
+“Alright… welcome to today’s session. I’m really glad you’re here…”
 """
     prompt_template = PromptTemplate(template=template)
     return prompt_template.format()
