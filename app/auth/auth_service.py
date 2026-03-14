@@ -1,5 +1,5 @@
 from motor.motor_asyncio import AsyncIOMotorDatabase
-from app.auth.auth_interfaces import CreateUser, GetUserData
+from app.auth.auth_interfaces import CreateUser, GetUserData, UserProfilePayload
 from bson import ObjectId
 from app.globals.constants import pydantic_mongo_helper_projection
 
@@ -19,3 +19,12 @@ class AuthService:
             {"_id": ObjectId(user_data.user_id)}, {**pydantic_mongo_helper_projection, "full_name": 1, "email": 1}
         )
         return {"status": True, "user": user_obj}
+
+    async def save_profile(self, user_id: str, profile: UserProfilePayload) -> dict:
+        """Update user profile by user_id."""
+        profile_doc = profile.model_dump()
+        await self.db["users"].update_one(
+            {"_id": ObjectId(user_id)},
+            {"$set": {"profile": profile_doc}},
+        )
+        return {"status": True}
