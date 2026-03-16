@@ -25,12 +25,10 @@ class OpenAIClient:
         temperature: float = 0.7,
     ) -> dict:
         """Return structured micro-instructions: at most one per type (movement, alignment, awareness, breath)."""
+        messages = [ {"role": "system", "content": developer_prompt}, {"role": "user", "content": prompt}]
         completion = self._client.chat.completions.parse(
             model=model,
-            messages=[
-                {"role": "system", "content": developer_prompt},
-                {"role": "user", "content": prompt},
-            ],
+            messages=messages,
             response_format=StructuredInstructionOutput,
             temperature=temperature,
         )
