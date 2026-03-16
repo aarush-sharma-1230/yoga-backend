@@ -15,10 +15,12 @@ class QueryService:
     async def process_user_query(
         self, user_query: str, session_id: str, postures: list, current_posture_name, chat_history: list
     ):
+        session = await self.session_service.get_session_by_id(session_id)
+        user_id = str(session.get("user_id")) if session.get("user_id") else None
         prompt = _get_user_query_prompt(
             postures=postures, current_posture=current_posture_name, chat_history=chat_history, user_query=user_query
         )
-        llm_response = self.yoga_agent.generate_text(prompt=prompt)
+        llm_response = await self.yoga_agent.generate_text(prompt=prompt, user_id=user_id)
         llm_response_message_id = llm_response["message_id"]
         llm_response_text = llm_response["text"]
 
@@ -53,10 +55,13 @@ class QueryService:
     ):
         self._validate_transition_query(transition_from_idx=transition_from_idx, postures=postures)
 
+        session = await self.session_service.get_session_by_id(session_id)
+        user_id = str(session.get("user_id")) if session.get("user_id") else None
+
         prompt = _get_transition_query_prompt(
             transition_from_idx=transition_from_idx, postures=postures, chat_history=chat_history
         )
-        llm_response = self.yoga_agent.generate_text(prompt=prompt)
+        llm_response = await self.yoga_agent.generate_text(prompt=prompt, user_id=user_id)
         llm_response_message_id = llm_response["message_id"]
         llm_response_text = llm_response["text"]
 
@@ -89,7 +94,7 @@ class QueryService:
         sequence = await self.session_service.get_sequence_by_id(sequence_id=sequence_id)
 
         prompt = _get_start_user_session_prompt(sequence_name=sequence["name"])
-        llm_response = self.yoga_agent.generate_text(prompt=prompt)
+        llm_response = await self.yoga_agent.generate_text(prompt=prompt, user_id=str(user_id))
         llm_response_message_id = llm_response["message_id"]
         llm_response_text = llm_response["text"]
 
@@ -115,9 +120,10 @@ class QueryService:
 
     async def end_user_session(self, session_id: str):
         session = await self.session_service.get_session_by_id(session_id=session_id)
+        user_id = str(session.get("user_id")) if session.get("user_id") else None
 
         prompt = self._get_end_user_session_prompt(session_name=session["sequence"]["name"])
-        llm_response = self.yoga_agent.generate_text(prompt=prompt)
+        llm_response = await self.yoga_agent.generate_text(prompt=prompt, user_id=user_id)
         llm_response_message_id = llm_response["message_id"]
         llm_response_text = llm_response["text"]
 

@@ -1,13 +1,13 @@
-from app.agents.yoga_agent import YogaAgent
 from fastapi import Depends
-from app.database.mongo import MongoDB
+
+from app.agents.yoga_agent import YogaAgent
 from app.auth.auth_service import AuthService
+from app.database.mongo import MongoDB
+from app.llms.openai_client import OpenAIClient
 from app.query.query_service import QueryService
 from app.session.session_service import SessionService
 from app.sequence.sequence_service import SequenceService
 from app.websocket.websocket_service import ConnectionManager, WebSocketService
-from app.llms.openai_client import OpenAIClient
-from app.agents.yoga_agent import YogaAgent
 import os
 from dotenv import load_dotenv
 
@@ -22,11 +22,16 @@ class DependencyInjector:
         openai_api_key = os.getenv("OPENAI_API_KEY")
         return OpenAIClient(openai_api_key=openai_api_key)
 
-    def get_yoga_agent(openai_client=Depends(get_openai_client)):
-        return YogaAgent(llm_client=openai_client)
+    def get_yoga_agent(db=Depends(get_database), openai_client=Depends(get_openai_client)):
+        """Create AuthService and YogaAgent. YogaAgent uses AuthService.get_profile for developer prompt."""
+        auth_service = AuthService(db, yoga_agent=None)
+        yoga_agent = YogaAgent(llm_client=openai_client, auth_service=auth_service)
+        auth_service.yoga_agent = yoga_agent
+        return yoga_agent
 
-    def get_auth_service(db=Depends(get_database), yoga_agent=Depends(get_yoga_agent)):
-        return AuthService(db, yoga_agent=yoga_agent)
+    def get_auth_service(yoga_agent=Depends(get_yoga_agent)):
+        """Return AuthService (created and wired during YogaAgent construction)."""
+        return yoga_agent.auth_service
 
     def get_session_service(db=Depends(get_database), yoga_agent=Depends(get_yoga_agent)):
         return SessionService(db, yoga_agent=yoga_agent)

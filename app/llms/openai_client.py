@@ -3,7 +3,6 @@ import uuid
 import openai
 from openai import OpenAI
 
-from app.prompts.developer import DEVELOPER_PROMPT
 from app.schemas.micro_instruction import StructuredInstructionOutput
 
 
@@ -14,15 +13,13 @@ class OpenAIClient:
         self.text_model = "gpt-4o-mini"
         self.audio_model = "gpt-4o-mini-tts"
         self.temperature = 0.7
-        self.developer_prompt = DEVELOPER_PROMPT
-
         openai.api_key = openai_api_key
         self._client = OpenAI(api_key=openai_api_key)
 
     def generate_structured_text(
         self,
         prompt: str,
-        developer_prompt: str = DEVELOPER_PROMPT,
+        developer_prompt: str,
         model: str = "gpt-4o-mini",
         temperature: float = 0.7,
     ) -> dict:
@@ -54,7 +51,7 @@ class OpenAIClient:
     def generate_text(
         self,
         prompt: str,
-        developer_prompt: str = DEVELOPER_PROMPT,
+        developer_prompt: str,
         model: str = "gpt-4o-mini",
         temperature: float = 0.7,
     ) -> str:
@@ -65,7 +62,7 @@ class OpenAIClient:
             return response
 
     def generate_audio(
-        self, text: str, instructions: str = DEVELOPER_PROMPT, model: str = "gpt-4o-mini-tts", voice: str = "nova"
+        self, text: str, instructions: str | None = None, model: str = "gpt-4o-mini-tts", voice: str = "nova"
     ):
         if self.is_api_enabled:
             with openai.audio.speech.with_streaming_response.create(model=model, voice=voice, input=text) as response:

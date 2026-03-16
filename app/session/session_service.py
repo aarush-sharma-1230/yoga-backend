@@ -142,11 +142,12 @@ class SessionService:
 
         return str(audio_path)
 
-    async def _generate_intro(self, sequence_name: str, session_id: str, user_name: str) -> None:
+    async def _generate_intro(
+        self, sequence_name: str, session_id: str, user_name: str, user_id: str | None = None
+    ) -> None:
         """Generate introduction micro-instructions and audio, store as flat array with category=introduction."""
-
         prompt = get_introduction_prompt(sequence_name=sequence_name, user_name=user_name)
-        response = self.yoga_agent.generate_text(prompt=prompt)
+        response = await self.yoga_agent.generate_text(prompt=prompt, user_id=user_id)
         text = response["text"]
         message_id = response["message_id"]
         audio_chunks = self.yoga_agent.generate_audio_from_text(text)
@@ -158,12 +159,13 @@ class SessionService:
             {"$push": {"instructions": {"category": "intro", "text": text, "message_id": message_id, "audio_path": audio_path}}},
         )
 
-    async def _generate_transitions(self, postures: list, session_id: str) -> None:
+    async def _generate_transitions(
+        self, postures: list, session_id: str, user_id: str | None = None
+    ) -> None:
         """Generate transition micro-instructions and audio, store as flat array with category=transition."""
-
         for from_idx in range(-1, len(postures) - 1):
             transition_prompt = get_transition_prompt(transition_from_idx=from_idx, postures=postures)
-            response = self.yoga_agent.generate_structured_text(prompt=transition_prompt)
+            response = await self.yoga_agent.generate_structured_text(prompt=transition_prompt, user_id=user_id)
             instructions = response["instructions"]
             base_message_id = response["message_id"]
 
@@ -186,11 +188,12 @@ class SessionService:
                 {"$push": {"instructions": {"$each": flat_items}}},
             )
 
-    async def _generate_ending_note(self, sequence_name: str, session_id: str) -> None:
+    async def _generate_ending_note(
+        self, sequence_name: str, session_id: str, user_id: str | None = None
+    ) -> None:
         """Generate ending micro-instructions and audio, store as flat array with category=ending."""
-        """Generate ending text for the session."""
         prompt = get_ending_prompt(sequence_name=sequence_name)
-        response = self.yoga_agent.generate_text(prompt=prompt)
+        response = await self.yoga_agent.generate_text(prompt=prompt, user_id=user_id)
         text = response["text"]
         message_id = response["message_id"]
         audio_chunks = self.yoga_agent.generate_audio_from_text(text)
@@ -205,11 +208,13 @@ class SessionService:
             }
         )
 
-    async def _generate_remaining_guidance_background(self, session_id: str, postures: list, sequence_name: str, user_name: str):
+    async def _generate_remaining_guidance_background(
+        self, session_id: str, postures: list, sequence_name: str, user_name: str, user_id: str | None = None
+    ):
         """Generate transitions and ending text, then generate audio in background."""
-        await self._generate_intro(sequence_name, session_id, user_name)
-        await self._generate_transitions(postures, session_id)
-        await self._generate_ending_note(sequence_name, session_id)
+        await self._generate_intro(sequence_name, session_id, user_name, user_id)
+        await self._generate_transitions(postures, session_id, user_id)
+        await self._generate_ending_note(sequence_name, session_id, user_id)
 
     def _create_session_document(self, user_id: str, sequence: dict) -> dict:
         """Create session document with intro only"""
@@ -243,7 +248,10 @@ class SessionService:
 
         session_id_str = str(session_created.inserted_id)
 
-        asyncio.create_task(self._generate_remaining_guidance_background(session_id_str, postures, sequence["name"], user_name))
+        user_id_str = str(user_id)
+        asyncio.create_task(
+            self._generate_remaining_guidance_background(session_id_str, postures, sequence["name"], user_name, user_id_str)
+        )
 
         trace("Session started", session_id=session_id_str)
         return {

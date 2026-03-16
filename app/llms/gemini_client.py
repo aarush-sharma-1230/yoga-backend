@@ -4,7 +4,7 @@ import uuid
 from google import genai
 from google.genai import types
 
-from app.prompts.developer import DEVELOPER_PROMPT
+from app.prompts.developer import get_developer_prompt
 
 
 class GeminiService:
@@ -19,10 +19,11 @@ class GeminiService:
     def generate_text(
         self,
         prompt: str,
-        developer_prompt: str = DEVELOPER_PROMPT,
+        developer_prompt: str | None = None,
         model: str = "gemini-2.5-flash",
         temperature: float = 0.7,
     ) -> dict:
+        dp = developer_prompt if developer_prompt is not None else get_developer_prompt()
         if not self.is_api_enabled or not self.client:
             text = "This is a mock response from Gemini API."
             return {
@@ -35,7 +36,7 @@ class GeminiService:
                 model=model,
                 contents=prompt,
                 config=types.GenerateContentConfig(
-                    system_instruction=developer_prompt,
+                    system_instruction=dp,
                     temperature=temperature,
                 ),
             )

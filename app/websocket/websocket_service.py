@@ -52,7 +52,7 @@ class WebSocketService:
         return waiting_time
 
     async def _stream_audio(self, websocket: WebSocket, text: str):
-        for chunk in self.yoga_agent.generate_audio(text):
+        for chunk in self.yoga_agent.generate_audio_from_text(text):
             await self.connection_manager.send_audio_bytes(chunk, websocket)
 
     async def _send_response(self, websocket: WebSocket, response: dict, stream: bool = True):

@@ -1,3 +1,5 @@
+import asyncio
+
 from motor.motor_asyncio import AsyncIOMotorDatabase
 from app.auth.auth_interfaces import CreateUser, GetUserData, UserProfilePayload
 from bson import ObjectId
@@ -23,22 +25,35 @@ class AuthService:
         return {"status": True, "user": user_obj}
 
     async def save_profile(self, user_id: str, profile: UserProfilePayload) -> dict:
-        """Update user profile by user_id. Generates LLM summaries for Hard and Medium priority strategies and saves them."""
+        """Save profile immediately. LLM summaries are generated in a background task."""
         profile_doc = profile.model_dump()
-
-        if self.yoga_agent:
-            hard_prompt = get_hard_priority_summary_prompt(profile_doc["hard_priority_strategy"])
-            medium_prompt = get_medium_priority_summary_prompt(profile_doc["medium_priority_strategy"])
-            hard_resp = self.yoga_agent.generate_text(prompt=hard_prompt)
-            medium_resp = self.yoga_agent.generate_text(prompt=medium_prompt)
-            profile_doc["hard_priority_summary"] = hard_resp["text"]
-            profile_doc["medium_priority_summary"] = medium_resp["text"]
-
         await self.db["users"].update_one(
             {"_id": ObjectId(user_id)},
             {"$set": {"profile": profile_doc}},
         )
         return {"status": True}
+
+    async def generate_summaries_and_update_profile(
+        self, user_id: str, hard_strategy: dict, medium_strategy: dict
+    ) -> None:
+        """Background task: generate both LLM summaries in parallel and update profile."""
+        if not self.yoga_agent:
+            return
+        hard_prompt = get_hard_priority_summary_prompt(hard_strategy)
+        medium_prompt = get_medium_priority_summary_prompt(medium_strategy)
+        hard_resp, medium_resp = await asyncio.gather(
+            self.yoga_agent.generate_text(hard_prompt),
+            self.yoga_agent.generate_text(medium_prompt),
+        )
+        await self.db["users"].update_one(
+            {"_id": ObjectId(user_id)},
+            {
+                "$set": {
+                    "profile.hard_priority_summary": hard_resp["text"],
+                    "profile.medium_priority_summary": medium_resp["text"],
+                }
+            },
+        )
 
     async def get_profile(self, user_id: str) -> dict:
         """Fetch user profile by user_id. Returns MongoDB document structure."""
