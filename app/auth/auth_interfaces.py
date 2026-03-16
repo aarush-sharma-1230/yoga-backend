@@ -30,13 +30,19 @@ class GetUserData(BaseModel):
 class HardPriorityStrategy(BaseModel):
     medical_conditions: list[MedicalCondition]
     chronic_pain_areas: list[ChronicPainArea]
-    recent_surgery: Optional[bool] = None  # frontend sends true/false
+    recent_surgery: Optional[bool] = None
+    medical_conditions_notes: Optional[str] = None
+    chronic_pain_areas_notes: Optional[str] = None
+    recent_surgery_notes: Optional[str] = None
 
 
 class MediumPriorityStrategy(BaseModel):
     experience_level: Optional[ExperienceLevel] = None
     activity_level: Optional[ActivityLevel] = None
     primary_goal: list[PrimaryGoal]
+    experience_level_notes: Optional[str] = None
+    activity_level_notes: Optional[str] = None
+    primary_goal_notes: Optional[str] = None
 
 
 class UserProfilePayload(BaseModel):
