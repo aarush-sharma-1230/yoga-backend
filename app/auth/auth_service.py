@@ -8,9 +8,9 @@ from app.prompts.profile_summaries import get_hard_priority_summary_prompt, get_
 
 
 class AuthService:
-    def __init__(self, db: AsyncIOMotorDatabase, yoga_agent=None):
+    def __init__(self, db: AsyncIOMotorDatabase, summary_agent=None):
         self.db = db
-        self.yoga_agent = yoga_agent
+        self.summary_agent = summary_agent
 
     async def create_user(self, user: CreateUser):
         user_obj = user.model_dump()
@@ -33,13 +33,13 @@ class AuthService:
 
     async def generate_summaries_and_update_profile(self, user_id: str, hard_strategy: dict, medium_strategy: dict) -> None:
         """Background task: generate both LLM summaries in parallel and update profile."""
-        if not self.yoga_agent:
+        if not self.summary_agent:
             return
         hard_prompt = get_hard_priority_summary_prompt(hard_strategy)
         medium_prompt = get_medium_priority_summary_prompt(medium_strategy)
         hard_resp, medium_resp = await asyncio.gather(
-            self.yoga_agent.generate_text(hard_prompt),
-            self.yoga_agent.generate_text(medium_prompt),
+            self.summary_agent.generate_summary(hard_prompt),
+            self.summary_agent.generate_summary(medium_prompt),
         )
         await self.db["users"].update_one(
             {"_id": ObjectId(user_id)},
