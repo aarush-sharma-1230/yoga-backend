@@ -25,8 +25,8 @@ class DependencyInjector:
     def get_yoga_agent(openai_client=Depends(get_openai_client)):
         return YogaAgent(llm_client=openai_client)
 
-    def get_auth_service(db=Depends(get_database)):
-        return AuthService(db)
+    def get_auth_service(db=Depends(get_database), yoga_agent=Depends(get_yoga_agent)):
+        return AuthService(db, yoga_agent=yoga_agent)
 
     def get_session_service(db=Depends(get_database), yoga_agent=Depends(get_yoga_agent)):
         return SessionService(db, yoga_agent=yoga_agent)
