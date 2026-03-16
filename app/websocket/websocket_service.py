@@ -77,9 +77,7 @@ class WebSocketService:
             chat_history = session["chat_history"]["messages"]
             current_posture_idx = current_posture["idx"] if current_posture else -1
 
-            upcoming_response = await self.query_service.process_transition_query(
-                current_posture_idx, session_id, postures, chat_history
-            )
+            upcoming_response = await self.query_service.process_transition_query(current_posture_idx, session_id, postures, chat_history)
 
             time_taken_to_generate_response = (datetime.utcnow() - last_response_sent_at).total_seconds()
             await asyncio.sleep(60 - time_taken_to_generate_response)
@@ -115,16 +113,12 @@ class WebSocketService:
 
                 if message["type"] == "start_session":
                     try:
-                        response = await self.query_service.start_user_session(
-                            user_id=user_id, sequence_id=message["sequence_id"]
-                        )
+                        response = await self.query_service.start_user_session(user_id=user_id, sequence_id=message["sequence_id"])
 
                         session_id = response["session_id"]
                         await self._send_response(websocket, response)
 
-                        session_task = asyncio.create_task(
-                            self.run_session(websocket, user_id, session_id, resume_session)
-                        )
+                        session_task = asyncio.create_task(self.run_session(websocket, user_id, session_id, resume_session))
                         await session_task
 
                         await self.close_connection(websocket, session_id, user_id, session_task)

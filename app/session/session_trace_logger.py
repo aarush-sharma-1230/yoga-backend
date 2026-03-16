@@ -2,6 +2,7 @@
 Temporary trace logging for session generation flow. Remove this module and all
 trace() calls when debugging is complete.
 """
+
 from datetime import datetime
 from zoneinfo import ZoneInfo
 

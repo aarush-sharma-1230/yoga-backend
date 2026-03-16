@@ -73,7 +73,7 @@ class SessionService:
             for chunk in self.yoga_agent.generate_audio_from_text(text):
                 audio_file.write(chunk)
                 queue.put_nowait(chunk)
-                
+
         queue.put_nowait(sentinel)
 
     async def _stream_generated_audio(self, session_id: str, message_id: str, text: str, file_path: Path):
@@ -142,9 +142,7 @@ class SessionService:
 
         return str(audio_path)
 
-    async def _generate_intro(
-        self, sequence_name: str, session_id: str, user_name: str, user_id: str | None = None
-    ) -> None:
+    async def _generate_intro(self, sequence_name: str, session_id: str, user_name: str, user_id: str | None = None) -> None:
         """Generate introduction micro-instructions and audio, store as flat array with category=introduction."""
         prompt = get_introduction_prompt(sequence_name=sequence_name, user_name=user_name)
         response = await self.yoga_agent.generate_text(prompt=prompt, user_id=user_id)
@@ -159,9 +157,7 @@ class SessionService:
             {"$push": {"instructions": {"category": "intro", "text": text, "message_id": message_id, "audio_path": audio_path}}},
         )
 
-    async def _generate_transitions(
-        self, postures: list, session_id: str, user_id: str | None = None
-    ) -> None:
+    async def _generate_transitions(self, postures: list, session_id: str, user_id: str | None = None) -> None:
         """Generate transition micro-instructions and audio, store as flat array with category=transition."""
         for from_idx in range(-1, len(postures) - 1):
             transition_prompt = get_transition_prompt(transition_from_idx=from_idx, postures=postures)
@@ -174,13 +170,15 @@ class SessionService:
                 message_id = f"{base_message_id}_{i}"
                 audio_chunks = self.yoga_agent.generate_audio_from_text(micro["text"])
                 audio_path = self._save_audio_to_file(session_id, message_id, audio_chunks)
-                flat_items.append({
-                    "category": "transition",
-                    "type": micro["type"],
-                    "text": micro["text"],
-                    "message_id": message_id,
-                    "audio_path": audio_path,
-                })
+                flat_items.append(
+                    {
+                        "category": "transition",
+                        "type": micro["type"],
+                        "text": micro["text"],
+                        "message_id": message_id,
+                        "audio_path": audio_path,
+                    }
+                )
 
             trace(f"Saving transition: from_idx={from_idx}", session_id=session_id)
             await self.db["session"].update_one(
@@ -188,9 +186,7 @@ class SessionService:
                 {"$push": {"instructions": {"$each": flat_items}}},
             )
 
-    async def _generate_ending_note(
-        self, sequence_name: str, session_id: str, user_id: str | None = None
-    ) -> None:
+    async def _generate_ending_note(self, sequence_name: str, session_id: str, user_id: str | None = None) -> None:
         """Generate ending micro-instructions and audio, store as flat array with category=ending."""
         prompt = get_ending_prompt(sequence_name=sequence_name)
         response = await self.yoga_agent.generate_text(prompt=prompt, user_id=user_id)
@@ -202,15 +198,10 @@ class SessionService:
         trace("Saving ending note", session_id=session_id)
         await self.db["session"].update_one(
             {"_id": ObjectId(session_id)},
-            {
-                "$push": {"instructions": {"category": "ending", "text": text, "message_id": message_id, "audio_path": audio_path}}, 
-                "$set": {"generation_status": "completed"}
-            }
+            {"$push": {"instructions": {"category": "ending", "text": text, "message_id": message_id, "audio_path": audio_path}}, "$set": {"generation_status": "completed"}},
         )
 
-    async def _generate_remaining_guidance_background(
-        self, session_id: str, postures: list, sequence_name: str, user_name: str, user_id: str | None = None
-    ):
+    async def _generate_remaining_guidance_background(self, session_id: str, postures: list, sequence_name: str, user_name: str, user_id: str | None = None) -> None:
         """Generate transitions and ending text, then generate audio in background."""
         await self._generate_intro(sequence_name, session_id, user_name, user_id)
         await self._generate_transitions(postures, session_id, user_id)
@@ -249,14 +240,12 @@ class SessionService:
         session_id_str = str(session_created.inserted_id)
 
         user_id_str = str(user_id)
-        asyncio.create_task(
-            self._generate_remaining_guidance_background(session_id_str, postures, sequence["name"], user_name, user_id_str)
-        )
+        asyncio.create_task(self._generate_remaining_guidance_background(session_id_str, postures, sequence["name"], user_name, user_id_str))
 
         trace("Session started", session_id=session_id_str)
         return {
-                "status": True,
-                "session_id": session_id_str,
-                "sequence": sequence,
-                "generation_status": "in_progress",
+            "status": True,
+            "session_id": session_id_str,
+            "sequence": sequence,
+            "generation_status": "in_progress",
         }

@@ -18,9 +18,7 @@ async def get_sequences(service: SequenceService = Depends(DependencyInjector.ge
 
 
 @router.post("/sequence/get_sequence")
-async def get_sequence(
-    sequence_data: SequenceData, service: SequenceService = Depends(DependencyInjector.get_sequence_service)
-):
+async def get_sequence(sequence_data: SequenceData, service: SequenceService = Depends(DependencyInjector.get_sequence_service)):
     try:
         sequence_id = sequence_data.sequence_id
         response = await service.get_sequence(sequence_id)

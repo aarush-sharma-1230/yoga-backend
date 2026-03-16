@@ -36,9 +36,7 @@ class DependencyInjector:
     def get_session_service(db=Depends(get_database), yoga_agent=Depends(get_yoga_agent)):
         return SessionService(db, yoga_agent=yoga_agent)
 
-    def get_query_service(
-        db=Depends(get_database), session_service=Depends(get_session_service), yoga_agent=Depends(get_yoga_agent)
-    ):
+    def get_query_service(db=Depends(get_database), session_service=Depends(get_session_service), yoga_agent=Depends(get_yoga_agent)):
         return QueryService(db, session_service, yoga_agent)
 
     def get_sequence_service(db=Depends(get_database)):

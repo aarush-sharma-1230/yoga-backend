@@ -10,9 +10,7 @@ router = APIRouter()
 
 
 @router.post("/session/start")
-async def start_user_session(
-    series_data: SeriesData, service: SessionService = Depends(DependencyInjector.get_session_service)
-):
+async def start_user_session(series_data: SeriesData, service: SessionService = Depends(DependencyInjector.get_session_service)):
     """
     Start a new yoga session.
     Pre-generates all guidance texts (intro, transitions, ending) and stores them in the session document.
@@ -35,9 +33,7 @@ async def start_user_session(
 
 
 @router.get("/session/{session_id}")
-async def get_session(
-    session_id: str, service: SessionService = Depends(DependencyInjector.get_session_service)
-):
+async def get_session(session_id: str, service: SessionService = Depends(DependencyInjector.get_session_service)):
     """Return session info by session_id. Excludes instructions."""
     try:
         response = await service.get_session_info(session_id)
@@ -51,9 +47,7 @@ async def get_session(
 
 
 @router.post("/session/get_instructions")
-async def get_instructions(
-    data: GetInstructionsData, service: SessionService = Depends(DependencyInjector.get_session_service)
-):
+async def get_instructions(data: GetInstructionsData, service: SessionService = Depends(DependencyInjector.get_session_service)):
     """Return instructions for a session. Excludes audio_path from each instruction."""
     try:
         instructions = await service.get_instructions(data.session_id)

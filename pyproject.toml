@@ -18,7 +18,7 @@ dependencies = [
 ]
 
 [tool.black]
-line-length = 120
+line-length = 180
 target-version = ['py310']
 include = '\.pyi?$'
 

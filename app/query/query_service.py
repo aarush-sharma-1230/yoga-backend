@@ -12,14 +12,10 @@ class QueryService:
         self.session_service = session_service
         self.yoga_agent = yoga_agent
 
-    async def process_user_query(
-        self, user_query: str, session_id: str, postures: list, current_posture_name, chat_history: list
-    ):
+    async def process_user_query(self, user_query: str, session_id: str, postures: list, current_posture_name, chat_history: list):
         session = await self.session_service.get_session_by_id(session_id)
         user_id = str(session.get("user_id")) if session.get("user_id") else None
-        prompt = _get_user_query_prompt(
-            postures=postures, current_posture=current_posture_name, chat_history=chat_history, user_query=user_query
-        )
+        prompt = _get_user_query_prompt(postures=postures, current_posture=current_posture_name, chat_history=chat_history, user_query=user_query)
         llm_response = await self.yoga_agent.generate_text(prompt=prompt, user_id=user_id)
         llm_response_message_id = llm_response["message_id"]
         llm_response_text = llm_response["text"]
@@ -50,17 +46,13 @@ class QueryService:
 
         return True
 
-    async def process_transition_query(
-        self, transition_from_idx: int, session_id: str, postures: list, chat_history: list
-    ):
+    async def process_transition_query(self, transition_from_idx: int, session_id: str, postures: list, chat_history: list):
         self._validate_transition_query(transition_from_idx=transition_from_idx, postures=postures)
 
         session = await self.session_service.get_session_by_id(session_id)
         user_id = str(session.get("user_id")) if session.get("user_id") else None
 
-        prompt = _get_transition_query_prompt(
-            transition_from_idx=transition_from_idx, postures=postures, chat_history=chat_history
-        )
+        prompt = _get_transition_query_prompt(transition_from_idx=transition_from_idx, postures=postures, chat_history=chat_history)
         llm_response = await self.yoga_agent.generate_text(prompt=prompt, user_id=user_id)
         llm_response_message_id = llm_response["message_id"]
         llm_response_text = llm_response["text"]
@@ -107,9 +99,7 @@ class QueryService:
                 }
             ]
         }
-        session_id = await self.session_service.create_new_session(
-            user_id=user_id, sequence=sequence, chat_history=chat_history
-        )
+        session_id = await self.session_service.create_new_session(user_id=user_id, sequence=sequence, chat_history=chat_history)
 
         return {
             "status": True,

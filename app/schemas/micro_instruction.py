@@ -11,6 +11,7 @@ MicroInstructionType = Literal[
 
 class InstructionBlock(BaseModel):
     """Single instruction block with text. One per type."""
+
     text: str
 
 

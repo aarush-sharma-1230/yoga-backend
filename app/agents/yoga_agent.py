@@ -24,24 +24,16 @@ class YogaAgent:
         medium = profile.get("medium_priority_summary") or ""
         return get_developer_prompt(hard, medium)
 
-    async def generate_structured_text(
-        self, prompt: str, user_id: Optional[str] = None
-    ) -> Dict[str, Any]:
+    async def generate_structured_text(self, prompt: str, user_id: Optional[str] = None) -> Dict[str, Any]:
         """Return structured micro-instructions from the LLM. Fetches profile and builds developer prompt internally."""
         dp = await self._build_developer_prompt(user_id)
-        response = await asyncio.to_thread(
-            self.llm_client.generate_structured_text, prompt=prompt, developer_prompt=dp
-        )
+        response = await asyncio.to_thread(self.llm_client.generate_structured_text, prompt=prompt, developer_prompt=dp)
         return response
 
-    async def generate_text(
-        self, prompt: str, user_id: Optional[str] = None
-    ) -> Dict[str, Any]:
+    async def generate_text(self, prompt: str, user_id: Optional[str] = None) -> Dict[str, Any]:
         """Generate text from LLM. Fetches profile and builds developer prompt internally."""
         dp = await self._build_developer_prompt(user_id)
-        response = await asyncio.to_thread(
-            self.llm_client.generate_text, prompt=prompt, developer_prompt=dp
-        )
+        response = await asyncio.to_thread(self.llm_client.generate_text, prompt=prompt, developer_prompt=dp)
         text = self._extract_text(response)
         return {
             **response,

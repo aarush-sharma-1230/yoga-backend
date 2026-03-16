@@ -1,5 +1,6 @@
 from langchain_core.prompts import PromptTemplate
 
+
 def get_ending_prompt(sequence_name: str):
     template = f"""Your task is to generate the closing guidance for a yoga session.
 

@@ -61,9 +61,7 @@ class OpenAIClient:
             response = response.to_dict()
             return response
 
-    def generate_audio(
-        self, text: str, instructions: str | None = None, model: str = "gpt-4o-mini-tts", voice: str = "nova"
-    ):
+    def generate_audio(self, text: str, instructions: str | None = None, model: str = "gpt-4o-mini-tts", voice: str = "nova"):
         if self.is_api_enabled:
             with openai.audio.speech.with_streaming_response.create(model=model, voice=voice, input=text) as response:
                 for chunk in response.iter_bytes():

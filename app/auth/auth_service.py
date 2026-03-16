@@ -19,9 +19,7 @@ class AuthService:
         return {"status": True, "user_id": str(result.inserted_id)}
 
     async def get_user_data(self, user_data: GetUserData):
-        user_obj = await self.db["users"].find_one(
-            {"_id": ObjectId(user_data.user_id)}, {**pydantic_mongo_helper_projection, "full_name": 1, "email": 1}
-        )
+        user_obj = await self.db["users"].find_one({"_id": ObjectId(user_data.user_id)}, {**pydantic_mongo_helper_projection, "full_name": 1, "email": 1})
         return {"status": True, "user": user_obj}
 
     async def save_profile(self, user_id: str, profile: UserProfilePayload) -> dict:
@@ -33,9 +31,7 @@ class AuthService:
         )
         return {"status": True}
 
-    async def generate_summaries_and_update_profile(
-        self, user_id: str, hard_strategy: dict, medium_strategy: dict
-    ) -> None:
+    async def generate_summaries_and_update_profile(self, user_id: str, hard_strategy: dict, medium_strategy: dict) -> None:
         """Background task: generate both LLM summaries in parallel and update profile."""
         if not self.yoga_agent:
             return
