@@ -4,7 +4,8 @@ import uuid
 from google import genai
 from google.genai import types
 
-from app.prompts.developer import get_developer_prompt
+from app.prompts.developer import get_yoga_coordinator_developer_prompt
+from app.prompts.developer.profile_context import ProfileContext
 
 
 class GeminiService:
@@ -23,7 +24,7 @@ class GeminiService:
         model: str = "gemini-2.5-flash",
         temperature: float = 0.7,
     ) -> dict:
-        dp = developer_prompt if developer_prompt is not None else get_developer_prompt()
+        dp = developer_prompt if developer_prompt is not None else get_yoga_coordinator_developer_prompt(ProfileContext("", "", ""))
         if not self.is_api_enabled or not self.client:
             text = "This is a mock response from Gemini API."
             return {

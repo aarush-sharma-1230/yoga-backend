@@ -1,7 +1,10 @@
+"""User prompt: ending guidance for yoga session."""
+
 from langchain_core.prompts import PromptTemplate
 
 
-def get_ending_prompt(sequence_name: str):
+def get_ending_prompt(sequence_name: str) -> str:
+    """Build ending prompt for closing a yoga session."""
     template = f"""Your task is to generate the closing guidance for a yoga session.
 
 INPUT
@@ -30,14 +33,14 @@ End the session with a gentle closing message that leaves the practitioner feeli
 
 OUTPUT FORMAT
 
-* 120–180 words
+* 100-120 words
 * Written as spoken guidance
 * No bullet points
 * No numbered lists
 * Natural pacing suitable for voice narration
 
 EXAMPLE STYLE (not to be copied verbatim)
-“Thank you for joining today’s session. I hope you enjoyed it…”
+"Thank you for joining today's session. I hope you enjoyed it…"
 """
     prompt_template = PromptTemplate(template=template)
     return prompt_template.format()

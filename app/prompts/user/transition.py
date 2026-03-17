@@ -1,7 +1,10 @@
+"""User prompt: transition between yoga postures."""
+
 from langchain_core.prompts import PromptTemplate
 
 
-def get_transition_prompt(transition_from_idx: int, postures: list):
+def get_transition_prompt(transition_from_idx: int, postures: list) -> str:
+    """Build transition prompt for moving from one posture to the next."""
     postures_context = ", ".join([f"{posture['name']}" for posture in postures])
 
     if transition_from_idx == -1:
@@ -20,7 +23,7 @@ Gently transition the practitioner from a calm breathing state into the first po
 
 INSTRUCTIONS
 
-Begin by softly bringing the practitioner’s awareness back from the breathing exercise.
+Begin by softly bringing the practitioner's awareness back from the breathing exercise.
 
 Invite them to slowly deepen their breath and become aware of their body again.
 

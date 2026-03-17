@@ -4,7 +4,6 @@ from motor.motor_asyncio import AsyncIOMotorDatabase
 from app.auth.auth_interfaces import CreateUser, GetUserData, UserProfilePayload
 from bson import ObjectId
 from app.globals.constants import pydantic_mongo_helper_projection
-from app.prompts.profile_summaries import get_hard_priority_summary_prompt, get_medium_priority_summary_prompt
 
 
 class AuthService:
@@ -35,11 +34,9 @@ class AuthService:
         """Background task: generate both LLM summaries in parallel and update profile."""
         if not self.summary_agent:
             return
-        hard_prompt = get_hard_priority_summary_prompt(hard_strategy)
-        medium_prompt = get_medium_priority_summary_prompt(medium_strategy)
         hard_resp, medium_resp = await asyncio.gather(
-            self.summary_agent.generate_summary(hard_prompt),
-            self.summary_agent.generate_summary(medium_prompt),
+            self.summary_agent.generate_summary(hard_strategy, "hard"),
+            self.summary_agent.generate_summary(medium_strategy, "medium"),
         )
         await self.db["users"].update_one(
             {"_id": ObjectId(user_id)},

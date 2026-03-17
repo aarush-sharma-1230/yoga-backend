@@ -1,4 +1,4 @@
-"""Prompt for generating a custom yoga sequence from user profile and posture catalogue."""
+"""User prompt: custom yoga sequence generation."""
 
 from typing import Optional
 
@@ -36,10 +36,7 @@ def get_custom_sequence_prompt(
     duration_minutes: Optional[int] = None,
     focus: Optional[str] = None,
 ) -> str:
-    """
-    Build the user prompt for custom sequence generation.
-    The developer prompt (from get_developer_prompt) already contains user profile and safety laws.
-    """
+    """Build the user prompt for custom sequence generation."""
     catalogue_lines = [_format_posture_entry(p) for p in postures]
     catalogue = "\n".join(catalogue_lines)
 

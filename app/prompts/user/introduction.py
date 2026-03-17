@@ -1,8 +1,10 @@
+"""User prompt: introduction to yoga session."""
+
 from langchain_core.prompts import PromptTemplate
 
 
-def get_introduction_prompt(sequence_name: str, user_name: str):
-    """Introduction to yoga session prompt"""
+def get_introduction_prompt(sequence_name: str, user_name: str) -> str:
+    """Introduction to yoga session prompt."""
     template = f"""Your task is to generate a short spoken introduction for a yoga sequence.
 
 INPUT
@@ -53,7 +55,7 @@ OUTPUT REQUIREMENTS
 * Natural pacing suitable for voice narration
 
 EXAMPLE STYLE (not to be copied verbatim)
-“Alright… welcome to today’s session. I’m really glad you’re here…”
+"Alright… welcome to today's session. I'm really glad you're here…"
 """
     prompt_template = PromptTemplate(template=template)
     return prompt_template.format()

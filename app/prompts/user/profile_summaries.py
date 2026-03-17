@@ -1,8 +1,4 @@
-"""Prompts to generate concise LLM summaries from user profile strategies.
-
-These summaries are stored in the user profile and injected into session-start prompts
-to personalize postures and modifications (avoid contraindications, match experience level, etc.).
-"""
+"""User prompts: profile strategy summarization."""
 
 import json
 

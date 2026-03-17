@@ -10,7 +10,7 @@ from app.posture_docs.prone_postures import PRONE_POSTURES
 from app.posture_docs.seated_postures import SEATED_POSTURES
 from app.posture_docs.standing_postures import STANDING_POSTURES
 from app.posture_docs.supine_postures import SUPINE_POSTURES
-from app.prompts.custom_sequence import get_custom_sequence_prompt
+from app.prompts.user import get_custom_sequence_prompt
 from app.schemas.custom_sequence import CustomSequenceOutput
 
 ALL_POSTURES = STANDING_POSTURES + SEATED_POSTURES + SUPINE_POSTURES + PRONE_POSTURES + INVERSION_POSTURES

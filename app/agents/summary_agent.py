@@ -1,21 +1,39 @@
-"""Agent for summarizing user profile data (medical, experience) into concise summaries."""
+"""
+Summary Agent: summarizes user profile strategies into concise text.
+
+Fetches context (strategy dict) from caller and passes it to user prompt builder.
+Uses static developer prompt. Parallel with YogaCoordinator and SequenceComposer.
+"""
 
 import asyncio
-from typing import Any, Dict
+from typing import Any, Dict, Literal
 
-from app.prompts.summary_system import SUMMARY_SYSTEM_PROMPT
+from app.prompts.developer import get_summary_developer_prompt
+from app.prompts.user.profile_summaries import (
+    get_hard_priority_summary_prompt,
+    get_medium_priority_summary_prompt,
+)
 
 
 class SummaryAgent:
     def __init__(self, llm_client):
         self.llm_client = llm_client
 
-    async def generate_summary(self, prompt: str) -> Dict[str, Any]:
-        """Generate a summary from the given prompt. Uses a summarizer system prompt."""
+    async def generate_summary(
+        self,
+        strategy: dict,
+        summary_type: Literal["hard", "medium"],
+    ) -> Dict[str, Any]:
+        """Generate a summary from the given strategy. Fetches prompts and calls LLM."""
+        if summary_type == "hard":
+            user_prompt = get_hard_priority_summary_prompt(strategy)
+        else:
+            user_prompt = get_medium_priority_summary_prompt(strategy)
+        developer_prompt = get_summary_developer_prompt()
         response = await asyncio.to_thread(
             self.llm_client.generate_text,
-            prompt=prompt,
-            developer_prompt=SUMMARY_SYSTEM_PROMPT,
+            prompt=user_prompt,
+            developer_prompt=developer_prompt,
         )
         text = self._extract_text(response)
         return {"text": text, "message_id": response.get("output", [{}])[0].get("id")}

@@ -5,9 +5,7 @@ from motor.motor_asyncio import AsyncIOMotorDatabase
 from bson import ObjectId
 from datetime import datetime
 
-from app.prompts.ending import get_ending_prompt
-from app.prompts.introduction import get_introduction_prompt
-from app.prompts.transition import get_transition_prompt
+from app.prompts.user import get_ending_prompt, get_introduction_prompt, get_transition_prompt
 from app.session.session_trace_logger import trace
 
 
