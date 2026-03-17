@@ -2,6 +2,7 @@ import asyncio
 from typing import Any, Dict, Optional
 
 from app.prompts.developer import get_developer_prompt
+from app.prompts.medical_conditions_laws import get_yoga_laws_context
 
 
 class YogaAgent:
@@ -22,7 +23,9 @@ class YogaAgent:
         profile = user.get("profile") or {}
         hard = profile.get("hard_priority_summary") or ""
         medium = profile.get("medium_priority_summary") or ""
-        return get_developer_prompt(hard, medium)
+        hard_strategy = profile.get("hard_priority_strategy") or {}
+        laws_context = get_yoga_laws_context(hard_strategy)
+        return get_developer_prompt(hard, medium, laws_context)
 
     async def generate_structured_text(self, prompt: str, user_id: Optional[str] = None) -> Dict[str, Any]:
         """Return structured micro-instructions from the LLM. Fetches profile and builds developer prompt internally."""
