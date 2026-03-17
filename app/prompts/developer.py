@@ -1,8 +1,55 @@
+from typing import Optional
+
+from app.prompts.medical_conditions_laws import get_yoga_laws_context
+
+
+async def build_developer_prompt(auth_service, user_id: Optional[str] = None, mode: str = "session") -> str:
+    """Fetch user profile and build developer prompt. Used by YogaCoordinator and SequenceComposer."""
+    if not user_id:
+        return get_developer_prompt(mode=mode)
+    try:
+        user = await auth_service.get_profile(str(user_id))
+    except RuntimeError:
+        return get_developer_prompt(mode=mode)
+    profile = user.get("profile") or {}
+    hard = profile.get("hard_priority_summary") or ""
+    medium = profile.get("medium_priority_summary") or ""
+    hard_strategy = profile.get("hard_priority_strategy") or {}
+    laws_context = get_yoga_laws_context(hard_strategy)
+    return get_developer_prompt(hard, medium, laws_context, mode=mode)
+
+
 def get_developer_prompt(
     hard_priority_summary: str = "",
     medium_priority_summary: str = "",
     laws_context: str = "",
+    mode: str = "session",
 ) -> str:
+    """
+    mode: "session" for spoken guidance, "sequence" for posture selection.
+    """
+    if mode == "sequence":
+        return f"""You are an experienced yoga instructor designing a custom sequence for a practitioner.
+
+Your task is to select and order postures from the catalogue. Output only valid JSON as specified.
+
+PRACTITIONER PROFILE & SAFETY
+
+HARD PRIORITY (SAFETY & MEDICAL): {hard_priority_summary}
+MEDIUM PRIORITY (GOALS & EXPERIENCE): {medium_priority_summary}
+
+{laws_context}
+
+RULES FOR SEQUENCE DESIGN
+
+* Exclude or substitute any posture that contraindicates the practitioner's conditions.
+* Respect the modification laws above strictly.
+* Select only from the postures in the catalogue; use their client_id exactly.
+* Create logical flow using typical_entries and typical_exits between poses.
+* Return a JSON object with "name" and "posture_ids" as specified in the user prompt.
+"""
+
+    # Default: session mode (spoken guidance)
     return f"""You are an experienced, calm, and attentive yoga instructor guiding a practitioner through a yoga session.
 
 Your role is to support the practitioner with clear, gentle, and mindful guidance so they can move safely, stay present in their body, and enjoy the practice.

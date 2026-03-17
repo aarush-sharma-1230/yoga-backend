@@ -38,12 +38,12 @@ class ConnectionManager:
 
 
 class WebSocketService:
-    def __init__(self, db: AsyncIOMotorDatabase, query_service, connection_manager, session_service, yoga_agent):
+    def __init__(self, db: AsyncIOMotorDatabase, query_service, connection_manager, session_service, yoga_coordinator):
         self.db = db
         self.query_service = query_service
         self.session_service = session_service
         self.connection_manager = connection_manager
-        self.yoga_agent = yoga_agent
+        self.yoga_coordinator = yoga_coordinator
 
     def calculate_wait_time(self, current_posture):
         current_timestamp = datetime.utcnow()
@@ -52,7 +52,7 @@ class WebSocketService:
         return waiting_time
 
     async def _stream_audio(self, websocket: WebSocket, text: str):
-        for chunk in self.yoga_agent.generate_audio_from_text(text):
+        for chunk in self.yoga_coordinator.generate_audio_from_text(text):
             await self.connection_manager.send_audio_bytes(chunk, websocket)
 
     async def _send_response(self, websocket: WebSocket, response: dict, stream: bool = True):

@@ -12,9 +12,9 @@ from app.session.session_trace_logger import trace
 
 
 class SessionService:
-    def __init__(self, db: AsyncIOMotorDatabase, yoga_agent):
+    def __init__(self, db: AsyncIOMotorDatabase, yoga_coordinator):
         self.db = db
-        self.yoga_agent = yoga_agent
+        self.yoga_coordinator = yoga_coordinator
 
     async def get_sequence_by_id(self, sequence_id: str):
         sequence = await self.db["sequences"].find_one({"_id": ObjectId(sequence_id)})
@@ -70,7 +70,7 @@ class SessionService:
         Runs in a thread to avoid blocking the event loop.
         """
         with open(file_path, "wb") as audio_file:
-            for chunk in self.yoga_agent.generate_audio_from_text(text):
+            for chunk in self.yoga_coordinator.generate_audio_from_text(text):
                 audio_file.write(chunk)
                 queue.put_nowait(chunk)
 
@@ -145,10 +145,10 @@ class SessionService:
     async def _generate_intro(self, sequence_name: str, session_id: str, user_name: str, user_id: str | None = None) -> None:
         """Generate introduction micro-instructions and audio, store as flat array with category=introduction."""
         prompt = get_introduction_prompt(sequence_name=sequence_name, user_name=user_name)
-        response = await self.yoga_agent.generate_text(prompt=prompt, user_id=user_id)
+        response = await self.yoga_coordinator.generate_text(prompt=prompt, user_id=user_id)
         text = response["text"]
         message_id = response["message_id"]
-        audio_chunks = self.yoga_agent.generate_audio_from_text(text)
+        audio_chunks = self.yoga_coordinator.generate_audio_from_text(text)
         audio_path = self._save_audio_to_file(session_id, message_id, audio_chunks)
 
         trace("Saving intro", session_id=session_id)
@@ -161,14 +161,14 @@ class SessionService:
         """Generate transition micro-instructions and audio, store as flat array with category=transition."""
         for from_idx in range(-1, len(postures) - 1):
             transition_prompt = get_transition_prompt(transition_from_idx=from_idx, postures=postures)
-            response = await self.yoga_agent.generate_structured_text(prompt=transition_prompt, user_id=user_id)
+            response = await self.yoga_coordinator.generate_structured_text(prompt=transition_prompt, user_id=user_id)
             instructions = response["instructions"]
             base_message_id = response["message_id"]
 
             flat_items = []
             for i, micro in enumerate(instructions):
                 message_id = f"{base_message_id}_{i}"
-                audio_chunks = self.yoga_agent.generate_audio_from_text(micro["text"])
+                audio_chunks = self.yoga_coordinator.generate_audio_from_text(micro["text"])
                 audio_path = self._save_audio_to_file(session_id, message_id, audio_chunks)
                 flat_items.append(
                     {
@@ -189,10 +189,10 @@ class SessionService:
     async def _generate_ending_note(self, sequence_name: str, session_id: str, user_id: str | None = None) -> None:
         """Generate ending micro-instructions and audio, store as flat array with category=ending."""
         prompt = get_ending_prompt(sequence_name=sequence_name)
-        response = await self.yoga_agent.generate_text(prompt=prompt, user_id=user_id)
+        response = await self.yoga_coordinator.generate_text(prompt=prompt, user_id=user_id)
         text = response["text"]
         message_id = response["message_id"]
-        audio_chunks = self.yoga_agent.generate_audio_from_text(text)
+        audio_chunks = self.yoga_coordinator.generate_audio_from_text(text)
         audio_path = self._save_audio_to_file(session_id, message_id, audio_chunks)
 
         trace("Saving ending note", session_id=session_id)

@@ -1,10 +1,15 @@
 import traceback
 import uuid
+from typing import Type, TypeVar
+
 import openai
 from openai import OpenAI
+from pydantic import BaseModel
 
 from app.logs.api_call_logger import log_api_call
 from app.schemas.micro_instruction import StructuredInstructionOutput
+
+T = TypeVar("T", bound=BaseModel)
 
 
 class OpenAIClient:
@@ -49,6 +54,30 @@ class OpenAIClient:
                 instructions.append({"type": type_name, "text": block.text})
 
         return {"instructions": instructions, "message_id": message_id}
+
+    def generate_with_schema(
+        self,
+        prompt: str,
+        developer_prompt: str,
+        response_format: Type[T],
+        model: str = "gpt-4o-mini",
+        temperature: float = 0.5,
+    ) -> T:
+        """Generate structured output conforming to the given Pydantic schema."""
+        messages = [
+            {"role": "system", "content": developer_prompt},
+            {"role": "user", "content": prompt},
+        ]
+        completion = self._client.chat.completions.parse(
+            model=model,
+            messages=messages,
+            response_format=response_format,
+            temperature=temperature,
+        )
+        parsed = completion.choices[0].message.parsed
+        input_tokens, output_tokens = self._extract_usage_from_chat_completion(completion)
+        self._log_api_call("generate_with_schema", developer_prompt, prompt, input_tokens, output_tokens)
+        return parsed
 
     def generate_text(
         self,

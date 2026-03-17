@@ -7,16 +7,16 @@ from app.globals.functions import serialize_mongo_output
 
 
 class QueryService:
-    def __init__(self, db: AsyncIOMotorDatabase, session_service, yoga_agent):
+    def __init__(self, db: AsyncIOMotorDatabase, session_service, yoga_coordinator):
         self.db = db
         self.session_service = session_service
-        self.yoga_agent = yoga_agent
+        self.yoga_coordinator = yoga_coordinator
 
     async def process_user_query(self, user_query: str, session_id: str, postures: list, current_posture_name, chat_history: list):
         session = await self.session_service.get_session_by_id(session_id)
         user_id = str(session.get("user_id")) if session.get("user_id") else None
         prompt = _get_user_query_prompt(postures=postures, current_posture=current_posture_name, chat_history=chat_history, user_query=user_query)
-        llm_response = await self.yoga_agent.generate_text(prompt=prompt, user_id=user_id)
+        llm_response = await self.yoga_coordinator.generate_text(prompt=prompt, user_id=user_id)
         llm_response_message_id = llm_response["message_id"]
         llm_response_text = llm_response["text"]
 
@@ -53,7 +53,7 @@ class QueryService:
         user_id = str(session.get("user_id")) if session.get("user_id") else None
 
         prompt = _get_transition_query_prompt(transition_from_idx=transition_from_idx, postures=postures, chat_history=chat_history)
-        llm_response = await self.yoga_agent.generate_text(prompt=prompt, user_id=user_id)
+        llm_response = await self.yoga_coordinator.generate_text(prompt=prompt, user_id=user_id)
         llm_response_message_id = llm_response["message_id"]
         llm_response_text = llm_response["text"]
 
@@ -86,7 +86,7 @@ class QueryService:
         sequence = await self.session_service.get_sequence_by_id(sequence_id=sequence_id)
 
         prompt = _get_start_user_session_prompt(sequence_name=sequence["name"])
-        llm_response = await self.yoga_agent.generate_text(prompt=prompt, user_id=str(user_id))
+        llm_response = await self.yoga_coordinator.generate_text(prompt=prompt, user_id=str(user_id))
         llm_response_message_id = llm_response["message_id"]
         llm_response_text = llm_response["text"]
 
@@ -113,7 +113,7 @@ class QueryService:
         user_id = str(session.get("user_id")) if session.get("user_id") else None
 
         prompt = self._get_end_user_session_prompt(session_name=session["sequence"]["name"])
-        llm_response = await self.yoga_agent.generate_text(prompt=prompt, user_id=user_id)
+        llm_response = await self.yoga_coordinator.generate_text(prompt=prompt, user_id=user_id)
         llm_response_message_id = llm_response["message_id"]
         llm_response_text = llm_response["text"]
 
