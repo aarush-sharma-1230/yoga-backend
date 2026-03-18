@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, Request
 
 from app.dependency_injector import DependencyInjector
 from app.globals.errors import CustomException
-from app.sequence.sequence_interface import CreateCustomSequenceData, SequenceData
+from app.sequence.sequence_interface import CreateCustomSequenceData, CreateManualSequenceData, SequenceData
 from app.sequence.sequence_service import SequenceService
 
 router = APIRouter()
@@ -58,6 +58,24 @@ async def create_custom_sequence(
         )
         return response
     except RuntimeError as e:
+        raise CustomException(str(e))
+    except Exception as e:
+        raise CustomException(e)
+
+
+@router.post("/sequence/create_manual_sequence")
+async def create_manual_sequence(
+    data: CreateManualSequenceData,
+    service: SequenceService = Depends(DependencyInjector.get_sequence_service),
+):
+    """Create a manual sequence from user-selected posture client_ids."""
+    try:
+        response = await service.create_manual_sequence(
+            name=data.name,
+            posture_client_ids=data.posture_client_ids,
+        )
+        return response
+    except ValueError as e:
         raise CustomException(str(e))
     except Exception as e:
         raise CustomException(e)

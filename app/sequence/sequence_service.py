@@ -4,7 +4,6 @@ from bson import ObjectId
 from motor.motor_asyncio import AsyncIOMotorDatabase
 
 from app.agents.sequence_composer import SequenceComposer
-from app.globals.functions import serialize_mongo_output
 from app.posture_docs.inversion_postures import INVERSION_POSTURES
 from app.posture_docs.prone_postures import PRONE_POSTURES
 from app.posture_docs.seated_postures import SEATED_POSTURES
@@ -25,7 +24,6 @@ class SequenceService:
     async def get_sequences(self):
         pipeline = [{"$project": {"_id": 1, "name": 1, "postures": 1}}]
         sequences = await self.db["sequences"].aggregate(pipeline).to_list(length=None)
-        sequences = serialize_mongo_output(sequences)
         return {"status": True, "result": sequences}
 
     async def get_postures(self):
@@ -35,7 +33,6 @@ class SequenceService:
 
     async def get_sequence(self, sequence_id: str):
         sequence = await self.db["sequences"].find_one({"_id": ObjectId(sequence_id)})
-        sequence = serialize_mongo_output(sequence)
         return {"status": True, "result": sequence}
 
     def _posture_for_sequence(self, posture: dict) -> dict:
@@ -85,5 +82,32 @@ class SequenceService:
         }
         result = await self.db["sequences"].insert_one(sequence_doc)
         sequence_doc["_id"] = result.inserted_id
-        serialized = serialize_mongo_output(sequence_doc)
-        return {"status": True, "result": serialized}
+
+        return {"status": True, "result": sequence_doc}
+
+    async def create_manual_sequence(self, name: str, posture_client_ids: list[str]) -> dict:
+        """
+        Create a manual sequence from user-provided posture client_ids.
+        Resolves postures from DB, preserving order.
+        """
+        if not posture_client_ids:
+            raise ValueError("posture_client_ids cannot be empty")
+
+        id_to_posture = {}
+        async for doc in self.db["postures"].find({"client_id": {"$in": posture_client_ids}}):
+            id_to_posture[doc["client_id"]] = doc
+
+        postures = []
+        for pid in posture_client_ids:
+            if pid in id_to_posture:
+                postures.append(self._posture_for_sequence(id_to_posture[pid]))
+
+        sequence_doc = {
+            "name": name,
+            "postures": postures,
+            "created_at": datetime.utcnow(),
+        }
+        result = await self.db["sequences"].insert_one(sequence_doc)
+        sequence_doc["_id"] = result.inserted_id
+
+        return {"status": True, "result": sequence_doc}
