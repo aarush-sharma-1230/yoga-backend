@@ -18,6 +18,17 @@ async def get_sequences(service: SequenceService = Depends(DependencyInjector.ge
         raise CustomException(e)
 
 
+@router.get("/sequence/get_postures")
+async def get_postures(service: SequenceService = Depends(DependencyInjector.get_sequence_service)):
+    """Get all postures from the postures collection."""
+    try:
+        response = await service.get_postures()
+        return response
+
+    except Exception as e:
+        raise CustomException(e)
+
+
 @router.post("/sequence/get_sequence")
 async def get_sequence(sequence_data: SequenceData, service: SequenceService = Depends(DependencyInjector.get_sequence_service)):
     try:
@@ -29,7 +40,7 @@ async def get_sequence(sequence_data: SequenceData, service: SequenceService = D
         raise CustomException(e)
 
 
-@router.post("/sequence/create_custom")
+@router.post("/sequence/create")
 async def create_custom_sequence(
     data: CreateCustomSequenceData,
     service: SequenceService = Depends(DependencyInjector.get_sequence_service),

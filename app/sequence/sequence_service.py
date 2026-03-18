@@ -28,6 +28,11 @@ class SequenceService:
         sequences = serialize_mongo_output(sequences)
         return {"status": True, "result": sequences}
 
+    async def get_postures(self):
+        """Fetch all postures from the postures collection."""
+        postures = await self.db["postures"].find().to_list(length=None)
+        return {"status": True, "result": postures}
+
     async def get_sequence(self, sequence_id: str):
         sequence = await self.db["sequences"].find_one({"_id": ObjectId(sequence_id)})
         sequence = serialize_mongo_output(sequence)
