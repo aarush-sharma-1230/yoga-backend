@@ -22,7 +22,7 @@ class SequenceService:
         self.sequence_composer = sequence_composer
 
     async def get_sequences(self):
-        pipeline = [{"$project": {"_id": 1, "name": 1, "postures": 1}}]
+        pipeline = [{"$project": {"_id": 1, "name": 1, "postures": 1, "type": 1, "user_id": 1}}]
         sequences = await self.db["sequences"].aggregate(pipeline).to_list(length=None)
         return {"status": True, "result": sequences}
 
@@ -41,18 +41,18 @@ class SequenceService:
         english = name.get("english", "Unknown")
         return {**posture, "name": english}
 
-    async def create_custom_sequence(
+    async def generate_sequence(
         self,
         user_id: str,
         duration_minutes: int | None = None,
         focus: str | None = None,
     ) -> dict:
         """
-        Create a custom sequence using the LLM, user profile, and posture catalogue.
+        Generate a sequence using the LLM, user profile, and posture catalogue.
         Saves to DB and returns the new sequence.
         """
         if not self.sequence_composer:
-            raise RuntimeError("SequenceComposer is required for custom sequence creation")
+            raise RuntimeError("SequenceComposer is required for sequence generation")
 
         prompt = get_custom_sequence_prompt(
             postures=ALL_POSTURES,
@@ -77,6 +77,7 @@ class SequenceService:
         sequence_doc = {
             "name": output.name,
             "postures": postures,
+            "type": "generated",
             "user_id": user_id,
             "created_at": datetime.utcnow(),
         }
@@ -85,7 +86,9 @@ class SequenceService:
 
         return {"status": True, "result": sequence_doc}
 
-    async def create_manual_sequence(self, name: str, posture_client_ids: list[str]) -> dict:
+    async def create_manual_sequence(
+        self, name: str, posture_client_ids: list[str], user_id: str
+    ) -> dict:
         """
         Create a manual sequence from user-provided posture client_ids.
         Resolves postures from DB, preserving order.
@@ -97,14 +100,19 @@ class SequenceService:
         async for doc in self.db["postures"].find({"client_id": {"$in": posture_client_ids}}):
             id_to_posture[doc["client_id"]] = doc
 
+        missing_ids = [pid for pid in posture_client_ids if pid not in id_to_posture]
+        if missing_ids:
+            raise ValueError(f"Posture IDs not found in database: {missing_ids}")
+
         postures = []
         for pid in posture_client_ids:
-            if pid in id_to_posture:
-                postures.append(self._posture_for_sequence(id_to_posture[pid]))
+            postures.append(self._posture_for_sequence(id_to_posture[pid]))
 
         sequence_doc = {
             "name": name,
             "postures": postures,
+            "type": "manual",
+            "user_id": user_id,
             "created_at": datetime.utcnow(),
         }
         result = await self.db["sequences"].insert_one(sequence_doc)

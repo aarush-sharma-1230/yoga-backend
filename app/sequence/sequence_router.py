@@ -1,12 +1,13 @@
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends
 
 from app.dependency_injector import DependencyInjector
 from app.globals.errors import CustomException
-from app.sequence.sequence_interface import CreateCustomSequenceData, CreateManualSequenceData, SequenceData
+from app.sequence.sequence_interface import CreateManualSequenceData, GenerateSequenceData, SequenceData
 from app.sequence.sequence_service import SequenceService
 
 router = APIRouter()
 
+USER_ID_TEMP = "67d5632a3a9bdddef290e127"
 
 @router.post("/sequence/get_sequences")
 async def get_sequences(service: SequenceService = Depends(DependencyInjector.get_sequence_service)):
@@ -40,19 +41,19 @@ async def get_sequence(sequence_data: SequenceData, service: SequenceService = D
         raise CustomException(e)
 
 
-@router.post("/sequence/create")
-async def create_custom_sequence(
-    data: CreateCustomSequenceData,
+@router.post("/sequence/generate")
+async def generate_sequence(
+    data: GenerateSequenceData,
     service: SequenceService = Depends(DependencyInjector.get_sequence_service),
 ):
     """
-    Create a custom yoga sequence for the user.
+    Generate a personalized yoga sequence for the user.
     Uses the user profile (medical conditions, goals) and posture catalogue
-    to generate a personalized sequence via LLM.
+    via LLM to create a custom sequence.
     """
     try:
-        response = await service.create_custom_sequence(
-            user_id=data.user_id,
+        response = await service.generate_sequence(
+            user_id=USER_ID_TEMP,
             duration_minutes=data.duration_minutes,
             focus=data.focus,
         )
@@ -73,6 +74,7 @@ async def create_manual_sequence(
         response = await service.create_manual_sequence(
             name=data.name,
             posture_client_ids=data.posture_client_ids,
+            user_id=USER_ID_TEMP,
         )
         return response
     except ValueError as e:

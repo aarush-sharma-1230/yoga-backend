@@ -7,10 +7,9 @@ class SequenceData(BaseModel):
     sequence_id: str
 
 
-class CreateCustomSequenceData(BaseModel):
-    """Request body for creating a custom sequence."""
+class GenerateSequenceData(BaseModel):
+    """Request body for generating a sequence via LLM."""
 
-    user_id: str
     duration_minutes: Optional[int] = None
     focus: Optional[str] = None
 
