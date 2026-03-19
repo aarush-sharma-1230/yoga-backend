@@ -42,6 +42,7 @@ class SequenceService:
         duration_minutes: int | None = None,
         focus: str | None = None,
         intensity_level: str | None = None,
+        user_notes: str | None = None,
     ) -> dict:
         """
         Generate a sequence using the LLM, user profile, and posture catalogue.
@@ -81,7 +82,13 @@ class SequenceService:
         result = await self.db["sequences"].insert_one(sequence_doc)
         sequence_doc["_id"] = result.inserted_id
 
-        return {"status": True, "result": sequence_doc}
+        return {
+            "status": True,
+            "result": {
+                **sequence_doc,
+                "reasoning": output.reasoning,
+            },
+        }
 
     async def create_manual_sequence(
         self, name: str, posture_client_ids: list[str], user_id: str

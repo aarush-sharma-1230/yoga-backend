@@ -145,6 +145,7 @@ CONSTRAINTS
 OUTPUT
 
 Return a JSON object with:
+- reasoning: High-level reasoning for your sequence design. Briefly explain: (1) why you chose these postures for this practitioner, (2) how you addressed their profile/conditions and safety laws, (3) how the sequence meets the requested constraints (duration, focus, intensity), and (4) the logic behind the flow order.
 - name: a short, descriptive sequence name (e.g. "Morning Wake-Up", "Hip Release Flow")
 - posture_ids: ordered list of client_ids in the sequence (e.g. ["p_mountain", "p_upward_salute", "p_forward_fold", ...])
 """
