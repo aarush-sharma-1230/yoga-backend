@@ -1,12 +1,13 @@
 # --- Inversion postures (head below heart) ---
 INVERSION_POSTURES = [
     {
-        "anatomical_signature": {"is_inverted": True, "spinal_shape": "neutral", "weight_bearing_points": ["palms", "feet"]},
+        "anatomical_signature": {"is_inverted": True, "spinal_shape": "neutral", "weight_bearing_points": ["palms", "feet"], "laterality": {"type": "symmetrical", "active_side": "neutral"}},
         "chronic_pain": [
             {"action": "modify", "condition": "wrist_pain", "reason": "Weight-bearing compresses the wrist joint.", "recommended_modification": "dolphin_pose"},
             {"action": "adjust", "condition": "tight_hamstrings", "reason": "Limited flexibility strains the back.", "recommended_modification": "bend_knees"},
         ],
         "client_id": "p_downward_dog",
+        "category": "inversion",
         "common_mistakes": ["Rounding the back", "Dumping weight into the wrists", "Forcing heels to the floor"],
         "contraindications": [
             {"action": "modify_or_avoid", "condition": "hypertension", "reason": "Inversion may increase blood pressure.", "recommended_modification": "puppy_pose"},
@@ -35,14 +36,15 @@ INVERSION_POSTURES = [
             {"area": "legs", "cue": "Imagine your heels gently melting toward the mat."},
         ],
         "typical_entries": ["p_plank", "p_table_top", "p_cow", "p_chaturanga", "p_upward_dog"],
-        "typical_exits": ["p_plank", "p_forward_fold", "p_low_lunge", "p_childs_pose", "p_chaturanga", "p_warrior_1_left", "p_warrior_1_right", "p_pigeon_left", "p_pigeon_right"],
+        "typical_exits": ["p_plank", "p_forward_fold", "p_childs_pose", "p_chaturanga", "p_warrior_1_left", "p_warrior_1_right", "p_pigeon_left", "p_pigeon_right"],
     },
     {
-        "anatomical_signature": {"is_inverted": True, "spinal_shape": "flexion", "weight_bearing_points": ["shoulders", "back_of_head", "elbows"]},
+        "anatomical_signature": {"is_inverted": True, "spinal_shape": "flexion", "weight_bearing_points": ["shoulders", "back_of_head", "elbows"], "laterality": {"type": "symmetrical", "active_side": "neutral"}},
         "chronic_pain": [
             {"action": "avoid", "condition": "neck_pain", "reason": "Flattening the cervical curve under load can herniate discs.", "recommended_modification": "legs_up_the_wall"}
         ],
         "client_id": "p_shoulder_stand",
+        "category": "inversion",
         "common_mistakes": [
             "Turning the head while in the pose (can cause severe injury)",
             "Splaying the elbows too wide, losing structural support",
@@ -87,11 +89,12 @@ INVERSION_POSTURES = [
         "typical_exits": ["p_halasana", "p_corpse_pose", "p_fish_pose"],
     },
     {
-        "anatomical_signature": {"is_inverted": True, "spinal_shape": "flexion", "weight_bearing_points": ["shoulders", "back_of_head", "toes"]},
+        "anatomical_signature": {"is_inverted": True, "spinal_shape": "flexion", "weight_bearing_points": ["shoulders", "back_of_head", "toes"], "laterality": {"type": "symmetrical", "active_side": "neutral"}},
         "chronic_pain": [
             {"action": "caution", "condition": "lower_back_pain", "reason": "Deep spinal flexion can aggravate lumbar discs.", "recommended_modification": "supported_bridge"}
         ],
         "client_id": "p_halasana",
+        "category": "inversion",
         "common_mistakes": [
             "Turning the head from side to side",
             "Forcing the feet to the floor, compromising the neck",

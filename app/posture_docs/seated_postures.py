@@ -1,7 +1,7 @@
 # --- Seated postures (sit bones) ---
 SEATED_POSTURES = [
     {
-        "anatomical_signature": {"is_inverted": False, "spinal_shape": "neutral", "weight_bearing_points": ["sit_bones", "outer_ankles"]},
+        "anatomical_signature": {"is_inverted": False, "spinal_shape": "neutral", "weight_bearing_points": ["sit_bones", "outer_ankles"], "laterality": {"type": "symmetrical", "active_side": "neutral"}},
         "chronic_pain": [
             {
                 "action": "adjust",
@@ -12,6 +12,7 @@ SEATED_POSTURES = [
             {"action": "adjust", "condition": "hip_tightness", "reason": "Tight hips cause the lower back to round backward.", "recommended_modification": "sit_on_cushion"},
         ],
         "client_id": "p_easy_pose",
+        "category": "seated",
         "common_mistakes": ["Slumping the lower back", "Jutting the chin forward (tech neck)", "Forcing the knees toward the floor"],
         "contraindications": [{"action": "caution", "condition": "sciatica", "reason": "Sitting flat can compress the sciatic nerve.", "recommended_modification": "sit_on_block"}],
         "drishti": {"alternatives": ["third_eye"], "primary": "closed_eyes"},
@@ -34,7 +35,7 @@ SEATED_POSTURES = [
         "typical_exits": ["p_seated_forward_fold", "p_table_top", "p_staff_pose"],
     },
     {
-        "anatomical_signature": {"is_inverted": False, "spinal_shape": "neutral", "weight_bearing_points": ["sit_bones", "heels", "palms (lightly)"]},
+        "anatomical_signature": {"is_inverted": False, "spinal_shape": "neutral", "weight_bearing_points": ["sit_bones", "heels", "palms (lightly)"], "laterality": {"type": "symmetrical", "active_side": "neutral"}},
         "chronic_pain": [
             {"action": "adjust", "condition": "tight_hamstrings", "reason": "Pulls the pelvis backward, rounding the lower spine.", "recommended_modification": "sit_on_blanket"},
             {
@@ -45,6 +46,7 @@ SEATED_POSTURES = [
             },
         ],
         "client_id": "p_staff_pose",
+        "category": "seated",
         "common_mistakes": ["Leaning backward on the hands", "Rounding the upper back", "Letting the feet splay open"],
         "contraindications": [
             {
@@ -74,7 +76,7 @@ SEATED_POSTURES = [
         "typical_exits": ["p_seated_forward_fold", "p_head_to_knee_left", "p_head_to_knee_right", "p_easy_pose"],
     },
     {
-        "anatomical_signature": {"is_inverted": False, "spinal_shape": "flexion", "weight_bearing_points": ["sit_bones", "heels", "calves"]},
+        "anatomical_signature": {"is_inverted": False, "spinal_shape": "flexion", "weight_bearing_points": ["sit_bones", "heels", "calves"], "laterality": {"type": "symmetrical", "active_side": "neutral"}},
         "chronic_pain": [
             {
                 "action": "adjust",
@@ -84,6 +86,7 @@ SEATED_POSTURES = [
             }
         ],
         "client_id": "p_seated_forward_fold",
+        "category": "seated",
         "common_mistakes": ["Rounding the upper back to force the head down", "Pulling aggressively with the arms", "Locking the knees"],
         "contraindications": [
             {"action": "avoid", "condition": "herniated_disc", "reason": "Intense seated spinal flexion forces disc material backward.", "recommended_modification": "staff_pose"},
@@ -113,6 +116,7 @@ SEATED_POSTURES = [
             "is_inverted": False,
             "spinal_shape": "flexion_with_mild_rotation",
             "weight_bearing_points": ["sit_bones", "extended_leg_heel", "bent_knee_outer_edge"],
+            "laterality": {"type": "asymmetrical", "active_side": "left", "paired_pose": "p_head_to_knee_right"},
         },
         "chronic_pain": [
             {
@@ -129,6 +133,7 @@ SEATED_POSTURES = [
             },
         ],
         "client_id": "p_head_to_knee_left",
+        "category": "seated",
         "common_mistakes": [
             "Rounding the upper back to force the head down",
             "Letting the extended leg roll outward",
@@ -163,13 +168,14 @@ SEATED_POSTURES = [
             {"area": "lower_back", "cue": "Feel a gentle, twisting release in your lower back on the side of the bent " "knee."},
         ],
         "typical_entries": ["p_staff_pose", "p_seated_forward_fold"],
-        "typical_exits": ["p_seated_forward_fold", "p_easy_pose", "p_staff_pose", "p_head_to_knee_right"],
+        "typical_exits": ["p_seated_forward_fold", "p_easy_pose", "p_staff_pose"],
     },
     {
         "anatomical_signature": {
             "is_inverted": False,
             "spinal_shape": "flexion_with_mild_rotation",
             "weight_bearing_points": ["sit_bones", "extended_leg_heel", "bent_knee_outer_edge"],
+            "laterality": {"type": "asymmetrical", "active_side": "right", "paired_pose": "p_head_to_knee_left"},
         },
         "chronic_pain": [
             {
@@ -186,6 +192,7 @@ SEATED_POSTURES = [
             },
         ],
         "client_id": "p_head_to_knee_right",
+        "category": "seated",
         "common_mistakes": [
             "Rounding the upper back to force the head down",
             "Letting the extended leg roll outward",
@@ -220,13 +227,14 @@ SEATED_POSTURES = [
             {"area": "lower_back", "cue": "Feel a gentle, twisting release in your lower back on the side of the bent " "knee."},
         ],
         "typical_entries": ["p_staff_pose", "p_seated_forward_fold"],
-        "typical_exits": ["p_seated_forward_fold", "p_easy_pose", "p_staff_pose", "p_head_to_knee_left"],
+        "typical_exits": ["p_seated_forward_fold", "p_easy_pose", "p_staff_pose"],
     },
     {
         "anatomical_signature": {
             "is_inverted": False,
             "spinal_shape": "neutral_to_mild_extension",
             "weight_bearing_points": ["front_shin", "back_knee", "top_of_back_foot", "forearms_if_folded"],
+            "laterality": {"type": "asymmetrical", "active_side": "left", "paired_pose": "p_pigeon_right"},
         },
         "chronic_pain": [
             {
@@ -243,6 +251,7 @@ SEATED_POSTURES = [
             },
         ],
         "client_id": "p_pigeon_left",
+        "category": "seated",
         "common_mistakes": [
             "Rolling onto the outer hip of the bent leg",
             "Forcing the front shin parallel to the mat, causing knee torque",
@@ -284,14 +293,15 @@ SEATED_POSTURES = [
             {"area": "hips", "cue": "Send your breath directly into the tightness of your outer hip."},
             {"area": "full_body", "cue": "With every exhale, imagine sinking a millimeter deeper into the mat."},
         ],
-        "typical_entries": ["p_downward_dog", "p_table_top", "p_low_lunge", "p_pigeon_right"],
-        "typical_exits": ["p_downward_dog", "p_table_top", "p_pigeon_right"],
+        "typical_entries": ["p_downward_dog", "p_table_top"],
+        "typical_exits": ["p_downward_dog", "p_table_top"],
     },
     {
         "anatomical_signature": {
             "is_inverted": False,
             "spinal_shape": "neutral_to_mild_extension",
             "weight_bearing_points": ["front_shin", "back_knee", "top_of_back_foot", "forearms_if_folded"],
+            "laterality": {"type": "asymmetrical", "active_side": "right", "paired_pose": "p_pigeon_left"},
         },
         "chronic_pain": [
             {
@@ -308,6 +318,7 @@ SEATED_POSTURES = [
             },
         ],
         "client_id": "p_pigeon_right",
+        "category": "seated",
         "common_mistakes": [
             "Rolling onto the outer hip of the bent leg",
             "Forcing the front shin parallel to the mat, causing knee torque",
@@ -349,7 +360,7 @@ SEATED_POSTURES = [
             {"area": "hips", "cue": "Send your breath directly into the tightness of your outer hip."},
             {"area": "full_body", "cue": "With every exhale, imagine sinking a millimeter deeper into the mat."},
         ],
-        "typical_entries": ["p_downward_dog", "p_table_top", "p_low_lunge", "p_pigeon_left"],
-        "typical_exits": ["p_downward_dog", "p_table_top", "p_pigeon_left"],
+        "typical_entries": ["p_downward_dog", "p_table_top"],
+        "typical_exits": ["p_downward_dog", "p_table_top"],
     },
 ]

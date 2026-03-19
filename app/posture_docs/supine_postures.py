@@ -1,11 +1,12 @@
 # --- Supine postures (on back) ---
 SUPINE_POSTURES = [
     {
-        "anatomical_signature": {"is_inverted": False, "spinal_shape": "flexion", "weight_bearing_points": ["sacrum", "back_of_head"]},
+        "anatomical_signature": {"is_inverted": False, "spinal_shape": "flexion", "weight_bearing_points": ["sacrum", "back_of_head"], "laterality": {"type": "symmetrical", "active_side": "neutral"}},
         "chronic_pain": [
             {"action": "adjust", "condition": "lower_back_pain", "reason": "Pulling knees too hard can strain the lumbar spine.", "recommended_modification": "gentle_hold"},
         ],
         "client_id": "p_knees_to_chest",
+        "category": "supine",
         "common_mistakes": ["Holding the breath", "Pulling too aggressively", "Lifting the head and shoulders"],
         "contraindications": [
             {"action": "modify", "condition": "pregnancy", "reason": "Deep compression of the abdomen.", "recommended_modification": "single_knee_to_chest"},
@@ -30,7 +31,7 @@ SUPINE_POSTURES = [
         "typical_exits": ["p_bridge", "p_happy_baby", "p_corpse_pose"],
     },
     {
-        "anatomical_signature": {"is_inverted": True, "spinal_shape": "extension", "weight_bearing_points": ["shoulders", "back_of_head", "feet"]},
+        "anatomical_signature": {"is_inverted": True, "spinal_shape": "extension", "weight_bearing_points": ["shoulders", "back_of_head", "feet"], "laterality": {"type": "symmetrical", "active_side": "neutral"}},
         "chronic_pain": [
             {
                 "action": "modify",
@@ -46,6 +47,7 @@ SUPINE_POSTURES = [
             },
         ],
         "client_id": "p_bridge",
+        "category": "supine",
         "common_mistakes": [
             "Turning the head side to side (dangerous for the neck)",
             "Letting the knees splay outward",
@@ -87,7 +89,7 @@ SUPINE_POSTURES = [
         "typical_exits": ["p_corpse_pose", "p_happy_baby", "p_knees_to_chest"],
     },
     {
-        "anatomical_signature": {"is_inverted": False, "spinal_shape": "mild_flexion", "weight_bearing_points": ["entire_back", "sacrum", "back_of_head"]},
+        "anatomical_signature": {"is_inverted": False, "spinal_shape": "mild_flexion", "weight_bearing_points": ["entire_back", "sacrum", "back_of_head"], "laterality": {"type": "symmetrical", "active_side": "neutral"}},
         "chronic_pain": [
             {
                 "action": "adjust",
@@ -103,6 +105,7 @@ SUPINE_POSTURES = [
             },
         ],
         "client_id": "p_happy_baby",
+        "category": "supine",
         "common_mistakes": [
             "Lifting the tailbone and lower back off the floor",
             "Lifting the head and shoulders up to reach the feet",
@@ -141,10 +144,10 @@ SUPINE_POSTURES = [
             {"area": "hips", "cue": "Feel the gentle, broad opening across your inner thighs."},
         ],
         "typical_entries": ["p_knees_to_chest", "p_bridge"],
-        "typical_exits": ["p_corpse_pose", "p_knees_to_chest", "p_supine_twist"],
+        "typical_exits": ["p_corpse_pose", "p_knees_to_chest"],
     },
     {
-        "anatomical_signature": {"is_inverted": False, "spinal_shape": "neutral", "weight_bearing_points": ["back_of_head", "shoulders", "sacrum", "calves", "heels"]},
+        "anatomical_signature": {"is_inverted": False, "spinal_shape": "neutral", "weight_bearing_points": ["back_of_head", "shoulders", "sacrum", "calves", "heels"], "laterality": {"type": "symmetrical", "active_side": "neutral"}},
         "chronic_pain": [
             {
                 "action": "modify",
@@ -154,6 +157,7 @@ SUPINE_POSTURES = [
             }
         ],
         "client_id": "p_corpse_pose",
+        "category": "supine",
         "common_mistakes": ["Fidgeting or adjusting clothing", "Keeping the teeth clenched or the tongue pressed against the roof of the mouth", "Skipping the pose entirely"],
         "contraindications": [
             {
@@ -188,15 +192,16 @@ SUPINE_POSTURES = [
             {"area": "breath", "cue": "Let your breath become natural, soft, and completely effortless."},
             {"area": "face", "cue": "Notice the space between your eyebrows softening and widening."},
         ],
-        "typical_entries": ["p_happy_baby", "p_supine_twist", "p_halasana", "p_fish_pose", "p_knees_to_chest"],
+        "typical_entries": ["p_happy_baby", "p_halasana", "p_fish_pose", "p_knees_to_chest"],
         "typical_exits": ["p_easy_pose", "p_knees_to_chest"],
     },
     {
-        "anatomical_signature": {"is_inverted": False, "spinal_shape": "extension", "weight_bearing_points": ["crown_of_head", "buttocks", "forearms"]},
+        "anatomical_signature": {"is_inverted": False, "spinal_shape": "extension", "weight_bearing_points": ["crown_of_head", "buttocks", "forearms"], "laterality": {"type": "symmetrical", "active_side": "neutral"}},
         "chronic_pain": [
             {"action": "modify", "condition": "neck_pain", "reason": "Weight on the crown can strain the cervical spine.", "recommended_modification": "supported_fish"},
         ],
         "client_id": "p_fish_pose",
+        "category": "supine",
         "common_mistakes": ["Dumping weight into the head", "Over-arching the lower back", "Holding the breath"],
         "contraindications": [
             {"action": "avoid", "condition": "neck_injury", "reason": "Weight-bearing on the cervical spine.", "recommended_modification": "bridge_pose"},

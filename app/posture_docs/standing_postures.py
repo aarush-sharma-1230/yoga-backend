@@ -1,12 +1,13 @@
 # --- Standing postures (weight on feet) ---
 STANDING_POSTURES = [
     {
-        "anatomical_signature": {"is_inverted": False, "spinal_shape": "neutral", "weight_bearing_points": ["feet"]},
+        "anatomical_signature": {"is_inverted": False, "spinal_shape": "neutral", "weight_bearing_points": ["feet"], "laterality": {"type": "symmetrical", "active_side": "neutral"}},
         "chronic_pain": [
             {"action": "adjust", "condition": "lower_back_pain", "reason": "Anterior pelvic tilt creates lumbar compression.", "recommended_modification": "tuck_tailbone"},
             {"action": "adjust", "condition": "knee_pain", "reason": "Locking the knees causes joint strain.", "recommended_modification": "microbend_knees"},
         ],
         "client_id": "p_mountain",
+        "category": "standing",
         "common_mistakes": ["Locking the knees", "Dumping weight entirely into the heels", "Arching the lower back excessively"],
         "contraindications": [
             {"action": "caution", "condition": "vertigo", "reason": "Closing eyes while standing can cause loss of balance.", "recommended_modification": "eyes_open"}
@@ -31,12 +32,13 @@ STANDING_POSTURES = [
         "typical_exits": ["p_upward_salute", "p_chair", "p_forward_fold", "p_tree_left", "p_tree_right"],
     },
     {
-        "anatomical_signature": {"is_inverted": False, "spinal_shape": "mild_extension", "weight_bearing_points": ["feet"]},
+        "anatomical_signature": {"is_inverted": False, "spinal_shape": "mild_extension", "weight_bearing_points": ["feet"], "laterality": {"type": "symmetrical", "active_side": "neutral"}},
         "chronic_pain": [
             {"action": "modify", "condition": "shoulder_pain", "reason": "Shoulder flexion can pinch the subacromial space.", "recommended_modification": "cactus_arms"},
             {"action": "adjust", "condition": "neck_pain", "reason": "Looking up at the thumbs strains the cervical spine.", "recommended_modification": "neutral_neck"},
         ],
         "client_id": "p_upward_salute",
+        "category": "standing",
         "common_mistakes": ["Shrugging shoulders up to the ears", "Flaring the lower ribs outward", "Craning the neck back excessively"],
         "contraindications": [
             {
@@ -66,7 +68,7 @@ STANDING_POSTURES = [
         "typical_exits": ["p_forward_fold", "p_chair", "p_mountain"],
     },
     {
-        "anatomical_signature": {"is_inverted": False, "spinal_shape": "neutral", "weight_bearing_points": ["feet"]},
+        "anatomical_signature": {"is_inverted": False, "spinal_shape": "neutral", "weight_bearing_points": ["feet"], "laterality": {"type": "symmetrical", "active_side": "neutral"}},
         "chronic_pain": [
             {
                 "action": "adjust",
@@ -82,6 +84,7 @@ STANDING_POSTURES = [
             },
         ],
         "client_id": "p_chair",
+        "category": "standing",
         "common_mistakes": ["Knees tracking past the toes", "Arching the lower back (duck butt)", "Dropping the chest toward the thighs"],
         "contraindications": [
             {
@@ -112,7 +115,7 @@ STANDING_POSTURES = [
         "typical_exits": ["p_forward_fold", "p_mountain", "p_halfway_lift"],
     },
     {
-        "anatomical_signature": {"is_inverted": True, "spinal_shape": "flexion", "weight_bearing_points": ["feet"]},
+        "anatomical_signature": {"is_inverted": True, "spinal_shape": "flexion", "weight_bearing_points": ["feet"], "laterality": {"type": "symmetrical", "active_side": "neutral"}},
         "chronic_pain": [
             {
                 "action": "adjust",
@@ -122,6 +125,7 @@ STANDING_POSTURES = [
             }
         ],
         "client_id": "p_forward_fold",
+        "category": "standing",
         "common_mistakes": ["Locking the knees", "Hinging from the lower back instead of the hips", "Holding tension in the neck"],
         "contraindications": [
             {"action": "avoid", "condition": "glaucoma", "reason": "Head below the heart increases intraocular pressure.", "recommended_modification": "halfway_lift"},
@@ -158,7 +162,7 @@ STANDING_POSTURES = [
         "typical_exits": ["p_halfway_lift", "p_plank", "p_mountain"],
     },
     {
-        "anatomical_signature": {"is_inverted": False, "spinal_shape": "neutral", "weight_bearing_points": ["feet"]},
+        "anatomical_signature": {"is_inverted": False, "spinal_shape": "neutral", "weight_bearing_points": ["feet"], "laterality": {"type": "symmetrical", "active_side": "neutral"}},
         "chronic_pain": [
             {
                 "action": "adjust",
@@ -168,6 +172,7 @@ STANDING_POSTURES = [
             }
         ],
         "client_id": "p_halfway_lift",
+        "category": "standing",
         "common_mistakes": ["Rounding the upper back", "Looking too far forward, straining the neck", "Locking the knees"],
         "contraindications": [
             {"action": "caution", "condition": "neck_injury", "reason": "Looking up can hyperextend the cervical spine.", "recommended_modification": "look_down"}
@@ -192,7 +197,7 @@ STANDING_POSTURES = [
         "typical_exits": ["p_forward_fold", "p_plank", "p_chaturanga"],
     },
     {
-        "anatomical_signature": {"is_inverted": False, "spinal_shape": "mild_extension", "weight_bearing_points": ["feet"]},
+        "anatomical_signature": {"is_inverted": False, "spinal_shape": "mild_extension", "weight_bearing_points": ["feet"], "laterality": {"type": "asymmetrical", "active_side": "left", "paired_pose": "p_warrior_1_right"}},
         "chronic_pain": [
             {"action": "adjust", "condition": "knee_pain", "reason": "Deep lunge places lateral and sheer stress on the front knee.", "recommended_modification": "shorten_stance"},
             {
@@ -203,6 +208,7 @@ STANDING_POSTURES = [
             },
         ],
         "client_id": "p_warrior_1_left",
+        "category": "standing",
         "common_mistakes": ["Front knee collapsing inward", "Over-arching the lower back", "Back foot lifting off the floor"],
         "contraindications": [
             {
@@ -225,11 +231,11 @@ STANDING_POSTURES = [
             "intermediate": "Deepen the front knee bend to 90 degrees, arms overhead.",
         },
         "sensory_cues": [{"area": "feet", "cue": "Feel your back heel anchoring you down."}, {"area": "hips", "cue": "Notice the stretch across the front of your back hip."}],
-        "typical_entries": ["p_downward_dog", "p_mountain", "p_low_lunge", "p_warrior_1_right"],
-        "typical_exits": ["p_warrior_2_left", "p_plank", "p_mountain", "p_warrior_1_right"],
+        "typical_entries": ["p_downward_dog", "p_mountain"],
+        "typical_exits": ["p_warrior_2_left", "p_plank", "p_mountain"],
     },
     {
-        "anatomical_signature": {"is_inverted": False, "spinal_shape": "mild_extension", "weight_bearing_points": ["feet"]},
+        "anatomical_signature": {"is_inverted": False, "spinal_shape": "mild_extension", "weight_bearing_points": ["feet"], "laterality": {"type": "asymmetrical", "active_side": "right", "paired_pose": "p_warrior_1_left"}},
         "chronic_pain": [
             {"action": "adjust", "condition": "knee_pain", "reason": "Deep lunge places lateral and sheer stress on the front knee.", "recommended_modification": "shorten_stance"},
             {
@@ -240,6 +246,7 @@ STANDING_POSTURES = [
             },
         ],
         "client_id": "p_warrior_1_right",
+        "category": "standing",
         "common_mistakes": ["Front knee collapsing inward", "Over-arching the lower back", "Back foot lifting off the floor"],
         "contraindications": [
             {
@@ -262,11 +269,11 @@ STANDING_POSTURES = [
             "intermediate": "Deepen the front knee bend to 90 degrees, arms overhead.",
         },
         "sensory_cues": [{"area": "feet", "cue": "Feel your back heel anchoring you down."}, {"area": "hips", "cue": "Notice the stretch across the front of your back hip."}],
-        "typical_entries": ["p_downward_dog", "p_mountain", "p_low_lunge", "p_warrior_1_left"],
-        "typical_exits": ["p_warrior_2_right", "p_plank", "p_mountain", "p_warrior_1_left"],
+        "typical_entries": ["p_downward_dog", "p_mountain"],
+        "typical_exits": ["p_warrior_2_right", "p_plank", "p_mountain"],
     },
     {
-        "anatomical_signature": {"is_inverted": False, "spinal_shape": "neutral", "weight_bearing_points": ["feet"]},
+        "anatomical_signature": {"is_inverted": False, "spinal_shape": "neutral", "weight_bearing_points": ["feet"], "laterality": {"type": "asymmetrical", "active_side": "left", "paired_pose": "p_warrior_2_right"}},
         "chronic_pain": [
             {
                 "action": "adjust",
@@ -282,6 +289,7 @@ STANDING_POSTURES = [
             },
         ],
         "client_id": "p_warrior_2_left",
+        "category": "standing",
         "common_mistakes": ["Leaning the torso over the front leg", "Front knee collapsing inward past the big toe", "Shrugging the shoulders"],
         "contraindications": [
             {
@@ -308,10 +316,10 @@ STANDING_POSTURES = [
             {"area": "legs", "cue": "Feel the power and stability in your legs."},
         ],
         "typical_entries": ["p_warrior_1_left", "p_downward_dog", "p_mountain"],
-        "typical_exits": ["p_triangle_left", "p_extended_side_angle", "p_plank", "p_warrior_2_right"],
+        "typical_exits": ["p_triangle_left", "p_plank"],
     },
     {
-        "anatomical_signature": {"is_inverted": False, "spinal_shape": "neutral", "weight_bearing_points": ["feet"]},
+        "anatomical_signature": {"is_inverted": False, "spinal_shape": "neutral", "weight_bearing_points": ["feet"], "laterality": {"type": "asymmetrical", "active_side": "right", "paired_pose": "p_warrior_2_left"}},
         "chronic_pain": [
             {
                 "action": "adjust",
@@ -327,6 +335,7 @@ STANDING_POSTURES = [
             },
         ],
         "client_id": "p_warrior_2_right",
+        "category": "standing",
         "common_mistakes": ["Leaning the torso over the front leg", "Front knee collapsing inward past the big toe", "Shrugging the shoulders"],
         "contraindications": [
             {
@@ -353,10 +362,10 @@ STANDING_POSTURES = [
             {"area": "legs", "cue": "Feel the power and stability in your legs."},
         ],
         "typical_entries": ["p_warrior_1_right", "p_downward_dog", "p_mountain"],
-        "typical_exits": ["p_triangle_right", "p_extended_side_angle", "p_plank", "p_warrior_2_left"],
+        "typical_exits": ["p_triangle_right", "p_plank"],
     },
     {
-        "anatomical_signature": {"is_inverted": False, "spinal_shape": "neutral", "weight_bearing_points": ["feet"]},
+        "anatomical_signature": {"is_inverted": False, "spinal_shape": "neutral", "weight_bearing_points": ["feet"], "laterality": {"type": "asymmetrical", "active_side": "left", "paired_pose": "p_warrior_3_right"}},
         "chronic_pain": [
             {
                 "action": "adjust",
@@ -367,6 +376,7 @@ STANDING_POSTURES = [
             {"action": "modify", "condition": "ankle_stiffness", "reason": "Requires immense stability from the standing ankle.", "recommended_modification": "wall_support"},
         ],
         "client_id": "p_warrior_3_left",
+        "category": "standing",
         "common_mistakes": ["Opening the lifted hip toward the ceiling", "Locking the standing knee", "Dropping the chest below the hips"],
         "contraindications": [
             {"action": "caution", "condition": "hypertension", "reason": "Intense full-body isometric contraction.", "recommended_modification": "airplane_arms"}
@@ -387,11 +397,11 @@ STANDING_POSTURES = [
             {"area": "full_body", "cue": "Imagine a straight line of energy from your back heel through the crown of " "your head."},
             {"area": "feet", "cue": "Feel your standing foot gripping the mat for stability."},
         ],
-        "typical_entries": ["p_high_lunge", "p_warrior_1_left", "p_tree_left"],
-        "typical_exits": ["p_mountain", "p_high_lunge", "p_standing_split", "p_warrior_3_right"],
+        "typical_entries": ["p_warrior_1_left", "p_tree_left"],
+        "typical_exits": ["p_mountain"],
     },
     {
-        "anatomical_signature": {"is_inverted": False, "spinal_shape": "neutral", "weight_bearing_points": ["feet"]},
+        "anatomical_signature": {"is_inverted": False, "spinal_shape": "neutral", "weight_bearing_points": ["feet"], "laterality": {"type": "asymmetrical", "active_side": "right", "paired_pose": "p_warrior_3_left"}},
         "chronic_pain": [
             {
                 "action": "adjust",
@@ -402,6 +412,7 @@ STANDING_POSTURES = [
             {"action": "modify", "condition": "ankle_stiffness", "reason": "Requires immense stability from the standing ankle.", "recommended_modification": "wall_support"},
         ],
         "client_id": "p_warrior_3_right",
+        "category": "standing",
         "common_mistakes": ["Opening the lifted hip toward the ceiling", "Locking the standing knee", "Dropping the chest below the hips"],
         "contraindications": [
             {"action": "caution", "condition": "hypertension", "reason": "Intense full-body isometric contraction.", "recommended_modification": "airplane_arms"}
@@ -422,11 +433,11 @@ STANDING_POSTURES = [
             {"area": "full_body", "cue": "Imagine a straight line of energy from your back heel through the crown of " "your head."},
             {"area": "feet", "cue": "Feel your standing foot gripping the mat for stability."},
         ],
-        "typical_entries": ["p_high_lunge", "p_warrior_1_right", "p_tree_right"],
-        "typical_exits": ["p_mountain", "p_high_lunge", "p_standing_split", "p_warrior_3_left"],
+        "typical_entries": ["p_warrior_1_right", "p_tree_right"],
+        "typical_exits": ["p_mountain"],
     },
     {
-        "anatomical_signature": {"is_inverted": False, "spinal_shape": "lateral_flexion", "weight_bearing_points": ["feet", "bottom_hand_optional"]},
+        "anatomical_signature": {"is_inverted": False, "spinal_shape": "lateral_flexion", "weight_bearing_points": ["feet", "bottom_hand_optional"], "laterality": {"type": "asymmetrical", "active_side": "left", "paired_pose": "p_triangle_right"}},
         "chronic_pain": [
             {
                 "action": "adjust",
@@ -437,6 +448,7 @@ STANDING_POSTURES = [
             {"action": "adjust", "condition": "knee_pain", "reason": "Hyperextension of the front knee.", "recommended_modification": "microbend_front_knee"},
         ],
         "client_id": "p_triangle_left",
+        "category": "standing",
         "common_mistakes": ["Resting the hand directly on the knee joint", "Collapsing the top shoulder forward", "Hyperextending (locking) the front knee"],
         "contraindications": [
             {"action": "modify", "condition": "neck_injury", "reason": "Looking up at the top hand strains the cervical spine.", "recommended_modification": "look_down"}
@@ -457,11 +469,11 @@ STANDING_POSTURES = [
             {"area": "ribs", "cue": "Feel the deep stretch along the side of your body."},
             {"area": "spine", "cue": "Imagine leaning back against an invisible wall."},
         ],
-        "typical_entries": ["p_warrior_2_left", "p_pyramid"],
-        "typical_exits": ["p_warrior_2_left", "p_half_moon", "p_pyramid", "p_triangle_right"],
+        "typical_entries": ["p_warrior_2_left"],
+        "typical_exits": ["p_warrior_2_left"],
     },
     {
-        "anatomical_signature": {"is_inverted": False, "spinal_shape": "lateral_flexion", "weight_bearing_points": ["feet", "bottom_hand_optional"]},
+        "anatomical_signature": {"is_inverted": False, "spinal_shape": "lateral_flexion", "weight_bearing_points": ["feet", "bottom_hand_optional"], "laterality": {"type": "asymmetrical", "active_side": "right", "paired_pose": "p_triangle_left"}},
         "chronic_pain": [
             {
                 "action": "adjust",
@@ -472,6 +484,7 @@ STANDING_POSTURES = [
             {"action": "adjust", "condition": "knee_pain", "reason": "Hyperextension of the front knee.", "recommended_modification": "microbend_front_knee"},
         ],
         "client_id": "p_triangle_right",
+        "category": "standing",
         "common_mistakes": ["Resting the hand directly on the knee joint", "Collapsing the top shoulder forward", "Hyperextending (locking) the front knee"],
         "contraindications": [
             {"action": "modify", "condition": "neck_injury", "reason": "Looking up at the top hand strains the cervical spine.", "recommended_modification": "look_down"}
@@ -492,11 +505,11 @@ STANDING_POSTURES = [
             {"area": "ribs", "cue": "Feel the deep stretch along the side of your body."},
             {"area": "spine", "cue": "Imagine leaning back against an invisible wall."},
         ],
-        "typical_entries": ["p_warrior_2_right", "p_pyramid"],
-        "typical_exits": ["p_warrior_2_right", "p_half_moon", "p_pyramid", "p_triangle_left"],
+        "typical_entries": ["p_warrior_2_right"],
+        "typical_exits": ["p_warrior_2_right"],
     },
     {
-        "anatomical_signature": {"is_inverted": False, "spinal_shape": "neutral", "weight_bearing_points": ["feet"]},
+        "anatomical_signature": {"is_inverted": False, "spinal_shape": "neutral", "weight_bearing_points": ["feet"], "laterality": {"type": "asymmetrical", "active_side": "left", "paired_pose": "p_tree_right"}},
         "chronic_pain": [
             {
                 "action": "avoid_specific_placement",
@@ -506,6 +519,7 @@ STANDING_POSTURES = [
             }
         ],
         "client_id": "p_tree_left",
+        "category": "standing",
         "common_mistakes": ["Placing the foot directly on the knee joint", "Sinking the hip of the standing leg out to the side", "Holding the breath while balancing"],
         "contraindications": [
             {"action": "modify", "condition": "vertigo", "reason": "Standing on one leg challenges the vestibular system.", "recommended_modification": "kickstand_foot"}
@@ -527,10 +541,10 @@ STANDING_POSTURES = [
             {"area": "spine", "cue": "Feel yourself rooted to the floor, yet growing taller through your spine."},
         ],
         "typical_entries": ["p_mountain"],
-        "typical_exits": ["p_mountain", "p_warrior_3_left", "p_tree_right"],
+        "typical_exits": ["p_mountain", "p_warrior_3_left"],
     },
     {
-        "anatomical_signature": {"is_inverted": False, "spinal_shape": "neutral", "weight_bearing_points": ["feet"]},
+        "anatomical_signature": {"is_inverted": False, "spinal_shape": "neutral", "weight_bearing_points": ["feet"], "laterality": {"type": "asymmetrical", "active_side": "right", "paired_pose": "p_tree_left"}},
         "chronic_pain": [
             {
                 "action": "avoid_specific_placement",
@@ -540,6 +554,7 @@ STANDING_POSTURES = [
             }
         ],
         "client_id": "p_tree_right",
+        "category": "standing",
         "common_mistakes": ["Placing the foot directly on the knee joint", "Sinking the hip of the standing leg out to the side", "Holding the breath while balancing"],
         "contraindications": [
             {"action": "modify", "condition": "vertigo", "reason": "Standing on one leg challenges the vestibular system.", "recommended_modification": "kickstand_foot"}
@@ -561,6 +576,6 @@ STANDING_POSTURES = [
             {"area": "spine", "cue": "Feel yourself rooted to the floor, yet growing taller through your spine."},
         ],
         "typical_entries": ["p_mountain"],
-        "typical_exits": ["p_mountain", "p_warrior_3_right", "p_tree_left"],
+        "typical_exits": ["p_mountain", "p_warrior_3_right"],
     },
 ]

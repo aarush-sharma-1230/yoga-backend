@@ -1,12 +1,13 @@
 # --- Prone postures (belly/body toward floor) ---
 PRONE_POSTURES = [
     {
-        "anatomical_signature": {"is_inverted": False, "spinal_shape": "neutral", "weight_bearing_points": ["palms", "knees", "shins"]},
+        "anatomical_signature": {"is_inverted": False, "spinal_shape": "neutral", "weight_bearing_points": ["palms", "knees", "shins"], "laterality": {"type": "symmetrical", "active_side": "neutral"}},
         "chronic_pain": [
             {"action": "modify", "condition": "wrist_pain", "reason": "Weight-bearing compresses the wrists.", "recommended_modification": "fists_or_forearms"},
             {"action": "modify", "condition": "knee_pain", "reason": "Direct pressure on the knees.", "recommended_modification": "padded_knees"},
         ],
         "client_id": "p_table_top",
+        "category": "prone",
         "common_mistakes": ["Rounding the spine", "Shrugging the shoulders", "Holding the breath"],
         "contraindications": [],
         "drishti": {"alternatives": ["straight_ahead"], "primary": "floor_slightly_forward"},
@@ -29,12 +30,13 @@ PRONE_POSTURES = [
         "typical_exits": ["p_cat", "p_cow", "p_childs_pose", "p_downward_dog", "p_plank", "p_pigeon_left", "p_pigeon_right"],
     },
     {
-        "anatomical_signature": {"is_inverted": False, "spinal_shape": "flexion", "weight_bearing_points": ["palms", "knees", "shins"]},
+        "anatomical_signature": {"is_inverted": False, "spinal_shape": "flexion", "weight_bearing_points": ["palms", "knees", "shins"], "laterality": {"type": "symmetrical", "active_side": "neutral"}},
         "chronic_pain": [
             {"action": "modify", "condition": "wrist_pain", "reason": "Weight-bearing in full extension compresses the wrists.", "recommended_modification": "fists_or_forearms"},
             {"action": "modify", "condition": "knee_pain", "reason": "Direct pressure on the patella against the floor.", "recommended_modification": "padded_knees"},
         ],
         "client_id": "p_cat",
+        "category": "prone",
         "common_mistakes": ["Forcing the chin too hard into the chest", "Shrugging the shoulders up toward the ears", "Locking the elbows"],
         "contraindications": [
             {
@@ -65,7 +67,7 @@ PRONE_POSTURES = [
         "typical_exits": ["p_cow", "p_childs_pose", "p_downward_dog"],
     },
     {
-        "anatomical_signature": {"is_inverted": False, "spinal_shape": "extension", "weight_bearing_points": ["palms", "knees", "shins"]},
+        "anatomical_signature": {"is_inverted": False, "spinal_shape": "extension", "weight_bearing_points": ["palms", "knees", "shins"], "laterality": {"type": "symmetrical", "active_side": "neutral"}},
         "chronic_pain": [
             {
                 "action": "adjust",
@@ -76,6 +78,7 @@ PRONE_POSTURES = [
             {"action": "modify", "condition": "wrist_pain", "reason": "Weight-bearing in extension compresses wrists.", "recommended_modification": "fists_or_forearms"},
         ],
         "client_id": "p_cow",
+        "category": "prone",
         "common_mistakes": ["Collapsing heavily into the lower back without core support", "Cranking the neck upward", "Bending the elbows"],
         "contraindications": [
             {"action": "modify", "condition": "neck_injury", "reason": "Looking up sharply compresses the cervical vertebrae.", "recommended_modification": "look_forward"}
@@ -100,7 +103,7 @@ PRONE_POSTURES = [
         "typical_exits": ["p_cat", "p_downward_dog", "p_childs_pose"],
     },
     {
-        "anatomical_signature": {"is_inverted": False, "spinal_shape": "flexion", "weight_bearing_points": ["shins", "forehead", "forearms"]},
+        "anatomical_signature": {"is_inverted": False, "spinal_shape": "flexion", "weight_bearing_points": ["shins", "forehead", "forearms"], "laterality": {"type": "symmetrical", "active_side": "neutral"}},
         "chronic_pain": [
             {"action": "modify", "condition": "knee_pain", "reason": "Deep flexion compresses the meniscus.", "recommended_modification": "blanket_under_knees_or_hips"},
             {
@@ -111,6 +114,7 @@ PRONE_POSTURES = [
             },
         ],
         "client_id": "p_childs_pose",
+        "category": "prone",
         "common_mistakes": ["Forcing hips to heels causing knee pain", "Holding tension in the shoulders"],
         "contraindications": [{"action": "modify", "condition": "pregnancy", "reason": "Compression of the abdomen.", "recommended_modification": "wide_knee_childs_pose"}],
         "drishti": {"alternatives": ["inward"], "primary": "closed_eyes"},
@@ -129,11 +133,11 @@ PRONE_POSTURES = [
             {"area": "hips", "cue": "Feel your hips sinking heavier toward your heels with every exhale."},
             {"area": "head", "cue": "Notice the solid support of the earth beneath your forehead."},
         ],
-        "typical_entries": ["p_table_top", "p_downward_dog", "p_hero_pose"],
+        "typical_entries": ["p_table_top", "p_downward_dog"],
         "typical_exits": ["p_table_top", "p_downward_dog", "p_cobra"],
     },
     {
-        "anatomical_signature": {"is_inverted": False, "spinal_shape": "neutral", "weight_bearing_points": ["palms", "toes"]},
+        "anatomical_signature": {"is_inverted": False, "spinal_shape": "neutral", "weight_bearing_points": ["palms", "toes"], "laterality": {"type": "symmetrical", "active_side": "neutral"}},
         "chronic_pain": [
             {
                 "action": "modify",
@@ -149,6 +153,7 @@ PRONE_POSTURES = [
             },
         ],
         "client_id": "p_plank",
+        "category": "prone",
         "common_mistakes": ["Dropping the hips and sagging the lower back", "Piking the hips up too high", "Collapsing between the shoulder blades"],
         "contraindications": [
             {
@@ -182,12 +187,13 @@ PRONE_POSTURES = [
         "typical_exits": ["p_chaturanga", "p_downward_dog", "p_childs_pose"],
     },
     {
-        "anatomical_signature": {"is_inverted": False, "spinal_shape": "neutral", "weight_bearing_points": ["palms", "tops_of_feet"]},
+        "anatomical_signature": {"is_inverted": False, "spinal_shape": "neutral", "weight_bearing_points": ["palms", "tops_of_feet"], "laterality": {"type": "symmetrical", "active_side": "neutral"}},
         "chronic_pain": [
             {"action": "modify", "condition": "wrist_pain", "reason": "Full body weight on wrists in extension.", "recommended_modification": "forearm_chaturanga"},
             {"action": "adjust", "condition": "lower_back_pain", "reason": "Weak core causes lumbar sag.", "recommended_modification": "knees_down_chaturanga"},
         ],
         "client_id": "p_chaturanga",
+        "category": "prone",
         "common_mistakes": ["Dropping the hips", "Splaying the elbows out", "Shrugging the shoulders"],
         "contraindications": [
             {"action": "modify", "condition": "shoulder_injury", "reason": "Heavy load on the shoulder girdle.", "recommended_modification": "knees_down_chaturanga"},
@@ -212,11 +218,12 @@ PRONE_POSTURES = [
         "typical_exits": ["p_cobra", "p_upward_dog", "p_downward_dog"],
     },
     {
-        "anatomical_signature": {"is_inverted": False, "spinal_shape": "extension", "weight_bearing_points": ["pelvis", "tops_of_feet", "palms (lightly)"]},
+        "anatomical_signature": {"is_inverted": False, "spinal_shape": "extension", "weight_bearing_points": ["pelvis", "tops_of_feet", "palms (lightly)"], "laterality": {"type": "symmetrical", "active_side": "neutral"}},
         "chronic_pain": [
             {"action": "adjust", "condition": "lower_back_pain", "reason": "Pushing up too high jams the lumbar facet joints.", "recommended_modification": "baby_cobra"}
         ],
         "client_id": "p_cobra",
+        "category": "prone",
         "common_mistakes": [
             "Using arm strength to push up instead of back strength",
             "Crunching the back of the neck by looking too far up",
@@ -251,11 +258,11 @@ PRONE_POSTURES = [
             {"area": "chest", "cue": "Feel the front of your chest peeling away from the earth."},
             {"area": "shoulders", "cue": "Imagine your shoulder blades sliding down toward your back pockets."},
         ],
-        "typical_entries": ["p_prone_savasana", "p_chaturanga"],
-        "typical_exits": ["p_downward_dog", "p_childs_pose", "p_prone_savasana"],
+        "typical_entries": ["p_chaturanga"],
+        "typical_exits": ["p_downward_dog", "p_childs_pose"],
     },
     {
-        "anatomical_signature": {"is_inverted": False, "spinal_shape": "mild_extension", "weight_bearing_points": ["forearms", "pelvis", "tops_of_feet"]},
+        "anatomical_signature": {"is_inverted": False, "spinal_shape": "mild_extension", "weight_bearing_points": ["forearms", "pelvis", "tops_of_feet"], "laterality": {"type": "symmetrical", "active_side": "neutral"}},
         "chronic_pain": [
             {
                 "action": "adjust",
@@ -265,6 +272,7 @@ PRONE_POSTURES = [
             }
         ],
         "client_id": "p_sphinx",
+        "category": "prone",
         "common_mistakes": ["Sinking the chest between the shoulders", "Clenching the glutes too tightly", "Looking too far upward"],
         "contraindications": [{"action": "avoid", "condition": "pregnancy", "reason": "Direct pressure on the abdomen is unsafe.", "recommended_modification": "cow_pose"}],
         "drishti": {"alternatives": ["closed_eyes"], "primary": "straight_ahead"},
@@ -286,16 +294,17 @@ PRONE_POSTURES = [
             {"area": "spine", "cue": "Feel the gentle traction as you energetically pull your elbows toward your " "hips."},
             {"area": "chest", "cue": "Notice the quiet, steady opening across your collarbones."},
         ],
-        "typical_entries": ["p_prone_savasana", "p_cobra"],
-        "typical_exits": ["p_prone_savasana", "p_childs_pose", "p_seal_pose"],
+        "typical_entries": ["p_cobra"],
+        "typical_exits": ["p_childs_pose"],
     },
     {
-        "anatomical_signature": {"is_inverted": False, "spinal_shape": "extension", "weight_bearing_points": ["palms", "tops_of_feet"]},
+        "anatomical_signature": {"is_inverted": False, "spinal_shape": "extension", "weight_bearing_points": ["palms", "tops_of_feet"], "laterality": {"type": "symmetrical", "active_side": "neutral"}},
         "chronic_pain": [
             {"action": "modify", "condition": "lower_back_pain", "reason": "Hanging in the joints causes severe lower back compression.", "recommended_modification": "cobra_pose"},
             {"action": "modify", "condition": "wrist_pain", "reason": "Bears significant body weight in deep wrist extension.", "recommended_modification": "sphinx_pose"},
         ],
         "client_id": "p_upward_dog",
+        "category": "prone",
         "common_mistakes": [
             "Letting the thighs rest on the floor (which turns it into a poorly aligned Cobra)",
             "Hanging the head back completely, crunching the neck",
