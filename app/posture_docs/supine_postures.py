@@ -1,6 +1,35 @@
 # --- Supine postures (on back) ---
 SUPINE_POSTURES = [
     {
+        "anatomical_signature": {"is_inverted": False, "spinal_shape": "flexion", "weight_bearing_points": ["sacrum", "back_of_head"]},
+        "chronic_pain": [
+            {"action": "adjust", "condition": "lower_back_pain", "reason": "Pulling knees too hard can strain the lumbar spine.", "recommended_modification": "gentle_hold"},
+        ],
+        "client_id": "p_knees_to_chest",
+        "common_mistakes": ["Holding the breath", "Pulling too aggressively", "Lifting the head and shoulders"],
+        "contraindications": [
+            {"action": "modify", "condition": "pregnancy", "reason": "Deep compression of the abdomen.", "recommended_modification": "single_knee_to_chest"},
+        ],
+        "drishti": {"alternatives": ["closed_eyes"], "primary": "straight_up"},
+        "modifications": [
+            {"instruction": "Hold behind your thighs instead of your shins if knees are sensitive.", "name": "Hold Behind Knees", "target_area": "knees"},
+            {"instruction": "Draw one knee at a time toward your chest.", "name": "Single Knee to Chest", "target_area": "lower_back"},
+        ],
+        "name": {"aliases": ["Apanasana", "Wind-Relieving Pose"], "english": "Knees to Chest", "sanskrit": "Apanasana"},
+        "pose_intent": ["Release lower back tension", "Massage the abdominal organs", "Prepare for Bridge or Happy Baby"],
+        "progression": {
+            "advanced": "Rock gently side to side to massage the spine.",
+            "beginner": "Hold behind thighs, gentle pressure.",
+            "intermediate": "Clasp hands around shins, draw knees toward armpits.",
+        },
+        "sensory_cues": [
+            {"area": "lower_back", "cue": "Feel your lower back softening into the floor."},
+            {"area": "breath", "cue": "Let your exhale help draw your knees closer."},
+        ],
+        "typical_entries": ["p_bridge", "p_happy_baby", "p_corpse_pose"],
+        "typical_exits": ["p_bridge", "p_happy_baby", "p_corpse_pose"],
+    },
+    {
         "anatomical_signature": {"is_inverted": True, "spinal_shape": "extension", "weight_bearing_points": ["shoulders", "back_of_head", "feet"]},
         "chronic_pain": [
             {
@@ -159,7 +188,36 @@ SUPINE_POSTURES = [
             {"area": "breath", "cue": "Let your breath become natural, soft, and completely effortless."},
             {"area": "face", "cue": "Notice the space between your eyebrows softening and widening."},
         ],
-        "typical_entries": ["p_happy_baby", "p_supine_twist", "p_halasana"],
-        "typical_exits": ["p_easy_pose", "session_end"],
+        "typical_entries": ["p_happy_baby", "p_supine_twist", "p_halasana", "p_fish_pose", "p_knees_to_chest"],
+        "typical_exits": ["p_easy_pose", "p_knees_to_chest"],
+    },
+    {
+        "anatomical_signature": {"is_inverted": False, "spinal_shape": "extension", "weight_bearing_points": ["crown_of_head", "buttocks", "forearms"]},
+        "chronic_pain": [
+            {"action": "modify", "condition": "neck_pain", "reason": "Weight on the crown can strain the cervical spine.", "recommended_modification": "supported_fish"},
+        ],
+        "client_id": "p_fish_pose",
+        "common_mistakes": ["Dumping weight into the head", "Over-arching the lower back", "Holding the breath"],
+        "contraindications": [
+            {"action": "avoid", "condition": "neck_injury", "reason": "Weight-bearing on the cervical spine.", "recommended_modification": "bridge_pose"},
+        ],
+        "drishti": {"alternatives": ["closed_eyes"], "primary": "straight_up"},
+        "modifications": [
+            {"instruction": "Place a folded blanket under your upper back to reduce neck pressure.", "name": "Supported Fish", "target_area": "neck"},
+            {"instruction": "Keep your legs in Butterfly or extended with minimal arch.", "name": "Gentle Fish", "target_area": "spine"},
+        ],
+        "name": {"aliases": ["Matsyasana"], "english": "Fish Pose", "sanskrit": "Matsyasana"},
+        "pose_intent": ["Open the chest and throat", "Counterpose for Shoulder Stand", "Stretch the front of the neck"],
+        "progression": {
+            "advanced": "Full expression with legs in Lotus, arms overhead.",
+            "beginner": "Supported with a block under the upper back.",
+            "intermediate": "Legs extended, crown of head lightly on the floor.",
+        },
+        "sensory_cues": [
+            {"area": "chest", "cue": "Feel your heart lifting toward the ceiling."},
+            {"area": "throat", "cue": "Notice the gentle stretch along the front of your neck."},
+        ],
+        "typical_entries": ["p_shoulder_stand"],
+        "typical_exits": ["p_corpse_pose"],
     },
 ]

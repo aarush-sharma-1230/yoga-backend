@@ -1,6 +1,34 @@
 # --- Prone postures (belly/body toward floor) ---
 PRONE_POSTURES = [
     {
+        "anatomical_signature": {"is_inverted": False, "spinal_shape": "neutral", "weight_bearing_points": ["palms", "knees", "shins"]},
+        "chronic_pain": [
+            {"action": "modify", "condition": "wrist_pain", "reason": "Weight-bearing compresses the wrists.", "recommended_modification": "fists_or_forearms"},
+            {"action": "modify", "condition": "knee_pain", "reason": "Direct pressure on the knees.", "recommended_modification": "padded_knees"},
+        ],
+        "client_id": "p_table_top",
+        "common_mistakes": ["Rounding the spine", "Shrugging the shoulders", "Holding the breath"],
+        "contraindications": [],
+        "drishti": {"alternatives": ["straight_ahead"], "primary": "floor_slightly_forward"},
+        "modifications": [
+            {"instruction": "Place a folded blanket under your knees for cushioning.", "name": "Padded Knees", "target_area": "knees"},
+            {"instruction": "Make fists or use forearms if wrists are sensitive.", "name": "Fists or Forearms", "target_area": "wrists"},
+        ],
+        "name": {"aliases": ["All Fours", "Hands and Knees"], "english": "Table Top Pose", "sanskrit": "Bharmanasana"},
+        "pose_intent": ["Establish neutral spine on all fours", "Prepare for Cat-Cow and transitions", "Build wrist and core awareness"],
+        "progression": {
+            "advanced": "Maintain perfect neutrality while moving through transitions.",
+            "beginner": "Focus on stacking shoulders over wrists, hips over knees.",
+            "intermediate": "Engage the core to support the spine.",
+        },
+        "sensory_cues": [
+            {"area": "spine", "cue": "Imagine your spine as a flat table from crown to tailbone."},
+            {"area": "hands", "cue": "Spread your fingers wide and press evenly through the palms."},
+        ],
+        "typical_entries": ["p_childs_pose", "p_easy_pose"],
+        "typical_exits": ["p_cat", "p_cow", "p_childs_pose", "p_downward_dog", "p_plank", "p_pigeon_left", "p_pigeon_right"],
+    },
+    {
         "anatomical_signature": {"is_inverted": False, "spinal_shape": "flexion", "weight_bearing_points": ["palms", "knees", "shins"]},
         "chronic_pain": [
             {"action": "modify", "condition": "wrist_pain", "reason": "Weight-bearing in full extension compresses the wrists.", "recommended_modification": "fists_or_forearms"},
@@ -152,6 +180,36 @@ PRONE_POSTURES = [
         ],
         "typical_entries": ["p_downward_dog", "p_forward_fold", "p_table_top"],
         "typical_exits": ["p_chaturanga", "p_downward_dog", "p_childs_pose"],
+    },
+    {
+        "anatomical_signature": {"is_inverted": False, "spinal_shape": "neutral", "weight_bearing_points": ["palms", "tops_of_feet"]},
+        "chronic_pain": [
+            {"action": "modify", "condition": "wrist_pain", "reason": "Full body weight on wrists in extension.", "recommended_modification": "forearm_chaturanga"},
+            {"action": "adjust", "condition": "lower_back_pain", "reason": "Weak core causes lumbar sag.", "recommended_modification": "knees_down_chaturanga"},
+        ],
+        "client_id": "p_chaturanga",
+        "common_mistakes": ["Dropping the hips", "Splaying the elbows out", "Shrugging the shoulders"],
+        "contraindications": [
+            {"action": "modify", "condition": "shoulder_injury", "reason": "Heavy load on the shoulder girdle.", "recommended_modification": "knees_down_chaturanga"},
+        ],
+        "drishti": {"alternatives": ["slightly_forward"], "primary": "floor_slightly_forward"},
+        "modifications": [
+            {"instruction": "Lower to your forearms instead of palms.", "name": "Forearm Chaturanga", "target_area": "wrists"},
+            {"instruction": "Lower your knees to the mat, maintaining a straight line from head to knees.", "name": "Knees Down Chaturanga", "target_area": "core"},
+        ],
+        "name": {"aliases": ["Four-Limbed Staff", "Low Plank"], "english": "Chaturanga Dandasana", "sanskrit": "Chaturanga Dandasana"},
+        "pose_intent": ["Strengthen arms, shoulders, and core", "Build the foundation for vinyasa flow", "Prepare for Cobra or Upward Dog"],
+        "progression": {
+            "advanced": "Full expression with elbows at 90 degrees, body in one straight line.",
+            "beginner": "Knees down, focus on elbow alignment.",
+            "intermediate": "Lower with control from Plank, hover briefly before transitioning.",
+        },
+        "sensory_cues": [
+            {"area": "core", "cue": "Draw your belly button up toward your spine."},
+            {"area": "arms", "cue": "Keep your elbows hugging your ribs as you lower."},
+        ],
+        "typical_entries": ["p_plank", "p_halfway_lift", "p_downward_dog"],
+        "typical_exits": ["p_cobra", "p_upward_dog", "p_downward_dog"],
     },
     {
         "anatomical_signature": {"is_inverted": False, "spinal_shape": "extension", "weight_bearing_points": ["pelvis", "tops_of_feet", "palms (lightly)"]},

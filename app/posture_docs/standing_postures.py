@@ -27,8 +27,8 @@ STANDING_POSTURES = [
             {"area": "feet", "cue": "Feel the four corners of your feet rooting deeply into the earth."},
             {"area": "spine", "cue": "Imagine a string pulling the crown of your head directly up."},
         ],
-        "typical_entries": ["p_forward_fold", "p_chair_pose"],
-        "typical_exits": ["p_upward_salute", "p_chair_pose", "p_forward_fold", "p_tree_pose"],
+        "typical_entries": ["p_forward_fold", "p_chair"],
+        "typical_exits": ["p_upward_salute", "p_chair", "p_forward_fold", "p_tree_left", "p_tree_right"],
     },
     {
         "anatomical_signature": {"is_inverted": False, "spinal_shape": "mild_extension", "weight_bearing_points": ["feet"]},
@@ -63,7 +63,7 @@ STANDING_POSTURES = [
             {"area": "ribs", "cue": "Feel the space opening up along your side body."},
         ],
         "typical_entries": ["p_mountain"],
-        "typical_exits": ["p_forward_fold", "p_chair_pose", "p_mountain"],
+        "typical_exits": ["p_forward_fold", "p_chair", "p_mountain"],
     },
     {
         "anatomical_signature": {"is_inverted": False, "spinal_shape": "neutral", "weight_bearing_points": ["feet"]},
@@ -154,7 +154,7 @@ STANDING_POSTURES = [
             {"area": "neck", "cue": "Let your head hang heavy like a ripe fruit."},
             {"area": "hamstrings", "cue": "Feel the stretch wrapping around the back of your legs."},
         ],
-        "typical_entries": ["p_mountain", "p_upward_salute", "p_halfway_lift"],
+        "typical_entries": ["p_mountain", "p_upward_salute", "p_halfway_lift", "p_chair"],
         "typical_exits": ["p_halfway_lift", "p_plank", "p_mountain"],
     },
     {
@@ -202,7 +202,7 @@ STANDING_POSTURES = [
                 "recommended_modification": "high_lunge_heel_up",
             },
         ],
-        "client_id": "p_warrior_1",
+        "client_id": "p_warrior_1_left",
         "common_mistakes": ["Front knee collapsing inward", "Over-arching the lower back", "Back foot lifting off the floor"],
         "contraindications": [
             {
@@ -217,7 +217,7 @@ STANDING_POSTURES = [
             {"instruction": "Step your back foot slightly closer to the front and decrease the " "bend in your front knee.", "name": "Shorten Stance", "target_area": "knees"},
             {"instruction": "Lift your back heel off the floor so all toes point forward, " "relieving ankle pressure.", "name": "High Lunge (Heel Up)", "target_area": "ankles"},
         ],
-        "name": {"aliases": ["Warrior I"], "english": "Warrior 1", "sanskrit": "Virabhadrasana I"},
+        "name": {"aliases": ["Warrior I Left"], "english": "Warrior 1 (Left Leg Forward)", "sanskrit": "Virabhadrasana I"},
         "pose_intent": ["Strengthen quadriceps, glutes, and ankles", "Stretch the hip flexors of the back leg", "Open the chest and shoulders"],
         "progression": {
             "advanced": "Palms touching overhead, gaze up, back leg perfectly straight.",
@@ -225,8 +225,45 @@ STANDING_POSTURES = [
             "intermediate": "Deepen the front knee bend to 90 degrees, arms overhead.",
         },
         "sensory_cues": [{"area": "feet", "cue": "Feel your back heel anchoring you down."}, {"area": "hips", "cue": "Notice the stretch across the front of your back hip."}],
-        "typical_entries": ["p_downward_dog", "p_mountain", "p_low_lunge"],
-        "typical_exits": ["p_warrior_2", "p_plank", "p_mountain"],
+        "typical_entries": ["p_downward_dog", "p_mountain", "p_low_lunge", "p_warrior_1_right"],
+        "typical_exits": ["p_warrior_2_left", "p_plank", "p_mountain", "p_warrior_1_right"],
+    },
+    {
+        "anatomical_signature": {"is_inverted": False, "spinal_shape": "mild_extension", "weight_bearing_points": ["feet"]},
+        "chronic_pain": [
+            {"action": "adjust", "condition": "knee_pain", "reason": "Deep lunge places lateral and sheer stress on the front knee.", "recommended_modification": "shorten_stance"},
+            {
+                "action": "modify",
+                "condition": "ankle_stiffness",
+                "reason": "The back foot requires strong dorsiflexion and rotation.",
+                "recommended_modification": "high_lunge_heel_up",
+            },
+        ],
+        "client_id": "p_warrior_1_right",
+        "common_mistakes": ["Front knee collapsing inward", "Over-arching the lower back", "Back foot lifting off the floor"],
+        "contraindications": [
+            {
+                "action": "modify",
+                "condition": "hypertension",
+                "reason": "Arms overhead combined with large muscle engagement increases cardiac " "load.",
+                "recommended_modification": "hands_at_heart",
+            }
+        ],
+        "drishti": {"alternatives": ["straight_ahead"], "primary": "thumbs"},
+        "modifications": [
+            {"instruction": "Step your back foot slightly closer to the front and decrease the " "bend in your front knee.", "name": "Shorten Stance", "target_area": "knees"},
+            {"instruction": "Lift your back heel off the floor so all toes point forward, " "relieving ankle pressure.", "name": "High Lunge (Heel Up)", "target_area": "ankles"},
+        ],
+        "name": {"aliases": ["Warrior I Right"], "english": "Warrior 1 (Right Leg Forward)", "sanskrit": "Virabhadrasana I"},
+        "pose_intent": ["Strengthen quadriceps, glutes, and ankles", "Stretch the hip flexors of the back leg", "Open the chest and shoulders"],
+        "progression": {
+            "advanced": "Palms touching overhead, gaze up, back leg perfectly straight.",
+            "beginner": "Short stance, hands on hips.",
+            "intermediate": "Deepen the front knee bend to 90 degrees, arms overhead.",
+        },
+        "sensory_cues": [{"area": "feet", "cue": "Feel your back heel anchoring you down."}, {"area": "hips", "cue": "Notice the stretch across the front of your back hip."}],
+        "typical_entries": ["p_downward_dog", "p_mountain", "p_low_lunge", "p_warrior_1_left"],
+        "typical_exits": ["p_warrior_2_right", "p_plank", "p_mountain", "p_warrior_1_left"],
     },
     {
         "anatomical_signature": {"is_inverted": False, "spinal_shape": "neutral", "weight_bearing_points": ["feet"]},
@@ -244,7 +281,7 @@ STANDING_POSTURES = [
                 "recommended_modification": "shorten_stance",
             },
         ],
-        "client_id": "p_warrior_2",
+        "client_id": "p_warrior_2_left",
         "common_mistakes": ["Leaning the torso over the front leg", "Front knee collapsing inward past the big toe", "Shrugging the shoulders"],
         "contraindications": [
             {
@@ -259,7 +296,7 @@ STANDING_POSTURES = [
             {"instruction": "Rest your hands on your hips to release tension in the shoulders and " "neck.", "name": "Hands on Hips", "target_area": "shoulders"},
             {"instruction": "Keep your chest and gaze facing the side of the room rather than " "turning your head.", "name": "Neutral Neck", "target_area": "neck"},
         ],
-        "name": {"aliases": ["Warrior II"], "english": "Warrior 2", "sanskrit": "Virabhadrasana II"},
+        "name": {"aliases": ["Warrior II Left"], "english": "Warrior 2 (Left Leg Forward)", "sanskrit": "Virabhadrasana II"},
         "pose_intent": ["Open the hips and groin", "Strengthen the legs and ankles", "Build stamina and concentration"],
         "progression": {
             "advanced": "Deepest expression with perfect external rotation of the front hip.",
@@ -270,8 +307,53 @@ STANDING_POSTURES = [
             {"area": "arms", "cue": "Imagine your arms are being gently pulled in opposite directions."},
             {"area": "legs", "cue": "Feel the power and stability in your legs."},
         ],
-        "typical_entries": ["p_warrior_1", "p_downward_dog", "p_mountain"],
-        "typical_exits": ["p_triangle", "p_extended_side_angle", "p_plank"],
+        "typical_entries": ["p_warrior_1_left", "p_downward_dog", "p_mountain"],
+        "typical_exits": ["p_triangle_left", "p_extended_side_angle", "p_plank", "p_warrior_2_right"],
+    },
+    {
+        "anatomical_signature": {"is_inverted": False, "spinal_shape": "neutral", "weight_bearing_points": ["feet"]},
+        "chronic_pain": [
+            {
+                "action": "adjust",
+                "condition": "shoulder_pain",
+                "reason": "Holding arms parallel to the floor fatigues the deltoids and traps.",
+                "recommended_modification": "hands_on_hips",
+            },
+            {
+                "action": "adjust",
+                "condition": "knee_pain",
+                "reason": "Front knee flexion combined with external hip rotation can strain the " "medial collateral ligament (MCL).",
+                "recommended_modification": "shorten_stance",
+            },
+        ],
+        "client_id": "p_warrior_2_right",
+        "common_mistakes": ["Leaning the torso over the front leg", "Front knee collapsing inward past the big toe", "Shrugging the shoulders"],
+        "contraindications": [
+            {
+                "action": "caution",
+                "condition": "vertigo",
+                "reason": "Turning the head sharply over the front hand can trigger dizziness.",
+                "recommended_modification": "neutral_neck",
+            }
+        ],
+        "drishti": {"alternatives": ["side_wall"], "primary": "front_middle_finger"},
+        "modifications": [
+            {"instruction": "Rest your hands on your hips to release tension in the shoulders and " "neck.", "name": "Hands on Hips", "target_area": "shoulders"},
+            {"instruction": "Keep your chest and gaze facing the side of the room rather than " "turning your head.", "name": "Neutral Neck", "target_area": "neck"},
+        ],
+        "name": {"aliases": ["Warrior II Right"], "english": "Warrior 2 (Right Leg Forward)", "sanskrit": "Virabhadrasana II"},
+        "pose_intent": ["Open the hips and groin", "Strengthen the legs and ankles", "Build stamina and concentration"],
+        "progression": {
+            "advanced": "Deepest expression with perfect external rotation of the front hip.",
+            "beginner": "Shorter stance, shallow bend in the front knee.",
+            "intermediate": "Front thigh parallel to the floor, arms actively reaching apart.",
+        },
+        "sensory_cues": [
+            {"area": "arms", "cue": "Imagine your arms are being gently pulled in opposite directions."},
+            {"area": "legs", "cue": "Feel the power and stability in your legs."},
+        ],
+        "typical_entries": ["p_warrior_1_right", "p_downward_dog", "p_mountain"],
+        "typical_exits": ["p_triangle_right", "p_extended_side_angle", "p_plank", "p_warrior_2_left"],
     },
     {
         "anatomical_signature": {"is_inverted": False, "spinal_shape": "neutral", "weight_bearing_points": ["feet"]},
@@ -284,7 +366,7 @@ STANDING_POSTURES = [
             },
             {"action": "modify", "condition": "ankle_stiffness", "reason": "Requires immense stability from the standing ankle.", "recommended_modification": "wall_support"},
         ],
-        "client_id": "p_warrior_3",
+        "client_id": "p_warrior_3_left",
         "common_mistakes": ["Opening the lifted hip toward the ceiling", "Locking the standing knee", "Dropping the chest below the hips"],
         "contraindications": [
             {"action": "caution", "condition": "hypertension", "reason": "Intense full-body isometric contraction.", "recommended_modification": "airplane_arms"}
@@ -294,7 +376,7 @@ STANDING_POSTURES = [
             {"instruction": "Place your hands on tall yoga blocks directly under your shoulders " "for support.", "name": "Hands on Blocks", "target_area": "lower_back"},
             {"instruction": "Reach your arms back alongside your hips like airplane wings.", "name": "Airplane Arms", "target_area": "shoulders"},
         ],
-        "name": {"aliases": ["Warrior III", "Flying Warrior"], "english": "Warrior 3", "sanskrit": "Virabhadrasana III"},
+        "name": {"aliases": ["Warrior III Left", "Flying Warrior"], "english": "Warrior 3 (Left Leg Forward)", "sanskrit": "Virabhadrasana III"},
         "pose_intent": ["Improve balance and proprioception", "Strengthen the standing leg, ankle, and core", "Tone the entire posterior chain"],
         "progression": {
             "advanced": "Arms reaching straight forward, biceps by the ears, forming a perfect 'T'.",
@@ -305,8 +387,43 @@ STANDING_POSTURES = [
             {"area": "full_body", "cue": "Imagine a straight line of energy from your back heel through the crown of " "your head."},
             {"area": "feet", "cue": "Feel your standing foot gripping the mat for stability."},
         ],
-        "typical_entries": ["p_high_lunge", "p_warrior_1"],
-        "typical_exits": ["p_mountain", "p_high_lunge", "p_standing_split"],
+        "typical_entries": ["p_high_lunge", "p_warrior_1_left", "p_tree_left"],
+        "typical_exits": ["p_mountain", "p_high_lunge", "p_standing_split", "p_warrior_3_right"],
+    },
+    {
+        "anatomical_signature": {"is_inverted": False, "spinal_shape": "neutral", "weight_bearing_points": ["feet"]},
+        "chronic_pain": [
+            {
+                "action": "adjust",
+                "condition": "lower_back_pain",
+                "reason": "Lifting the back leg without core engagement hyperextends the lumbar spine.",
+                "recommended_modification": "hands_on_blocks",
+            },
+            {"action": "modify", "condition": "ankle_stiffness", "reason": "Requires immense stability from the standing ankle.", "recommended_modification": "wall_support"},
+        ],
+        "client_id": "p_warrior_3_right",
+        "common_mistakes": ["Opening the lifted hip toward the ceiling", "Locking the standing knee", "Dropping the chest below the hips"],
+        "contraindications": [
+            {"action": "caution", "condition": "hypertension", "reason": "Intense full-body isometric contraction.", "recommended_modification": "airplane_arms"}
+        ],
+        "drishti": {"alternatives": ["slightly_forward"], "primary": "floor_straight_down"},
+        "modifications": [
+            {"instruction": "Place your hands on tall yoga blocks directly under your shoulders " "for support.", "name": "Hands on Blocks", "target_area": "lower_back"},
+            {"instruction": "Reach your arms back alongside your hips like airplane wings.", "name": "Airplane Arms", "target_area": "shoulders"},
+        ],
+        "name": {"aliases": ["Warrior III Right", "Flying Warrior"], "english": "Warrior 3 (Right Leg Forward)", "sanskrit": "Virabhadrasana III"},
+        "pose_intent": ["Improve balance and proprioception", "Strengthen the standing leg, ankle, and core", "Tone the entire posterior chain"],
+        "progression": {
+            "advanced": "Arms reaching straight forward, biceps by the ears, forming a perfect 'T'.",
+            "beginner": "Hands on blocks or a wall, back leg lifted halfway.",
+            "intermediate": "Airplane arms, torso and back leg parallel to the floor.",
+        },
+        "sensory_cues": [
+            {"area": "full_body", "cue": "Imagine a straight line of energy from your back heel through the crown of " "your head."},
+            {"area": "feet", "cue": "Feel your standing foot gripping the mat for stability."},
+        ],
+        "typical_entries": ["p_high_lunge", "p_warrior_1_right", "p_tree_right"],
+        "typical_exits": ["p_mountain", "p_high_lunge", "p_standing_split", "p_warrior_3_left"],
     },
     {
         "anatomical_signature": {"is_inverted": False, "spinal_shape": "lateral_flexion", "weight_bearing_points": ["feet", "bottom_hand_optional"]},
@@ -319,7 +436,7 @@ STANDING_POSTURES = [
             },
             {"action": "adjust", "condition": "knee_pain", "reason": "Hyperextension of the front knee.", "recommended_modification": "microbend_front_knee"},
         ],
-        "client_id": "p_triangle",
+        "client_id": "p_triangle_left",
         "common_mistakes": ["Resting the hand directly on the knee joint", "Collapsing the top shoulder forward", "Hyperextending (locking) the front knee"],
         "contraindications": [
             {"action": "modify", "condition": "neck_injury", "reason": "Looking up at the top hand strains the cervical spine.", "recommended_modification": "look_down"}
@@ -329,7 +446,7 @@ STANDING_POSTURES = [
             {"instruction": "Rest your bottom hand lightly on a block or your shin, never directly " "on your knee.", "name": "Hand on Block", "target_area": "hamstrings"},
             {"instruction": "Keep your gaze down at your front foot to relax your neck.", "name": "Look Down", "target_area": "neck"},
         ],
-        "name": {"aliases": ["Extended Triangle"], "english": "Triangle Pose", "sanskrit": "Trikonasana"},
+        "name": {"aliases": ["Extended Triangle Left"], "english": "Triangle Pose (Left Leg Forward)", "sanskrit": "Trikonasana"},
         "pose_intent": ["Stretch the hamstrings, groin, and hips", "Open the chest and shoulders", "Strengthen the legs and core"],
         "progression": {
             "advanced": "Bottom hand outside the foot on the floor, core holding the torso without " "dumping weight into the hand.",
@@ -340,8 +457,43 @@ STANDING_POSTURES = [
             {"area": "ribs", "cue": "Feel the deep stretch along the side of your body."},
             {"area": "spine", "cue": "Imagine leaning back against an invisible wall."},
         ],
-        "typical_entries": ["p_warrior_2", "p_pyramid"],
-        "typical_exits": ["p_warrior_2", "p_half_moon", "p_pyramid"],
+        "typical_entries": ["p_warrior_2_left", "p_pyramid"],
+        "typical_exits": ["p_warrior_2_left", "p_half_moon", "p_pyramid", "p_triangle_right"],
+    },
+    {
+        "anatomical_signature": {"is_inverted": False, "spinal_shape": "lateral_flexion", "weight_bearing_points": ["feet", "bottom_hand_optional"]},
+        "chronic_pain": [
+            {
+                "action": "adjust",
+                "condition": "tight_hamstrings",
+                "reason": "Forcing the hand to the floor rounds the spine and strains the hamstring " "attachment.",
+                "recommended_modification": "hand_on_shin_or_block",
+            },
+            {"action": "adjust", "condition": "knee_pain", "reason": "Hyperextension of the front knee.", "recommended_modification": "microbend_front_knee"},
+        ],
+        "client_id": "p_triangle_right",
+        "common_mistakes": ["Resting the hand directly on the knee joint", "Collapsing the top shoulder forward", "Hyperextending (locking) the front knee"],
+        "contraindications": [
+            {"action": "modify", "condition": "neck_injury", "reason": "Looking up at the top hand strains the cervical spine.", "recommended_modification": "look_down"}
+        ],
+        "drishti": {"alternatives": ["bottom_foot", "straight_ahead"], "primary": "top_thumb"},
+        "modifications": [
+            {"instruction": "Rest your bottom hand lightly on a block or your shin, never directly " "on your knee.", "name": "Hand on Block", "target_area": "hamstrings"},
+            {"instruction": "Keep your gaze down at your front foot to relax your neck.", "name": "Look Down", "target_area": "neck"},
+        ],
+        "name": {"aliases": ["Extended Triangle Right"], "english": "Triangle Pose (Right Leg Forward)", "sanskrit": "Trikonasana"},
+        "pose_intent": ["Stretch the hamstrings, groin, and hips", "Open the chest and shoulders", "Strengthen the legs and core"],
+        "progression": {
+            "advanced": "Bottom hand outside the foot on the floor, core holding the torso without " "dumping weight into the hand.",
+            "beginner": "Hand high on the shin, slight bend in the front knee.",
+            "intermediate": "Hand on a block or ankle, top arm reaching straight up.",
+        },
+        "sensory_cues": [
+            {"area": "ribs", "cue": "Feel the deep stretch along the side of your body."},
+            {"area": "spine", "cue": "Imagine leaning back against an invisible wall."},
+        ],
+        "typical_entries": ["p_warrior_2_right", "p_pyramid"],
+        "typical_exits": ["p_warrior_2_right", "p_half_moon", "p_pyramid", "p_triangle_left"],
     },
     {
         "anatomical_signature": {"is_inverted": False, "spinal_shape": "neutral", "weight_bearing_points": ["feet"]},
@@ -353,7 +505,7 @@ STANDING_POSTURES = [
                 "recommended_modification": "foot_below_knee",
             }
         ],
-        "client_id": "p_tree",
+        "client_id": "p_tree_left",
         "common_mistakes": ["Placing the foot directly on the knee joint", "Sinking the hip of the standing leg out to the side", "Holding the breath while balancing"],
         "contraindications": [
             {"action": "modify", "condition": "vertigo", "reason": "Standing on one leg challenges the vestibular system.", "recommended_modification": "kickstand_foot"}
@@ -363,7 +515,7 @@ STANDING_POSTURES = [
             {"instruction": "Keep your toes on the floor and rest your heel against your inner " "ankle.", "name": "Kickstand", "target_area": "balance"},
             {"instruction": "Place your foot flat against your inner calf, completely avoiding the " "knee joint.", "name": "Foot Below Knee", "target_area": "knees"},
         ],
-        "name": {"aliases": [], "english": "Tree Pose", "sanskrit": "Vrksasana"},
+        "name": {"aliases": [], "english": "Tree Pose (Left Leg Lifted)", "sanskrit": "Vrksasana"},
         "pose_intent": ["Improve balance and focus", "Strengthen the standing leg and ankle", "Externally rotate and open the hip"],
         "progression": {
             "advanced": "Foot high on the inner thigh, gaze lifted or eyes closed.",
@@ -375,6 +527,40 @@ STANDING_POSTURES = [
             {"area": "spine", "cue": "Feel yourself rooted to the floor, yet growing taller through your spine."},
         ],
         "typical_entries": ["p_mountain"],
-        "typical_exits": ["p_mountain", "p_warrior_3"],
+        "typical_exits": ["p_mountain", "p_warrior_3_left", "p_tree_right"],
+    },
+    {
+        "anatomical_signature": {"is_inverted": False, "spinal_shape": "neutral", "weight_bearing_points": ["feet"]},
+        "chronic_pain": [
+            {
+                "action": "avoid_specific_placement",
+                "condition": "knee_pain",
+                "reason": "Pressing the foot directly against the inner knee joint forces it laterally " "out of alignment.",
+                "recommended_modification": "foot_below_knee",
+            }
+        ],
+        "client_id": "p_tree_right",
+        "common_mistakes": ["Placing the foot directly on the knee joint", "Sinking the hip of the standing leg out to the side", "Holding the breath while balancing"],
+        "contraindications": [
+            {"action": "modify", "condition": "vertigo", "reason": "Standing on one leg challenges the vestibular system.", "recommended_modification": "kickstand_foot"}
+        ],
+        "drishti": {"alternatives": ["upward"], "primary": "steady_point_forward"},
+        "modifications": [
+            {"instruction": "Keep your toes on the floor and rest your heel against your inner " "ankle.", "name": "Kickstand", "target_area": "balance"},
+            {"instruction": "Place your foot flat against your inner calf, completely avoiding the " "knee joint.", "name": "Foot Below Knee", "target_area": "knees"},
+        ],
+        "name": {"aliases": [], "english": "Tree Pose (Right Leg Lifted)", "sanskrit": "Vrksasana"},
+        "pose_intent": ["Improve balance and focus", "Strengthen the standing leg and ankle", "Externally rotate and open the hip"],
+        "progression": {
+            "advanced": "Foot high on the inner thigh, gaze lifted or eyes closed.",
+            "beginner": "Kickstand variation, hands at the heart.",
+            "intermediate": "Foot on the inner calf or thigh, arms growing overhead.",
+        },
+        "sensory_cues": [
+            {"area": "legs", "cue": "Press your foot into your leg, and your leg equally back into your foot."},
+            {"area": "spine", "cue": "Feel yourself rooted to the floor, yet growing taller through your spine."},
+        ],
+        "typical_entries": ["p_mountain"],
+        "typical_exits": ["p_mountain", "p_warrior_3_right", "p_tree_left"],
     },
 ]

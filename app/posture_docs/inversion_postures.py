@@ -34,8 +34,8 @@ INVERSION_POSTURES = [
             {"area": "spine", "cue": "Feel the length growing from your hands to your hips."},
             {"area": "legs", "cue": "Imagine your heels gently melting toward the mat."},
         ],
-        "typical_entries": ["p_plank", "p_table_top", "p_cow"],
-        "typical_exits": ["p_plank", "p_forward_fold", "p_low_lunge", "p_childs_pose"],
+        "typical_entries": ["p_plank", "p_table_top", "p_cow", "p_chaturanga", "p_upward_dog"],
+        "typical_exits": ["p_plank", "p_forward_fold", "p_low_lunge", "p_childs_pose", "p_chaturanga", "p_warrior_1_left", "p_warrior_1_right", "p_pigeon_left", "p_pigeon_right"],
     },
     {
         "anatomical_signature": {"is_inverted": True, "spinal_shape": "flexion", "weight_bearing_points": ["shoulders", "back_of_head", "elbows"]},
