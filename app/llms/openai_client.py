@@ -16,7 +16,6 @@ class OpenAIClient:
     def __init__(self, openai_api_key: str):
         self.is_api_enabled = True
         self.api_key = openai_api_key
-        self.text_model = "gpt-4o-mini"
         self.audio_model = "gpt-4o-mini-tts"
         self.temperature = 0.7
         openai.api_key = openai_api_key
@@ -26,7 +25,7 @@ class OpenAIClient:
         self,
         prompt: str,
         developer_prompt: str,
-        model: str = "gpt-4o-mini",
+        model: str,
         temperature: float = 0.7,
     ) -> dict:
         """Return structured micro-instructions: at most one per type (movement, alignment, awareness, breath)."""
@@ -60,7 +59,7 @@ class OpenAIClient:
         prompt: str,
         developer_prompt: str,
         response_format: Type[T],
-        model: str = "gpt-4o-mini",
+        model: str,
         temperature: float = 0.5,
     ) -> T:
         """Generate structured output conforming to the given Pydantic schema."""
@@ -83,7 +82,7 @@ class OpenAIClient:
         self,
         prompt: str,
         developer_prompt: str,
-        model: str = "gpt-4o-mini",
+        model: str,
         temperature: float = 0.7,
     ) -> str:
         if self.is_api_enabled:

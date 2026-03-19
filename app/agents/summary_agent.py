@@ -18,6 +18,7 @@ from app.prompts.user.profile_summaries import (
 class SummaryAgent:
     def __init__(self, llm_client):
         self.llm_client = llm_client
+        self.model = "gpt-5.4-mini"
 
     async def generate_summary(
         self,
@@ -33,6 +34,7 @@ class SummaryAgent:
         response = await asyncio.to_thread(
             self.llm_client.generate_text,
             prompt=user_prompt,
+            model=self.model,
             developer_prompt=developer_prompt,
         )
         text = self._extract_text(response)

@@ -19,6 +19,7 @@ class YogaCoordinator:
     def __init__(self, llm_client, auth_service):
         self.llm_client = llm_client
         self.auth_service = auth_service
+        self.model = "gpt-5.4-mini"
 
     async def _get_developer_prompt(self, user_id: Optional[str]) -> str:
         """Fetch profile, extract context, build developer prompt."""
@@ -34,7 +35,7 @@ class YogaCoordinator:
     async def generate_text(self, prompt: str, user_id: Optional[str] = None) -> Dict[str, Any]:
         """Generate spoken guidance text from the LLM."""
         dp = await self._get_developer_prompt(user_id)
-        response = await asyncio.to_thread(self.llm_client.generate_text, prompt=prompt, developer_prompt=dp)
+        response = await asyncio.to_thread(self.llm_client.generate_text, prompt=prompt, developer_prompt=dp, model=self.model)
         text = self._extract_text(response)
         return {
             **response,
@@ -49,6 +50,7 @@ class YogaCoordinator:
             self.llm_client.generate_structured_text,
             prompt=prompt,
             developer_prompt=dp,
+            model=self.model
         )
 
     def generate_audio_from_text(self, text: str):
