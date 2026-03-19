@@ -2,6 +2,12 @@
 STANDING_POSTURES = [
     {
         "anatomical_signature": {"is_inverted": False, "spinal_shape": "neutral", "weight_bearing_points": ["feet"], "laterality": {"type": "symmetrical", "active_side": "neutral"}, "requires_counter_pose": False, "recommended_counter_poses": []},
+        "intensity_profile": {
+            "overall_exertion": 1,
+            "balance_requirement": 1,
+            "muscular_load": {"core": 1, "upper_body": 1, "lower_body": 1},
+            "mobility_load": {"posterior_chain": 1, "hips_and_pelvis": 1, "spine": 1, "shoulders_and_chest": 1},
+        },
         "chronic_pain": [
             {"action": "adjust", "condition": "lower_back_pain", "reason": "Anterior pelvic tilt creates lumbar compression.", "recommended_modification": "tuck_tailbone"},
             {"action": "adjust", "condition": "knee_pain", "reason": "Locking the knees causes joint strain.", "recommended_modification": "microbend_knees"},
@@ -33,6 +39,12 @@ STANDING_POSTURES = [
     },
     {
         "anatomical_signature": {"is_inverted": False, "spinal_shape": "mild_extension", "weight_bearing_points": ["feet"], "laterality": {"type": "symmetrical", "active_side": "neutral"}, "requires_counter_pose": True, "recommended_counter_poses": ["p_forward_fold", "p_mountain"]},
+        "intensity_profile": {
+            "overall_exertion": 1,
+            "balance_requirement": 1,
+            "muscular_load": {"core": 1, "upper_body": 2, "lower_body": 1},
+            "mobility_load": {"posterior_chain": 1, "hips_and_pelvis": 1, "spine": 1, "shoulders_and_chest": 3},
+        },
         "chronic_pain": [
             {"action": "modify", "condition": "shoulder_pain", "reason": "Shoulder flexion can pinch the subacromial space.", "recommended_modification": "cactus_arms"},
             {"action": "adjust", "condition": "neck_pain", "reason": "Looking up at the thumbs strains the cervical spine.", "recommended_modification": "neutral_neck"},
@@ -69,6 +81,12 @@ STANDING_POSTURES = [
     },
     {
         "anatomical_signature": {"is_inverted": False, "spinal_shape": "neutral", "weight_bearing_points": ["feet"], "laterality": {"type": "symmetrical", "active_side": "neutral"}, "requires_counter_pose": True, "recommended_counter_poses": ["p_forward_fold", "p_mountain"]},
+        "intensity_profile": {
+            "overall_exertion": 4,
+            "balance_requirement": 1,
+            "muscular_load": {"core": 3, "upper_body": 2, "lower_body": 4},
+            "mobility_load": {"posterior_chain": 2, "hips_and_pelvis": 2, "spine": 1, "shoulders_and_chest": 2},
+        },
         "chronic_pain": [
             {
                 "action": "adjust",
@@ -116,6 +134,12 @@ STANDING_POSTURES = [
     },
     {
         "anatomical_signature": {"is_inverted": True, "spinal_shape": "flexion", "weight_bearing_points": ["feet"], "laterality": {"type": "symmetrical", "active_side": "neutral"}, "requires_counter_pose": True, "recommended_counter_poses": ["p_halfway_lift", "p_mountain"]},
+        "intensity_profile": {
+            "overall_exertion": 2,
+            "balance_requirement": 1,
+            "muscular_load": {"core": 1, "upper_body": 1, "lower_body": 2},
+            "mobility_load": {"posterior_chain": 4, "hips_and_pelvis": 2, "spine": 2, "shoulders_and_chest": 1},
+        },
         "chronic_pain": [
             {
                 "action": "adjust",
@@ -163,6 +187,12 @@ STANDING_POSTURES = [
     },
     {
         "anatomical_signature": {"is_inverted": False, "spinal_shape": "neutral", "weight_bearing_points": ["feet"], "laterality": {"type": "symmetrical", "active_side": "neutral"}, "requires_counter_pose": False, "recommended_counter_poses": []},
+        "intensity_profile": {
+            "overall_exertion": 2,
+            "balance_requirement": 1,
+            "muscular_load": {"core": 3, "upper_body": 1, "lower_body": 1},
+            "mobility_load": {"posterior_chain": 3, "hips_and_pelvis": 1, "spine": 2, "shoulders_and_chest": 1},
+        },
         "chronic_pain": [
             {
                 "action": "adjust",
@@ -198,6 +228,12 @@ STANDING_POSTURES = [
     },
     {
         "anatomical_signature": {"is_inverted": False, "spinal_shape": "mild_extension", "weight_bearing_points": ["feet"], "laterality": {"type": "asymmetrical", "active_side": "left", "paired_pose": "p_warrior_1_right"}, "requires_counter_pose": False, "recommended_counter_poses": []},
+        "intensity_profile": {
+            "overall_exertion": 4,
+            "balance_requirement": 2,
+            "muscular_load": {"core": 3, "upper_body": 2, "lower_body": 4},
+            "mobility_load": {"posterior_chain": 2, "hips_and_pelvis": 4, "spine": 1, "shoulders_and_chest": 2},
+        },
         "chronic_pain": [
             {"action": "adjust", "condition": "knee_pain", "reason": "Deep lunge places lateral and sheer stress on the front knee.", "recommended_modification": "shorten_stance"},
             {
@@ -236,6 +272,12 @@ STANDING_POSTURES = [
     },
     {
         "anatomical_signature": {"is_inverted": False, "spinal_shape": "mild_extension", "weight_bearing_points": ["feet"], "laterality": {"type": "asymmetrical", "active_side": "right", "paired_pose": "p_warrior_1_left"}, "requires_counter_pose": False, "recommended_counter_poses": []},
+        "intensity_profile": {
+            "overall_exertion": 4,
+            "balance_requirement": 2,
+            "muscular_load": {"core": 3, "upper_body": 2, "lower_body": 4},
+            "mobility_load": {"posterior_chain": 2, "hips_and_pelvis": 4, "spine": 1, "shoulders_and_chest": 2},
+        },
         "chronic_pain": [
             {"action": "adjust", "condition": "knee_pain", "reason": "Deep lunge places lateral and sheer stress on the front knee.", "recommended_modification": "shorten_stance"},
             {
@@ -274,6 +316,12 @@ STANDING_POSTURES = [
     },
     {
         "anatomical_signature": {"is_inverted": False, "spinal_shape": "neutral", "weight_bearing_points": ["feet"], "laterality": {"type": "asymmetrical", "active_side": "left", "paired_pose": "p_warrior_2_right"}, "requires_counter_pose": False, "recommended_counter_poses": []},
+        "intensity_profile": {
+            "overall_exertion": 4,
+            "balance_requirement": 2,
+            "muscular_load": {"core": 3, "upper_body": 3, "lower_body": 4},
+            "mobility_load": {"posterior_chain": 2, "hips_and_pelvis": 3, "spine": 1, "shoulders_and_chest": 2},
+        },
         "chronic_pain": [
             {
                 "action": "adjust",
@@ -320,6 +368,12 @@ STANDING_POSTURES = [
     },
     {
         "anatomical_signature": {"is_inverted": False, "spinal_shape": "neutral", "weight_bearing_points": ["feet"], "laterality": {"type": "asymmetrical", "active_side": "right", "paired_pose": "p_warrior_2_left"}, "requires_counter_pose": False, "recommended_counter_poses": []},
+        "intensity_profile": {
+            "overall_exertion": 4,
+            "balance_requirement": 2,
+            "muscular_load": {"core": 3, "upper_body": 3, "lower_body": 4},
+            "mobility_load": {"posterior_chain": 2, "hips_and_pelvis": 3, "spine": 1, "shoulders_and_chest": 2},
+        },
         "chronic_pain": [
             {
                 "action": "adjust",
@@ -366,6 +420,12 @@ STANDING_POSTURES = [
     },
     {
         "anatomical_signature": {"is_inverted": False, "spinal_shape": "neutral", "weight_bearing_points": ["feet"], "laterality": {"type": "asymmetrical", "active_side": "left", "paired_pose": "p_warrior_3_right"}, "requires_counter_pose": False, "recommended_counter_poses": []},
+        "intensity_profile": {
+            "overall_exertion": 5,
+            "balance_requirement": 5,
+            "muscular_load": {"core": 4, "upper_body": 3, "lower_body": 3},
+            "mobility_load": {"posterior_chain": 2, "hips_and_pelvis": 2, "spine": 1, "shoulders_and_chest": 2},
+        },
         "chronic_pain": [
             {
                 "action": "adjust",
@@ -402,6 +462,12 @@ STANDING_POSTURES = [
     },
     {
         "anatomical_signature": {"is_inverted": False, "spinal_shape": "neutral", "weight_bearing_points": ["feet"], "laterality": {"type": "asymmetrical", "active_side": "right", "paired_pose": "p_warrior_3_left"}, "requires_counter_pose": False, "recommended_counter_poses": []},
+        "intensity_profile": {
+            "overall_exertion": 5,
+            "balance_requirement": 5,
+            "muscular_load": {"core": 4, "upper_body": 3, "lower_body": 3},
+            "mobility_load": {"posterior_chain": 2, "hips_and_pelvis": 2, "spine": 1, "shoulders_and_chest": 2},
+        },
         "chronic_pain": [
             {
                 "action": "adjust",
@@ -438,6 +504,12 @@ STANDING_POSTURES = [
     },
     {
         "anatomical_signature": {"is_inverted": False, "spinal_shape": "lateral_flexion", "weight_bearing_points": ["feet", "bottom_hand_optional"], "laterality": {"type": "asymmetrical", "active_side": "left", "paired_pose": "p_triangle_right"}, "requires_counter_pose": False, "recommended_counter_poses": []},
+        "intensity_profile": {
+            "overall_exertion": 3,
+            "balance_requirement": 2,
+            "muscular_load": {"core": 2, "upper_body": 2, "lower_body": 2},
+            "mobility_load": {"posterior_chain": 4, "hips_and_pelvis": 4, "spine": 3, "shoulders_and_chest": 3},
+        },
         "chronic_pain": [
             {
                 "action": "adjust",
@@ -474,6 +546,12 @@ STANDING_POSTURES = [
     },
     {
         "anatomical_signature": {"is_inverted": False, "spinal_shape": "lateral_flexion", "weight_bearing_points": ["feet", "bottom_hand_optional"], "laterality": {"type": "asymmetrical", "active_side": "right", "paired_pose": "p_triangle_left"}, "requires_counter_pose": False, "recommended_counter_poses": []},
+        "intensity_profile": {
+            "overall_exertion": 3,
+            "balance_requirement": 2,
+            "muscular_load": {"core": 2, "upper_body": 2, "lower_body": 2},
+            "mobility_load": {"posterior_chain": 4, "hips_and_pelvis": 4, "spine": 3, "shoulders_and_chest": 3},
+        },
         "chronic_pain": [
             {
                 "action": "adjust",
@@ -510,6 +588,12 @@ STANDING_POSTURES = [
     },
     {
         "anatomical_signature": {"is_inverted": False, "spinal_shape": "neutral", "weight_bearing_points": ["feet"], "laterality": {"type": "asymmetrical", "active_side": "left", "paired_pose": "p_tree_right"}, "requires_counter_pose": False, "recommended_counter_poses": []},
+        "intensity_profile": {
+            "overall_exertion": 3,
+            "balance_requirement": 4,
+            "muscular_load": {"core": 2, "upper_body": 2, "lower_body": 2},
+            "mobility_load": {"posterior_chain": 1, "hips_and_pelvis": 3, "spine": 1, "shoulders_and_chest": 1},
+        },
         "chronic_pain": [
             {
                 "action": "avoid_specific_placement",
@@ -545,6 +629,12 @@ STANDING_POSTURES = [
     },
     {
         "anatomical_signature": {"is_inverted": False, "spinal_shape": "neutral", "weight_bearing_points": ["feet"], "laterality": {"type": "asymmetrical", "active_side": "right", "paired_pose": "p_tree_left"}, "requires_counter_pose": False, "recommended_counter_poses": []},
+        "intensity_profile": {
+            "overall_exertion": 3,
+            "balance_requirement": 4,
+            "muscular_load": {"core": 2, "upper_body": 2, "lower_body": 2},
+            "mobility_load": {"posterior_chain": 1, "hips_and_pelvis": 3, "spine": 1, "shoulders_and_chest": 1},
+        },
         "chronic_pain": [
             {
                 "action": "avoid_specific_placement",

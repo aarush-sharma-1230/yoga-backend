@@ -2,6 +2,12 @@
 SEATED_POSTURES = [
     {
         "anatomical_signature": {"is_inverted": False, "spinal_shape": "neutral", "weight_bearing_points": ["sit_bones", "outer_ankles"], "laterality": {"type": "symmetrical", "active_side": "neutral"}, "requires_counter_pose": False, "recommended_counter_poses": []},
+        "intensity_profile": {
+            "overall_exertion": 1,
+            "balance_requirement": 1,
+            "muscular_load": {"core": 1, "upper_body": 1, "lower_body": 1},
+            "mobility_load": {"posterior_chain": 1, "hips_and_pelvis": 3, "spine": 1, "shoulders_and_chest": 1},
+        },
         "chronic_pain": [
             {
                 "action": "adjust",
@@ -36,6 +42,12 @@ SEATED_POSTURES = [
     },
     {
         "anatomical_signature": {"is_inverted": False, "spinal_shape": "neutral", "weight_bearing_points": ["sit_bones", "heels", "palms (lightly)"], "laterality": {"type": "symmetrical", "active_side": "neutral"}, "requires_counter_pose": False, "recommended_counter_poses": []},
+        "intensity_profile": {
+            "overall_exertion": 2,
+            "balance_requirement": 1,
+            "muscular_load": {"core": 3, "upper_body": 1, "lower_body": 1},
+            "mobility_load": {"posterior_chain": 3, "hips_and_pelvis": 2, "spine": 1, "shoulders_and_chest": 1},
+        },
         "chronic_pain": [
             {"action": "adjust", "condition": "tight_hamstrings", "reason": "Pulls the pelvis backward, rounding the lower spine.", "recommended_modification": "sit_on_blanket"},
             {
@@ -77,6 +89,12 @@ SEATED_POSTURES = [
     },
     {
         "anatomical_signature": {"is_inverted": False, "spinal_shape": "flexion", "weight_bearing_points": ["sit_bones", "heels", "calves"], "laterality": {"type": "symmetrical", "active_side": "neutral"}, "requires_counter_pose": True, "recommended_counter_poses": ["p_staff_pose", "p_bridge"]},
+        "intensity_profile": {
+            "overall_exertion": 2,
+            "balance_requirement": 1,
+            "muscular_load": {"core": 1, "upper_body": 1, "lower_body": 1},
+            "mobility_load": {"posterior_chain": 5, "hips_and_pelvis": 2, "spine": 3, "shoulders_and_chest": 1},
+        },
         "chronic_pain": [
             {
                 "action": "adjust",
@@ -119,6 +137,12 @@ SEATED_POSTURES = [
             "laterality": {"type": "asymmetrical", "active_side": "left", "paired_pose": "p_head_to_knee_right"},
             "requires_counter_pose": False,
             "recommended_counter_poses": [],
+        },
+        "intensity_profile": {
+            "overall_exertion": 2,
+            "balance_requirement": 1,
+            "muscular_load": {"core": 1, "upper_body": 1, "lower_body": 1},
+            "mobility_load": {"posterior_chain": 4, "hips_and_pelvis": 4, "spine": 2, "shoulders_and_chest": 1},
         },
         "chronic_pain": [
             {
@@ -181,6 +205,12 @@ SEATED_POSTURES = [
             "requires_counter_pose": False,
             "recommended_counter_poses": [],
         },
+        "intensity_profile": {
+            "overall_exertion": 2,
+            "balance_requirement": 1,
+            "muscular_load": {"core": 1, "upper_body": 1, "lower_body": 1},
+            "mobility_load": {"posterior_chain": 4, "hips_and_pelvis": 4, "spine": 2, "shoulders_and_chest": 1},
+        },
         "chronic_pain": [
             {
                 "action": "modify",
@@ -241,6 +271,12 @@ SEATED_POSTURES = [
             "laterality": {"type": "asymmetrical", "active_side": "left", "paired_pose": "p_pigeon_right"},
             "requires_counter_pose": False,
             "recommended_counter_poses": [],
+        },
+        "intensity_profile": {
+            "overall_exertion": 3,
+            "balance_requirement": 1,
+            "muscular_load": {"core": 1, "upper_body": 1, "lower_body": 1},
+            "mobility_load": {"posterior_chain": 2, "hips_and_pelvis": 5, "spine": 1, "shoulders_and_chest": 2},
         },
         "chronic_pain": [
             {
@@ -310,6 +346,12 @@ SEATED_POSTURES = [
             "laterality": {"type": "asymmetrical", "active_side": "right", "paired_pose": "p_pigeon_left"},
             "requires_counter_pose": False,
             "recommended_counter_poses": [],
+        },
+        "intensity_profile": {
+            "overall_exertion": 3,
+            "balance_requirement": 1,
+            "muscular_load": {"core": 1, "upper_body": 1, "lower_body": 1},
+            "mobility_load": {"posterior_chain": 2, "hips_and_pelvis": 5, "spine": 1, "shoulders_and_chest": 2},
         },
         "chronic_pain": [
             {

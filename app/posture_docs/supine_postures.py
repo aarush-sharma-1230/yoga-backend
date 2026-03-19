@@ -2,6 +2,12 @@
 SUPINE_POSTURES = [
     {
         "anatomical_signature": {"is_inverted": False, "spinal_shape": "flexion", "weight_bearing_points": ["sacrum", "back_of_head"], "laterality": {"type": "symmetrical", "active_side": "neutral"}, "requires_counter_pose": False, "recommended_counter_poses": []},
+        "intensity_profile": {
+            "overall_exertion": 1,
+            "balance_requirement": 1,
+            "muscular_load": {"core": 1, "upper_body": 1, "lower_body": 1},
+            "mobility_load": {"posterior_chain": 1, "hips_and_pelvis": 2, "spine": 1, "shoulders_and_chest": 1},
+        },
         "chronic_pain": [
             {"action": "adjust", "condition": "lower_back_pain", "reason": "Pulling knees too hard can strain the lumbar spine.", "recommended_modification": "gentle_hold"},
         ],
@@ -32,6 +38,12 @@ SUPINE_POSTURES = [
     },
     {
         "anatomical_signature": {"is_inverted": True, "spinal_shape": "extension", "weight_bearing_points": ["shoulders", "back_of_head", "feet"], "laterality": {"type": "symmetrical", "active_side": "neutral"}, "requires_counter_pose": True, "recommended_counter_poses": ["p_knees_to_chest", "p_childs_pose"]},
+        "intensity_profile": {
+            "overall_exertion": 3,
+            "balance_requirement": 1,
+            "muscular_load": {"core": 3, "upper_body": 1, "lower_body": 4},
+            "mobility_load": {"posterior_chain": 2, "hips_and_pelvis": 2, "spine": 3, "shoulders_and_chest": 3},
+        },
         "chronic_pain": [
             {
                 "action": "modify",
@@ -90,6 +102,12 @@ SUPINE_POSTURES = [
     },
     {
         "anatomical_signature": {"is_inverted": False, "spinal_shape": "mild_flexion", "weight_bearing_points": ["entire_back", "sacrum", "back_of_head"], "laterality": {"type": "symmetrical", "active_side": "neutral"}, "requires_counter_pose": True, "recommended_counter_poses": ["p_corpse_pose", "p_bridge"]},
+        "intensity_profile": {
+            "overall_exertion": 2,
+            "balance_requirement": 1,
+            "muscular_load": {"core": 2, "upper_body": 2, "lower_body": 1},
+            "mobility_load": {"posterior_chain": 2, "hips_and_pelvis": 4, "spine": 1, "shoulders_and_chest": 2},
+        },
         "chronic_pain": [
             {
                 "action": "adjust",
@@ -148,6 +166,12 @@ SUPINE_POSTURES = [
     },
     {
         "anatomical_signature": {"is_inverted": False, "spinal_shape": "neutral", "weight_bearing_points": ["back_of_head", "shoulders", "sacrum", "calves", "heels"], "laterality": {"type": "symmetrical", "active_side": "neutral"}, "requires_counter_pose": False, "recommended_counter_poses": []},
+        "intensity_profile": {
+            "overall_exertion": 1,
+            "balance_requirement": 1,
+            "muscular_load": {"core": 1, "upper_body": 1, "lower_body": 1},
+            "mobility_load": {"posterior_chain": 1, "hips_and_pelvis": 1, "spine": 1, "shoulders_and_chest": 1},
+        },
         "chronic_pain": [
             {
                 "action": "modify",
@@ -197,6 +221,12 @@ SUPINE_POSTURES = [
     },
     {
         "anatomical_signature": {"is_inverted": False, "spinal_shape": "extension", "weight_bearing_points": ["crown_of_head", "buttocks", "forearms"], "laterality": {"type": "symmetrical", "active_side": "neutral"}, "requires_counter_pose": True, "recommended_counter_poses": ["p_corpse_pose"]},
+        "intensity_profile": {
+            "overall_exertion": 2,
+            "balance_requirement": 1,
+            "muscular_load": {"core": 1, "upper_body": 2, "lower_body": 1},
+            "mobility_load": {"posterior_chain": 1, "hips_and_pelvis": 2, "spine": 3, "shoulders_and_chest": 4},
+        },
         "chronic_pain": [
             {"action": "modify", "condition": "neck_pain", "reason": "Weight on the crown can strain the cervical spine.", "recommended_modification": "supported_fish"},
         ],

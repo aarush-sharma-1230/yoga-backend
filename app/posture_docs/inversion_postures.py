@@ -2,6 +2,12 @@
 INVERSION_POSTURES = [
     {
         "anatomical_signature": {"is_inverted": True, "spinal_shape": "neutral", "weight_bearing_points": ["palms", "feet"], "laterality": {"type": "symmetrical", "active_side": "neutral"}, "requires_counter_pose": True, "recommended_counter_poses": ["p_childs_pose"]},
+        "intensity_profile": {
+            "overall_exertion": 3,
+            "balance_requirement": 1,
+            "muscular_load": {"core": 2, "upper_body": 4, "lower_body": 1},
+            "mobility_load": {"posterior_chain": 4, "hips_and_pelvis": 2, "spine": 1, "shoulders_and_chest": 3},
+        },
         "chronic_pain": [
             {"action": "modify", "condition": "wrist_pain", "reason": "Weight-bearing compresses the wrist joint.", "recommended_modification": "dolphin_pose"},
             {"action": "adjust", "condition": "tight_hamstrings", "reason": "Limited flexibility strains the back.", "recommended_modification": "bend_knees"},
@@ -40,6 +46,12 @@ INVERSION_POSTURES = [
     },
     {
         "anatomical_signature": {"is_inverted": True, "spinal_shape": "flexion", "weight_bearing_points": ["shoulders", "back_of_head", "elbows"], "laterality": {"type": "symmetrical", "active_side": "neutral"}, "requires_counter_pose": True, "recommended_counter_poses": ["p_fish_pose"]},
+        "intensity_profile": {
+            "overall_exertion": 5,
+            "balance_requirement": 2,
+            "muscular_load": {"core": 4, "upper_body": 2, "lower_body": 1},
+            "mobility_load": {"posterior_chain": 2, "hips_and_pelvis": 1, "spine": 5, "shoulders_and_chest": 3},
+        },
         "chronic_pain": [
             {"action": "avoid", "condition": "neck_pain", "reason": "Flattening the cervical curve under load can herniate discs.", "recommended_modification": "legs_up_the_wall"}
         ],
@@ -90,6 +102,12 @@ INVERSION_POSTURES = [
     },
     {
         "anatomical_signature": {"is_inverted": True, "spinal_shape": "flexion", "weight_bearing_points": ["shoulders", "back_of_head", "toes"], "laterality": {"type": "symmetrical", "active_side": "neutral"}, "requires_counter_pose": True, "recommended_counter_poses": ["p_fish_pose", "p_corpse_pose"]},
+        "intensity_profile": {
+            "overall_exertion": 5,
+            "balance_requirement": 2,
+            "muscular_load": {"core": 4, "upper_body": 1, "lower_body": 1},
+            "mobility_load": {"posterior_chain": 5, "hips_and_pelvis": 2, "spine": 5, "shoulders_and_chest": 2},
+        },
         "chronic_pain": [
             {"action": "caution", "condition": "lower_back_pain", "reason": "Deep spinal flexion can aggravate lumbar discs.", "recommended_modification": "supported_bridge"}
         ],

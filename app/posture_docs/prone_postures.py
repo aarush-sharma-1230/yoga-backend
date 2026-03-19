@@ -2,6 +2,12 @@
 PRONE_POSTURES = [
     {
         "anatomical_signature": {"is_inverted": False, "spinal_shape": "neutral", "weight_bearing_points": ["palms", "knees", "shins"], "laterality": {"type": "symmetrical", "active_side": "neutral"}, "requires_counter_pose": False, "recommended_counter_poses": []},
+        "intensity_profile": {
+            "overall_exertion": 1,
+            "balance_requirement": 1,
+            "muscular_load": {"core": 2, "upper_body": 1, "lower_body": 1},
+            "mobility_load": {"posterior_chain": 1, "hips_and_pelvis": 1, "spine": 1, "shoulders_and_chest": 2},
+        },
         "chronic_pain": [
             {"action": "modify", "condition": "wrist_pain", "reason": "Weight-bearing compresses the wrists.", "recommended_modification": "fists_or_forearms"},
             {"action": "modify", "condition": "knee_pain", "reason": "Direct pressure on the knees.", "recommended_modification": "padded_knees"},
@@ -31,6 +37,12 @@ PRONE_POSTURES = [
     },
     {
         "anatomical_signature": {"is_inverted": False, "spinal_shape": "flexion", "weight_bearing_points": ["palms", "knees", "shins"], "laterality": {"type": "symmetrical", "active_side": "neutral"}, "requires_counter_pose": True, "recommended_counter_poses": ["p_cow"]},
+        "intensity_profile": {
+            "overall_exertion": 1,
+            "balance_requirement": 1,
+            "muscular_load": {"core": 2, "upper_body": 1, "lower_body": 1},
+            "mobility_load": {"posterior_chain": 1, "hips_and_pelvis": 1, "spine": 3, "shoulders_and_chest": 2},
+        },
         "chronic_pain": [
             {"action": "modify", "condition": "wrist_pain", "reason": "Weight-bearing in full extension compresses the wrists.", "recommended_modification": "fists_or_forearms"},
             {"action": "modify", "condition": "knee_pain", "reason": "Direct pressure on the patella against the floor.", "recommended_modification": "padded_knees"},
@@ -68,6 +80,12 @@ PRONE_POSTURES = [
     },
     {
         "anatomical_signature": {"is_inverted": False, "spinal_shape": "extension", "weight_bearing_points": ["palms", "knees", "shins"], "laterality": {"type": "symmetrical", "active_side": "neutral"}, "requires_counter_pose": True, "recommended_counter_poses": ["p_cat"]},
+        "intensity_profile": {
+            "overall_exertion": 1,
+            "balance_requirement": 1,
+            "muscular_load": {"core": 2, "upper_body": 1, "lower_body": 1},
+            "mobility_load": {"posterior_chain": 1, "hips_and_pelvis": 1, "spine": 3, "shoulders_and_chest": 3},
+        },
         "chronic_pain": [
             {
                 "action": "adjust",
@@ -104,6 +122,12 @@ PRONE_POSTURES = [
     },
     {
         "anatomical_signature": {"is_inverted": False, "spinal_shape": "flexion", "weight_bearing_points": ["shins", "forehead", "forearms"], "laterality": {"type": "symmetrical", "active_side": "neutral"}, "requires_counter_pose": False, "recommended_counter_poses": []},
+        "intensity_profile": {
+            "overall_exertion": 1,
+            "balance_requirement": 1,
+            "muscular_load": {"core": 1, "upper_body": 1, "lower_body": 1},
+            "mobility_load": {"posterior_chain": 2, "hips_and_pelvis": 3, "spine": 2, "shoulders_and_chest": 1},
+        },
         "chronic_pain": [
             {"action": "modify", "condition": "knee_pain", "reason": "Deep flexion compresses the meniscus.", "recommended_modification": "blanket_under_knees_or_hips"},
             {
@@ -138,6 +162,12 @@ PRONE_POSTURES = [
     },
     {
         "anatomical_signature": {"is_inverted": False, "spinal_shape": "neutral", "weight_bearing_points": ["palms", "toes"], "laterality": {"type": "symmetrical", "active_side": "neutral"}, "requires_counter_pose": False, "recommended_counter_poses": []},
+        "intensity_profile": {
+            "overall_exertion": 4,
+            "balance_requirement": 1,
+            "muscular_load": {"core": 4, "upper_body": 4, "lower_body": 2},
+            "mobility_load": {"posterior_chain": 1, "hips_and_pelvis": 1, "spine": 1, "shoulders_and_chest": 2},
+        },
         "chronic_pain": [
             {
                 "action": "modify",
@@ -188,6 +218,12 @@ PRONE_POSTURES = [
     },
     {
         "anatomical_signature": {"is_inverted": False, "spinal_shape": "neutral", "weight_bearing_points": ["palms", "tops_of_feet"], "laterality": {"type": "symmetrical", "active_side": "neutral"}, "requires_counter_pose": False, "recommended_counter_poses": []},
+        "intensity_profile": {
+            "overall_exertion": 5,
+            "balance_requirement": 1,
+            "muscular_load": {"core": 4, "upper_body": 5, "lower_body": 1},
+            "mobility_load": {"posterior_chain": 1, "hips_and_pelvis": 1, "spine": 1, "shoulders_and_chest": 3},
+        },
         "chronic_pain": [
             {"action": "modify", "condition": "wrist_pain", "reason": "Full body weight on wrists in extension.", "recommended_modification": "forearm_chaturanga"},
             {"action": "adjust", "condition": "lower_back_pain", "reason": "Weak core causes lumbar sag.", "recommended_modification": "knees_down_chaturanga"},
@@ -219,6 +255,12 @@ PRONE_POSTURES = [
     },
     {
         "anatomical_signature": {"is_inverted": False, "spinal_shape": "extension", "weight_bearing_points": ["pelvis", "tops_of_feet", "palms (lightly)"], "laterality": {"type": "symmetrical", "active_side": "neutral"}, "requires_counter_pose": True, "recommended_counter_poses": ["p_childs_pose"]},
+        "intensity_profile": {
+            "overall_exertion": 3,
+            "balance_requirement": 1,
+            "muscular_load": {"core": 2, "upper_body": 2, "lower_body": 1},
+            "mobility_load": {"posterior_chain": 2, "hips_and_pelvis": 2, "spine": 4, "shoulders_and_chest": 4},
+        },
         "chronic_pain": [
             {"action": "adjust", "condition": "lower_back_pain", "reason": "Pushing up too high jams the lumbar facet joints.", "recommended_modification": "baby_cobra"}
         ],
@@ -263,6 +305,12 @@ PRONE_POSTURES = [
     },
     {
         "anatomical_signature": {"is_inverted": False, "spinal_shape": "mild_extension", "weight_bearing_points": ["forearms", "pelvis", "tops_of_feet"], "laterality": {"type": "symmetrical", "active_side": "neutral"}, "requires_counter_pose": True, "recommended_counter_poses": ["p_childs_pose"]},
+        "intensity_profile": {
+            "overall_exertion": 2,
+            "balance_requirement": 1,
+            "muscular_load": {"core": 2, "upper_body": 1, "lower_body": 1},
+            "mobility_load": {"posterior_chain": 1, "hips_and_pelvis": 1, "spine": 3, "shoulders_and_chest": 3},
+        },
         "chronic_pain": [
             {
                 "action": "adjust",
@@ -299,6 +347,12 @@ PRONE_POSTURES = [
     },
     {
         "anatomical_signature": {"is_inverted": False, "spinal_shape": "extension", "weight_bearing_points": ["palms", "tops_of_feet"], "laterality": {"type": "symmetrical", "active_side": "neutral"}, "requires_counter_pose": True, "recommended_counter_poses": ["p_childs_pose", "p_downward_dog"]},
+        "intensity_profile": {
+            "overall_exertion": 4,
+            "balance_requirement": 1,
+            "muscular_load": {"core": 3, "upper_body": 4, "lower_body": 2},
+            "mobility_load": {"posterior_chain": 2, "hips_and_pelvis": 3, "spine": 5, "shoulders_and_chest": 5},
+        },
         "chronic_pain": [
             {"action": "modify", "condition": "lower_back_pain", "reason": "Hanging in the joints causes severe lower back compression.", "recommended_modification": "cobra_pose"},
             {"action": "modify", "condition": "wrist_pain", "reason": "Bears significant body weight in deep wrist extension.", "recommended_modification": "sphinx_pose"},
