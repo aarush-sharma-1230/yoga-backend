@@ -1,7 +1,7 @@
 # --- Seated postures (sit bones) ---
 SEATED_POSTURES = [
     {
-        "anatomical_signature": {"is_inverted": False, "spinal_shape": "neutral", "weight_bearing_points": ["sit_bones", "outer_ankles"], "laterality": {"type": "symmetrical", "active_side": "neutral"}},
+        "anatomical_signature": {"is_inverted": False, "spinal_shape": "neutral", "weight_bearing_points": ["sit_bones", "outer_ankles"], "laterality": {"type": "symmetrical", "active_side": "neutral"}, "requires_counter_pose": False, "recommended_counter_poses": []},
         "chronic_pain": [
             {
                 "action": "adjust",
@@ -35,7 +35,7 @@ SEATED_POSTURES = [
         "typical_exits": ["p_seated_forward_fold", "p_table_top", "p_staff_pose"],
     },
     {
-        "anatomical_signature": {"is_inverted": False, "spinal_shape": "neutral", "weight_bearing_points": ["sit_bones", "heels", "palms (lightly)"], "laterality": {"type": "symmetrical", "active_side": "neutral"}},
+        "anatomical_signature": {"is_inverted": False, "spinal_shape": "neutral", "weight_bearing_points": ["sit_bones", "heels", "palms (lightly)"], "laterality": {"type": "symmetrical", "active_side": "neutral"}, "requires_counter_pose": False, "recommended_counter_poses": []},
         "chronic_pain": [
             {"action": "adjust", "condition": "tight_hamstrings", "reason": "Pulls the pelvis backward, rounding the lower spine.", "recommended_modification": "sit_on_blanket"},
             {
@@ -76,7 +76,7 @@ SEATED_POSTURES = [
         "typical_exits": ["p_seated_forward_fold", "p_head_to_knee_left", "p_head_to_knee_right", "p_easy_pose"],
     },
     {
-        "anatomical_signature": {"is_inverted": False, "spinal_shape": "flexion", "weight_bearing_points": ["sit_bones", "heels", "calves"], "laterality": {"type": "symmetrical", "active_side": "neutral"}},
+        "anatomical_signature": {"is_inverted": False, "spinal_shape": "flexion", "weight_bearing_points": ["sit_bones", "heels", "calves"], "laterality": {"type": "symmetrical", "active_side": "neutral"}, "requires_counter_pose": True, "recommended_counter_poses": ["p_staff_pose", "p_bridge"]},
         "chronic_pain": [
             {
                 "action": "adjust",
@@ -117,6 +117,8 @@ SEATED_POSTURES = [
             "spinal_shape": "flexion_with_mild_rotation",
             "weight_bearing_points": ["sit_bones", "extended_leg_heel", "bent_knee_outer_edge"],
             "laterality": {"type": "asymmetrical", "active_side": "left", "paired_pose": "p_head_to_knee_right"},
+            "requires_counter_pose": False,
+            "recommended_counter_poses": [],
         },
         "chronic_pain": [
             {
@@ -176,6 +178,8 @@ SEATED_POSTURES = [
             "spinal_shape": "flexion_with_mild_rotation",
             "weight_bearing_points": ["sit_bones", "extended_leg_heel", "bent_knee_outer_edge"],
             "laterality": {"type": "asymmetrical", "active_side": "right", "paired_pose": "p_head_to_knee_left"},
+            "requires_counter_pose": False,
+            "recommended_counter_poses": [],
         },
         "chronic_pain": [
             {
@@ -235,6 +239,8 @@ SEATED_POSTURES = [
             "spinal_shape": "neutral_to_mild_extension",
             "weight_bearing_points": ["front_shin", "back_knee", "top_of_back_foot", "forearms_if_folded"],
             "laterality": {"type": "asymmetrical", "active_side": "left", "paired_pose": "p_pigeon_right"},
+            "requires_counter_pose": False,
+            "recommended_counter_poses": [],
         },
         "chronic_pain": [
             {
@@ -302,6 +308,8 @@ SEATED_POSTURES = [
             "spinal_shape": "neutral_to_mild_extension",
             "weight_bearing_points": ["front_shin", "back_knee", "top_of_back_foot", "forearms_if_folded"],
             "laterality": {"type": "asymmetrical", "active_side": "right", "paired_pose": "p_pigeon_left"},
+            "requires_counter_pose": False,
+            "recommended_counter_poses": [],
         },
         "chronic_pain": [
             {

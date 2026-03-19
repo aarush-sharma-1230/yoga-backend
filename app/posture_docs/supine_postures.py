@@ -1,7 +1,7 @@
 # --- Supine postures (on back) ---
 SUPINE_POSTURES = [
     {
-        "anatomical_signature": {"is_inverted": False, "spinal_shape": "flexion", "weight_bearing_points": ["sacrum", "back_of_head"], "laterality": {"type": "symmetrical", "active_side": "neutral"}},
+        "anatomical_signature": {"is_inverted": False, "spinal_shape": "flexion", "weight_bearing_points": ["sacrum", "back_of_head"], "laterality": {"type": "symmetrical", "active_side": "neutral"}, "requires_counter_pose": False, "recommended_counter_poses": []},
         "chronic_pain": [
             {"action": "adjust", "condition": "lower_back_pain", "reason": "Pulling knees too hard can strain the lumbar spine.", "recommended_modification": "gentle_hold"},
         ],
@@ -31,7 +31,7 @@ SUPINE_POSTURES = [
         "typical_exits": ["p_bridge", "p_happy_baby", "p_corpse_pose"],
     },
     {
-        "anatomical_signature": {"is_inverted": True, "spinal_shape": "extension", "weight_bearing_points": ["shoulders", "back_of_head", "feet"], "laterality": {"type": "symmetrical", "active_side": "neutral"}},
+        "anatomical_signature": {"is_inverted": True, "spinal_shape": "extension", "weight_bearing_points": ["shoulders", "back_of_head", "feet"], "laterality": {"type": "symmetrical", "active_side": "neutral"}, "requires_counter_pose": True, "recommended_counter_poses": ["p_knees_to_chest", "p_childs_pose"]},
         "chronic_pain": [
             {
                 "action": "modify",
@@ -89,7 +89,7 @@ SUPINE_POSTURES = [
         "typical_exits": ["p_corpse_pose", "p_happy_baby", "p_knees_to_chest"],
     },
     {
-        "anatomical_signature": {"is_inverted": False, "spinal_shape": "mild_flexion", "weight_bearing_points": ["entire_back", "sacrum", "back_of_head"], "laterality": {"type": "symmetrical", "active_side": "neutral"}},
+        "anatomical_signature": {"is_inverted": False, "spinal_shape": "mild_flexion", "weight_bearing_points": ["entire_back", "sacrum", "back_of_head"], "laterality": {"type": "symmetrical", "active_side": "neutral"}, "requires_counter_pose": True, "recommended_counter_poses": ["p_corpse_pose", "p_bridge"]},
         "chronic_pain": [
             {
                 "action": "adjust",
@@ -147,7 +147,7 @@ SUPINE_POSTURES = [
         "typical_exits": ["p_corpse_pose", "p_knees_to_chest"],
     },
     {
-        "anatomical_signature": {"is_inverted": False, "spinal_shape": "neutral", "weight_bearing_points": ["back_of_head", "shoulders", "sacrum", "calves", "heels"], "laterality": {"type": "symmetrical", "active_side": "neutral"}},
+        "anatomical_signature": {"is_inverted": False, "spinal_shape": "neutral", "weight_bearing_points": ["back_of_head", "shoulders", "sacrum", "calves", "heels"], "laterality": {"type": "symmetrical", "active_side": "neutral"}, "requires_counter_pose": False, "recommended_counter_poses": []},
         "chronic_pain": [
             {
                 "action": "modify",
@@ -196,7 +196,7 @@ SUPINE_POSTURES = [
         "typical_exits": ["p_easy_pose", "p_knees_to_chest"],
     },
     {
-        "anatomical_signature": {"is_inverted": False, "spinal_shape": "extension", "weight_bearing_points": ["crown_of_head", "buttocks", "forearms"], "laterality": {"type": "symmetrical", "active_side": "neutral"}},
+        "anatomical_signature": {"is_inverted": False, "spinal_shape": "extension", "weight_bearing_points": ["crown_of_head", "buttocks", "forearms"], "laterality": {"type": "symmetrical", "active_side": "neutral"}, "requires_counter_pose": True, "recommended_counter_poses": ["p_corpse_pose"]},
         "chronic_pain": [
             {"action": "modify", "condition": "neck_pain", "reason": "Weight on the crown can strain the cervical spine.", "recommended_modification": "supported_fish"},
         ],

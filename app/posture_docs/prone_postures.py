@@ -1,7 +1,7 @@
 # --- Prone postures (belly/body toward floor) ---
 PRONE_POSTURES = [
     {
-        "anatomical_signature": {"is_inverted": False, "spinal_shape": "neutral", "weight_bearing_points": ["palms", "knees", "shins"], "laterality": {"type": "symmetrical", "active_side": "neutral"}},
+        "anatomical_signature": {"is_inverted": False, "spinal_shape": "neutral", "weight_bearing_points": ["palms", "knees", "shins"], "laterality": {"type": "symmetrical", "active_side": "neutral"}, "requires_counter_pose": False, "recommended_counter_poses": []},
         "chronic_pain": [
             {"action": "modify", "condition": "wrist_pain", "reason": "Weight-bearing compresses the wrists.", "recommended_modification": "fists_or_forearms"},
             {"action": "modify", "condition": "knee_pain", "reason": "Direct pressure on the knees.", "recommended_modification": "padded_knees"},
@@ -30,7 +30,7 @@ PRONE_POSTURES = [
         "typical_exits": ["p_cat", "p_cow", "p_childs_pose", "p_downward_dog", "p_plank", "p_pigeon_left", "p_pigeon_right"],
     },
     {
-        "anatomical_signature": {"is_inverted": False, "spinal_shape": "flexion", "weight_bearing_points": ["palms", "knees", "shins"], "laterality": {"type": "symmetrical", "active_side": "neutral"}},
+        "anatomical_signature": {"is_inverted": False, "spinal_shape": "flexion", "weight_bearing_points": ["palms", "knees", "shins"], "laterality": {"type": "symmetrical", "active_side": "neutral"}, "requires_counter_pose": True, "recommended_counter_poses": ["p_cow"]},
         "chronic_pain": [
             {"action": "modify", "condition": "wrist_pain", "reason": "Weight-bearing in full extension compresses the wrists.", "recommended_modification": "fists_or_forearms"},
             {"action": "modify", "condition": "knee_pain", "reason": "Direct pressure on the patella against the floor.", "recommended_modification": "padded_knees"},
@@ -67,7 +67,7 @@ PRONE_POSTURES = [
         "typical_exits": ["p_cow", "p_childs_pose", "p_downward_dog"],
     },
     {
-        "anatomical_signature": {"is_inverted": False, "spinal_shape": "extension", "weight_bearing_points": ["palms", "knees", "shins"], "laterality": {"type": "symmetrical", "active_side": "neutral"}},
+        "anatomical_signature": {"is_inverted": False, "spinal_shape": "extension", "weight_bearing_points": ["palms", "knees", "shins"], "laterality": {"type": "symmetrical", "active_side": "neutral"}, "requires_counter_pose": True, "recommended_counter_poses": ["p_cat"]},
         "chronic_pain": [
             {
                 "action": "adjust",
@@ -103,7 +103,7 @@ PRONE_POSTURES = [
         "typical_exits": ["p_cat", "p_downward_dog", "p_childs_pose"],
     },
     {
-        "anatomical_signature": {"is_inverted": False, "spinal_shape": "flexion", "weight_bearing_points": ["shins", "forehead", "forearms"], "laterality": {"type": "symmetrical", "active_side": "neutral"}},
+        "anatomical_signature": {"is_inverted": False, "spinal_shape": "flexion", "weight_bearing_points": ["shins", "forehead", "forearms"], "laterality": {"type": "symmetrical", "active_side": "neutral"}, "requires_counter_pose": False, "recommended_counter_poses": []},
         "chronic_pain": [
             {"action": "modify", "condition": "knee_pain", "reason": "Deep flexion compresses the meniscus.", "recommended_modification": "blanket_under_knees_or_hips"},
             {
@@ -137,7 +137,7 @@ PRONE_POSTURES = [
         "typical_exits": ["p_table_top", "p_downward_dog", "p_cobra"],
     },
     {
-        "anatomical_signature": {"is_inverted": False, "spinal_shape": "neutral", "weight_bearing_points": ["palms", "toes"], "laterality": {"type": "symmetrical", "active_side": "neutral"}},
+        "anatomical_signature": {"is_inverted": False, "spinal_shape": "neutral", "weight_bearing_points": ["palms", "toes"], "laterality": {"type": "symmetrical", "active_side": "neutral"}, "requires_counter_pose": False, "recommended_counter_poses": []},
         "chronic_pain": [
             {
                 "action": "modify",
@@ -187,7 +187,7 @@ PRONE_POSTURES = [
         "typical_exits": ["p_chaturanga", "p_downward_dog", "p_childs_pose"],
     },
     {
-        "anatomical_signature": {"is_inverted": False, "spinal_shape": "neutral", "weight_bearing_points": ["palms", "tops_of_feet"], "laterality": {"type": "symmetrical", "active_side": "neutral"}},
+        "anatomical_signature": {"is_inverted": False, "spinal_shape": "neutral", "weight_bearing_points": ["palms", "tops_of_feet"], "laterality": {"type": "symmetrical", "active_side": "neutral"}, "requires_counter_pose": False, "recommended_counter_poses": []},
         "chronic_pain": [
             {"action": "modify", "condition": "wrist_pain", "reason": "Full body weight on wrists in extension.", "recommended_modification": "forearm_chaturanga"},
             {"action": "adjust", "condition": "lower_back_pain", "reason": "Weak core causes lumbar sag.", "recommended_modification": "knees_down_chaturanga"},
@@ -218,7 +218,7 @@ PRONE_POSTURES = [
         "typical_exits": ["p_cobra", "p_upward_dog", "p_downward_dog"],
     },
     {
-        "anatomical_signature": {"is_inverted": False, "spinal_shape": "extension", "weight_bearing_points": ["pelvis", "tops_of_feet", "palms (lightly)"], "laterality": {"type": "symmetrical", "active_side": "neutral"}},
+        "anatomical_signature": {"is_inverted": False, "spinal_shape": "extension", "weight_bearing_points": ["pelvis", "tops_of_feet", "palms (lightly)"], "laterality": {"type": "symmetrical", "active_side": "neutral"}, "requires_counter_pose": True, "recommended_counter_poses": ["p_childs_pose"]},
         "chronic_pain": [
             {"action": "adjust", "condition": "lower_back_pain", "reason": "Pushing up too high jams the lumbar facet joints.", "recommended_modification": "baby_cobra"}
         ],
@@ -262,7 +262,7 @@ PRONE_POSTURES = [
         "typical_exits": ["p_downward_dog", "p_childs_pose"],
     },
     {
-        "anatomical_signature": {"is_inverted": False, "spinal_shape": "mild_extension", "weight_bearing_points": ["forearms", "pelvis", "tops_of_feet"], "laterality": {"type": "symmetrical", "active_side": "neutral"}},
+        "anatomical_signature": {"is_inverted": False, "spinal_shape": "mild_extension", "weight_bearing_points": ["forearms", "pelvis", "tops_of_feet"], "laterality": {"type": "symmetrical", "active_side": "neutral"}, "requires_counter_pose": True, "recommended_counter_poses": ["p_childs_pose"]},
         "chronic_pain": [
             {
                 "action": "adjust",
@@ -298,7 +298,7 @@ PRONE_POSTURES = [
         "typical_exits": ["p_childs_pose"],
     },
     {
-        "anatomical_signature": {"is_inverted": False, "spinal_shape": "extension", "weight_bearing_points": ["palms", "tops_of_feet"], "laterality": {"type": "symmetrical", "active_side": "neutral"}},
+        "anatomical_signature": {"is_inverted": False, "spinal_shape": "extension", "weight_bearing_points": ["palms", "tops_of_feet"], "laterality": {"type": "symmetrical", "active_side": "neutral"}, "requires_counter_pose": True, "recommended_counter_poses": ["p_childs_pose", "p_downward_dog"]},
         "chronic_pain": [
             {"action": "modify", "condition": "lower_back_pain", "reason": "Hanging in the joints causes severe lower back compression.", "recommended_modification": "cobra_pose"},
             {"action": "modify", "condition": "wrist_pain", "reason": "Bears significant body weight in deep wrist extension.", "recommended_modification": "sphinx_pose"},
