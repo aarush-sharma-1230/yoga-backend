@@ -22,7 +22,7 @@ def _format_chronic_pain(p: dict) -> str:
 
 
 def _format_posture_entry(posture: dict) -> str:
-    """Build a structured posture entry with inverted, spinal_shape, laterality, counterpose, contraindications and chronic_pain."""
+    """Build a structured posture entry with anatomical data, intensity_profile, contraindications and chronic_pain."""
     name = posture.get("name") or {}
     english = name.get("english", "Unknown")
     client_id = posture.get("client_id", "")
@@ -50,11 +50,23 @@ def _format_posture_entry(posture: dict) -> str:
     else:
         counter_str += " | recommended: none"
 
+    # Intensity profile (1–5 scale: targets and demands per area)
+    ip = posture.get("intensity_profile") or {}
+    musc = ip.get("muscular_load") or {}
+    mob = ip.get("mobility_load") or {}
+    ip_str = (
+        f"intensity: exertion={ip.get('overall_exertion', 1)} balance={ip.get('balance_requirement', 1)} | "
+        f"muscular: core={musc.get('core', 1)} upper={musc.get('upper_body', 1)} lower={musc.get('lower_body', 1)} | "
+        f"mobility: posterior_chain={mob.get('posterior_chain', 1)} hips={mob.get('hips_and_pelvis', 1)} "
+        f"spine={mob.get('spine', 1)} shoulders={mob.get('shoulders_and_chest', 1)}"
+    )
+
     lines = [
         f"{client_id}: {english}",
         f"  inverted: {'yes' if is_inverted else 'no'} | spinal_shape: {spinal_shape}",
         f"  {lat_str}",
         f"  {counter_str}",
+        f"  {ip_str}",
     ]
 
     contra = posture.get("contraindications") or []
@@ -113,6 +125,7 @@ CONSTRAINTS
 
 - Select ONLY from the postures listed above. Use their client_id exactly.
 - Respect the practitioner's profile and safety laws in the system prompt. Match practitioner conditions against each posture's contraindications and chronic_pain. For contraindications: avoid = exclude pose, modify/caution = use recommended_modification or substitute.
+- Use intensity_profile to match postures to the practitioner's conditions: mobility (posterior_chain, hips, spine, shoulders) = stretch demand—caution with stretch-sensitive areas (e.g. groin injury: avoid high hips mobility). Muscular (core, upper, lower) = strength/load demand—strengthening can sometimes help, but avoid heavy load on acutely injured areas.
 - Use inverted and spinal_shape when applying safety rules: e.g. avoid inverted poses for hypertension/glaucoma; avoid flexion for herniated_disc; avoid extension for certain back issues.
 - Use laterality for asymmetrical poses: include both sides (e.g. p_tree_left and p_tree_right) where applicable; paired_pose indicates the opposite-side variant for sequencing.
 - For poses with requires_counter_pose: yes, include one of the recommended_counter_poses shortly after to balance the body.
