@@ -3,32 +3,63 @@
 from typing import Optional
 
 
+def _format_contraindication(c: dict) -> str:
+    """Format a single contraindication: action(condition): reason → modification."""
+    action = c.get("action", "")
+    condition = c.get("condition", "")
+    reason = c.get("reason", "")
+    mod = c.get("recommended_modification") or "none"
+    return f"{action}({condition}): {reason} → {mod}"
+
+
+def _format_chronic_pain(p: dict) -> str:
+    """Format a single chronic pain item: action(condition): reason → modification."""
+    action = p.get("action", "")
+    condition = p.get("condition", "")
+    reason = p.get("reason", "")
+    mod = p.get("recommended_modification") or "none"
+    return f"{action}({condition}): {reason} → {mod}"
+
+
 def _format_posture_entry(posture: dict) -> str:
-    """Build a compact one-line summary of a posture for the catalogue."""
+    """Build a structured posture entry with inverted, spinal_shape, full contraindications and chronic_pain."""
     name = posture.get("name") or {}
     english = name.get("english", "Unknown")
     client_id = posture.get("client_id", "")
     sig = posture.get("anatomical_signature") or {}
-    inverted = "INVERTED" if sig.get("is_inverted") else ""
-    contra = [c.get("condition", "") for c in (posture.get("contraindications") or []) if isinstance(c, dict)]
-    pain = [p.get("condition", "") for p in (posture.get("chronic_pain") or []) if isinstance(p, dict)]
+    is_inverted = sig.get("is_inverted", False)
+    spinal_shape = sig.get("spinal_shape", "neutral")
+
+    lines = [
+        f"{client_id}: {english}",
+        f"  inverted: {'yes' if is_inverted else 'no'} | spinal_shape: {spinal_shape}",
+    ]
+
+    contra = posture.get("contraindications") or []
+    if contra:
+        lines.append("  contraindications:")
+        for c in contra:
+            if isinstance(c, dict):
+                lines.append(f"    {_format_contraindication(c)}")
+    else:
+        lines.append("  contraindications: none")
+
+    pain = posture.get("chronic_pain") or []
+    if pain:
+        lines.append("  chronic_pain:")
+        for p in pain:
+            if isinstance(p, dict):
+                lines.append(f"    {_format_chronic_pain(p)}")
+    else:
+        lines.append("  chronic_pain: none")
+
     entries = posture.get("typical_entries") or []
     exits = posture.get("typical_exits") or []
-    intent = posture.get("pose_intent") or []
-    intent_str = "; ".join(intent[:2]) if intent else ""
-    safety = []
-    if contra:
-        safety.append(f"avoid/modify for: {', '.join(contra[:4])}")
-    if pain:
-        safety.append(f"adjust for: {', '.join(pain[:4])}")
-    safety_str = " | ".join(safety) if safety else "generally safe"
-    flow = f"entries: {', '.join(entries[:3])} | exits: {', '.join(exits[:3])}" if entries or exits else ""
-    parts = [f"{client_id}: {english} {inverted}".strip(), safety_str]
-    if intent_str:
-        parts.append(intent_str)
+    flow = f"entries: {', '.join(entries)} | exits: {', '.join(exits)}" if entries or exits else ""
     if flow:
-        parts.append(flow)
-    return " | ".join(parts)
+        lines.append(f"  flow: {flow}")
+
+    return "\n".join(lines)
 
 
 def get_custom_sequence_prompt(
@@ -37,8 +68,8 @@ def get_custom_sequence_prompt(
     focus: Optional[str] = None,
 ) -> str:
     """Build the user prompt for custom sequence generation."""
-    catalogue_lines = [_format_posture_entry(p) for p in postures]
-    catalogue = "\n".join(catalogue_lines)
+    catalogue_blocks = [_format_posture_entry(p) for p in postures]
+    catalogue = "\n---\n".join(catalogue_blocks)
 
     constraints = []
     if duration_minutes:
@@ -59,8 +90,9 @@ CONSTRAINTS
 {constraints_block}
 
 - Select ONLY from the postures listed above. Use their client_id exactly.
-- Respect the practitioner's profile and safety laws in the system prompt. Exclude, substitute or modify any pose that contraindicates their conditions.
-- Create a logical flow: use typical_entries and typical_exits to chain poses (e.g. from Mountain you can go to Upward Salute or Forward Fold).
+- Respect the practitioner's profile and safety laws in the system prompt. Match practitioner conditions against each posture's contraindications and chronic_pain. For contraindications: avoid = exclude pose, modify/caution = use recommended_modification or substitute.
+- Use inverted and spinal_shape when applying safety rules: e.g. avoid inverted poses for hypertension/glaucoma; avoid flexion for herniated_disc; avoid extension for certain back issues.
+- Create a logical flow: strictly use typical_entries and typical_exits (shown as flow) to chain poses.
 - Include a mix of categories (standing, seated, supine, prone) for balance unless focus dictates otherwise.
 - Sequence length: aim for 6–12 postures for a typical session. Adjust for duration if specified.
 - Start with grounding (e.g. Mountain, Easy Pose) and end with rest (e.g. Child's Pose, Corpse Pose).
