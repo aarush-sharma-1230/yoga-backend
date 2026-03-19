@@ -1,23 +1,17 @@
 """
 Seed yoga postures into MongoDB.
 
-Postures are organized by category (standing, seated, supine, prone, inversion)
-in separate modules. This file imports all categories, combines them into
-a single list, and upserts them into the database.
+Postures are imported from all_postures (which combines and shuffles all
+category modules). This file upserts them into the database.
 """
 
 import asyncio
 from motor.motor_asyncio import AsyncIOMotorClient
 from pymongo import UpdateOne
 
-from app.posture_docs.standing_postures import STANDING_POSTURES
-from app.posture_docs.seated_postures import SEATED_POSTURES
-from app.posture_docs.supine_postures import SUPINE_POSTURES
-from app.posture_docs.prone_postures import PRONE_POSTURES
-from app.posture_docs.inversion_postures import INVERSION_POSTURES
+from app.posture_docs.all_postures import ALL_POSTURES
 
-# Combine all posture categories into a single array
-postures_data = STANDING_POSTURES + SEATED_POSTURES + SUPINE_POSTURES + PRONE_POSTURES + INVERSION_POSTURES
+postures_data = ALL_POSTURES
 
 
 async def seed_database():

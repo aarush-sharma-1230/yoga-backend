@@ -22,7 +22,7 @@ def _format_chronic_pain(p: dict) -> str:
 
 
 def _format_posture_entry(posture: dict) -> str:
-    """Build a structured posture entry with inverted, spinal_shape, full contraindications and chronic_pain."""
+    """Build a structured posture entry with inverted, spinal_shape, laterality, counterpose, contraindications and chronic_pain."""
     name = posture.get("name") or {}
     english = name.get("english", "Unknown")
     client_id = posture.get("client_id", "")
@@ -30,9 +30,31 @@ def _format_posture_entry(posture: dict) -> str:
     is_inverted = sig.get("is_inverted", False)
     spinal_shape = sig.get("spinal_shape", "neutral")
 
+    # Laterality (symmetry/asymmetry)
+    laterality = sig.get("laterality") or {}
+    lat_type = laterality.get("type", "symmetrical")
+    active_side = laterality.get("active_side", "neutral")
+    paired_pose = laterality.get("paired_pose", "")
+    lat_str = f"laterality: {lat_type}"
+    if lat_type == "asymmetrical":
+        lat_str += f" | active_side: {active_side}"
+        if paired_pose:
+            lat_str += f" | paired_pose: {paired_pose}"
+
+    # Counterpose
+    requires_counter = sig.get("requires_counter_pose", False)
+    counter_poses = sig.get("recommended_counter_poses") or []
+    counter_str = f"requires_counter_pose: {'yes' if requires_counter else 'no'}"
+    if counter_poses:
+        counter_str += f" | recommended: {', '.join(counter_poses)}"
+    else:
+        counter_str += " | recommended: none"
+
     lines = [
         f"{client_id}: {english}",
         f"  inverted: {'yes' if is_inverted else 'no'} | spinal_shape: {spinal_shape}",
+        f"  {lat_str}",
+        f"  {counter_str}",
     ]
 
     contra = posture.get("contraindications") or []
@@ -92,6 +114,8 @@ CONSTRAINTS
 - Select ONLY from the postures listed above. Use their client_id exactly.
 - Respect the practitioner's profile and safety laws in the system prompt. Match practitioner conditions against each posture's contraindications and chronic_pain. For contraindications: avoid = exclude pose, modify/caution = use recommended_modification or substitute.
 - Use inverted and spinal_shape when applying safety rules: e.g. avoid inverted poses for hypertension/glaucoma; avoid flexion for herniated_disc; avoid extension for certain back issues.
+- Use laterality for asymmetrical poses: include both sides (e.g. p_tree_left and p_tree_right) where applicable; paired_pose indicates the opposite-side variant for sequencing.
+- For poses with requires_counter_pose: yes, include one of the recommended_counter_poses shortly after to balance the body.
 - Create a logical flow: strictly use typical_entries and typical_exits (shown as flow) to chain poses.
 - Include a mix of categories (standing, seated, supine, prone) for balance unless focus dictates otherwise.
 - Sequence length: aim for 6–12 postures for a typical session. Adjust for duration if specified.
