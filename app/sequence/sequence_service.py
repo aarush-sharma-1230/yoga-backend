@@ -41,6 +41,7 @@ class SequenceService:
         user_id: str,
         duration_minutes: int | None = None,
         focus: str | None = None,
+        intensity_level: str | None = None,
     ) -> dict:
         """
         Generate a sequence using the LLM, user profile, and posture catalogue.
@@ -53,6 +54,7 @@ class SequenceService:
             postures=ALL_POSTURES,
             duration_minutes=duration_minutes,
             focus=focus,
+            intensity_level=intensity_level,
         )
         output: CustomSequenceOutput = await self.sequence_composer.compose_sequence(
             prompt=prompt,

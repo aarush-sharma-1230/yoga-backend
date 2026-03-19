@@ -56,6 +56,8 @@ async def generate_sequence(
             user_id=USER_ID_TEMP,
             duration_minutes=data.duration_minutes,
             focus=data.focus,
+            intensity_level=data.intensity_level,
+            user_notes=data.user_notes,
         )
         return response
     except RuntimeError as e:

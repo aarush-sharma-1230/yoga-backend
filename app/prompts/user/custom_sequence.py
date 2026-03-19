@@ -2,6 +2,8 @@
 
 from typing import Optional
 
+from app.prompts.user.sequence_intensity import get_intensity_spec
+
 
 def _format_contraindication(c: dict) -> str:
     """Format a single contraindication: action(condition): reason → modification."""
@@ -100,6 +102,7 @@ def get_custom_sequence_prompt(
     postures: list,
     duration_minutes: Optional[int] = None,
     focus: Optional[str] = None,
+    intensity_level: Optional[str] = None,
 ) -> str:
     """Build the user prompt for custom sequence generation."""
     catalogue_blocks = [_format_posture_entry(p) for p in postures]
@@ -110,6 +113,11 @@ def get_custom_sequence_prompt(
         constraints.append(f"- Target duration: approximately {duration_minutes} minutes.")
     if focus:
         constraints.append(f"- Primary focus: {focus}.")
+
+    if intensity_level:
+        spec = get_intensity_spec(intensity_level, duration_minutes)
+        constraints.append("Intensity distribution (select postures whose overall_exertion matches these targets):")
+        constraints.append(spec.to_prompt_text())
 
     constraints_block = "\n".join(constraints) if constraints else "- No specific duration or focus; design a balanced sequence."
 
@@ -131,7 +139,7 @@ CONSTRAINTS
 - For poses with requires_counter_pose: yes, include one of the recommended_counter_poses shortly after to balance the body.
 - Create a logical flow: strictly use typical_entries and typical_exits (shown as flow) to chain poses.
 - Include a mix of categories (standing, seated, supine, prone) for balance unless focus dictates otherwise.
-- Sequence length: aim for 6–12 postures for a typical session. Adjust for duration if specified.
+- Sequence length: aim for 6–12 postures for a typical session (or follow the intensity distribution above when specified). Adjust for duration if specified.
 - Start with grounding (e.g. Mountain, Easy Pose) and end with rest (e.g. Child's Pose, Corpse Pose).
 
 OUTPUT

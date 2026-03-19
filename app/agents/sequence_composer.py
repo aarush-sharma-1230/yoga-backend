@@ -22,7 +22,7 @@ class SequenceComposer:
     def __init__(self, llm_client, auth_service):
         self.llm_client = llm_client
         self.auth_service = auth_service
-        self.model = "gpt-5.4"
+        self.model = "gpt-5"
 
     async def _get_developer_prompt(self, user_id: str | None) -> str:
         """Fetch profile, extract context, build developer prompt."""

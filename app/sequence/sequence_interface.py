@@ -10,8 +10,10 @@ class SequenceData(BaseModel):
 class GenerateSequenceData(BaseModel):
     """Request body for generating a sequence via LLM."""
 
-    duration_minutes: Optional[int] = None
-    focus: Optional[str] = None
+    duration_minutes: int
+    focus: str
+    intensity_level: str
+    user_notes: Optional[str] = None
 
 
 class CreateManualSequenceData(BaseModel):
