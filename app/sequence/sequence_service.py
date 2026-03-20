@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import Optional
 
 from bson import ObjectId
 from motor.motor_asyncio import AsyncIOMotorDatabase
@@ -38,9 +39,9 @@ class SequenceService:
     async def generate_sequence(
         self,
         user_id: str,
-        duration_minutes: int = 30,
-        focus: str = "strength_and_flexibility_balanced",
-        intensity_level: str = "balanced",
+        duration_minutes: Optional[int] = 30,
+        focus: Optional[str] = "strength_and_flexibility_balanced",
+        intensity_level: Optional[str] = "balanced",
         user_notes: str | None = None,
     ) -> dict:
         """
