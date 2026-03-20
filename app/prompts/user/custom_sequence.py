@@ -2,7 +2,7 @@
 
 from typing import Optional
 
-from app.prompts.user.sequence_intensity import get_intensity_spec
+from app.prompts.user.sequence_intensity import get_intensity_instruction
 
 
 def _format_contraindication(c: dict) -> str:
@@ -115,9 +115,7 @@ def get_custom_sequence_prompt(
         constraints.append(f"- Primary focus: {focus}.")
 
     if intensity_level:
-        spec = get_intensity_spec(intensity_level, duration_minutes)
-        constraints.append("Intensity distribution (select postures whose overall_exertion matches these targets):")
-        constraints.append(spec.to_prompt_text())
+        constraints.append(f"- {get_intensity_instruction(intensity_level, duration_minutes)}")
 
     constraints_block = "\n".join(constraints) if constraints else "- No specific duration or focus; design a balanced sequence."
 
@@ -132,14 +130,14 @@ CONSTRAINTS
 {constraints_block}
 
 - Select ONLY from the postures listed above. Use their client_id exactly.
+- Unilateral postures must exist in pairs: If you add any asymmetrical pose (e.g. p_tree_left, p_warrior_2_right), you must also add its paired_pose (e.g. p_tree_right, p_warrior_2_left) somewhere in the upcoming postures to maintain balance. Check the paired_pose field for each asymmetrical posture.
+- For poses with requires_counter_pose: yes, include one of the recommended_counter_poses shortly after to balance the body.
 - Respect the practitioner's profile and safety laws in the system prompt. Match practitioner conditions against each posture's contraindications and chronic_pain. For contraindications: avoid = exclude pose, modify/caution = use recommended_modification or substitute.
 - Use intensity_profile to match postures to the practitioner's conditions: mobility (posterior_chain, hips, spine, shoulders) = stretch demand—caution with stretch-sensitive areas (e.g. groin injury: avoid high hips mobility). Muscular (core, upper, lower) = strength/load demand—strengthening can sometimes help, but avoid heavy load on acutely injured areas.
 - Use inverted and spinal_shape when applying safety rules: e.g. avoid inverted poses for hypertension/glaucoma; avoid flexion for herniated_disc; avoid extension for certain back issues.
-- Use laterality for asymmetrical poses: include both sides (e.g. p_tree_left and p_tree_right) where applicable; paired_pose indicates the opposite-side variant for sequencing.
-- For poses with requires_counter_pose: yes, include one of the recommended_counter_poses shortly after to balance the body.
 - Create a logical flow: strictly use typical_entries and typical_exits (shown as flow) to chain poses.
 - Include a mix of categories (standing, seated, supine, prone) for balance unless focus dictates otherwise.
-- Sequence length: aim for 6–12 postures for a typical session (or follow the intensity distribution above when specified). Adjust for duration if specified.
+- Sequence length: choose based on the target duration and smooth flow between poses. Prioritize logical transitions (typical_entries and typical_exits) over hitting a specific posture count.
 - Start with grounding (e.g. Mountain, Easy Pose) and end with rest (e.g. Child's Pose, Corpse Pose).
 
 OUTPUT
