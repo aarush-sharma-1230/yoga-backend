@@ -1,19 +1,17 @@
 """
 Sequence Composer: designs custom yoga sequences for practitioners.
 
-Fetches user profile context and passes it to prompt builders. Responsible for
-selecting and ordering postures from the catalogue based on profile and safety laws.
+Builds developer prompt (catalogue + fixed rules) and user prompt (profile + session params).
+Fetches user profile and passes session parameters to prompt builders.
 """
 
 import asyncio
-from typing import Type, TypeVar
-
 from pydantic import BaseModel
-
-from app.prompts.developer import (
-    extract_profile_context,
-    get_sequence_composer_developer_prompt,
-)
+from typing import Type, TypeVar
+from app.posture_docs.all_postures import ALL_POSTURES
+from app.prompts.developer import (extract_profile_context, get_sequence_composer_developer_prompt)
+from app.prompts.posture_catalogue import format_posture_catalogue
+from app.prompts.user import get_sequence_user_prompt
 
 T = TypeVar("T", bound=BaseModel)
 
@@ -24,29 +22,38 @@ class SequenceComposer:
         self.auth_service = auth_service
         self.model = "gpt-5.1"
 
-    async def _get_developer_prompt(self, user_id: str | None) -> str:
-        """Fetch profile, extract context, build developer prompt."""
-        user = None
-        if user_id:
-            try:
-                user = await self.auth_service.get_profile(str(user_id))
-            except RuntimeError:
-                pass
-        ctx = extract_profile_context(user)
-        return get_sequence_composer_developer_prompt(ctx)
+    async def _get_profile_context(self, user_id: str):
+        """Fetch profile and extract context."""
+        user = await self.auth_service.get_profile(str(user_id))
+        return extract_profile_context(user)
 
     async def compose_sequence(
         self,
-        prompt: str,
         response_format: Type[T],
-        user_id: str | None = None,
+        user_id: str,
+        duration_minutes: int,
+        focus: str,
+        intensity_level: str,
     ) -> T:
-        """Generate a structured sequence (e.g. CustomSequenceOutput) from the LLM."""
-        dp = await self._get_developer_prompt(user_id)
+        """
+        Generate a structured sequence (e.g. CustomSequenceOutput) from the LLM.
+
+        Developer prompt: catalogue + fixed rules (role, intensity matching, design rules).
+        User prompt: practitioner profile + session parameters (duration, focus, intensity).
+        """
+        catalogue = format_posture_catalogue(ALL_POSTURES)
+        developer_prompt = get_sequence_composer_developer_prompt(catalogue)
+        ctx = await self._get_profile_context(user_id)
+        user_prompt = get_sequence_user_prompt(
+            ctx=ctx,
+            duration_minutes=duration_minutes,
+            focus=focus,
+            intensity_level=intensity_level,
+        )
         return await asyncio.to_thread(
             self.llm_client.generate_with_schema,
-            prompt=prompt,
+            prompt=user_prompt,
             model=self.model,
-            developer_prompt=dp,
+            developer_prompt=developer_prompt,
             response_format=response_format,
         )

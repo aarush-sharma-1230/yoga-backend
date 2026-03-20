@@ -5,7 +5,6 @@ from motor.motor_asyncio import AsyncIOMotorDatabase
 
 from app.agents.sequence_composer import SequenceComposer
 from app.posture_docs.all_postures import ALL_POSTURES
-from app.prompts.user import get_custom_sequence_prompt
 from app.schemas.custom_sequence import CustomSequenceOutput
 
 POSTURE_BY_ID = {p["client_id"]: p for p in ALL_POSTURES}
@@ -51,16 +50,12 @@ class SequenceService:
         if not self.sequence_composer:
             raise RuntimeError("SequenceComposer is required for sequence generation")
 
-        prompt = get_custom_sequence_prompt(
-            postures=ALL_POSTURES,
+        output: CustomSequenceOutput = await self.sequence_composer.compose_sequence(
+            response_format=CustomSequenceOutput,
+            user_id=user_id,
             duration_minutes=duration_minutes,
             focus=focus,
             intensity_level=intensity_level,
-        )
-        output: CustomSequenceOutput = await self.sequence_composer.compose_sequence(
-            prompt=prompt,
-            response_format=CustomSequenceOutput,
-            user_id=user_id,
         )
 
         postures = []
