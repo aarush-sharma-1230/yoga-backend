@@ -1,16 +1,22 @@
 """
 Sequence Composer: designs custom yoga sequences for practitioners.
 
-Builds developer prompt (catalogue + fixed rules) and user prompt (profile + session params).
-Fetches user profile and passes session parameters to prompt builders.
+Agent responsibility: fetch data, call helpers, process information, build prompts.
+Prompt functions receive pre-computed values only; no function calls inside prompts.
 """
 
 import asyncio
-from pydantic import BaseModel
 from typing import Type, TypeVar
+
+from pydantic import BaseModel
+
 from app.posture_docs.all_postures import ALL_POSTURES
-from app.prompts.developer import (extract_profile_context, get_sequence_composer_developer_prompt)
-from app.prompts.posture_catalogue import format_posture_catalogue
+from app.prompts.developer import extract_profile_context, get_sequence_composer_developer_prompt
+from app.prompts.helpers import (
+    duration_to_posture_range,
+    format_posture_catalogue,
+    get_intensity_instruction,
+)
 from app.prompts.user import get_sequence_user_prompt
 
 T = TypeVar("T", bound=BaseModel)
@@ -32,24 +38,31 @@ class SequenceComposer:
         response_format: Type[T],
         user_id: str,
         duration_minutes: int,
-        focus: str,
+        focus: str | None,
         intensity_level: str,
     ) -> T:
         """
         Generate a structured sequence (e.g. CustomSequenceOutput) from the LLM.
 
-        Developer prompt: catalogue + fixed rules (role, intensity matching, design rules).
-        User prompt: practitioner profile + session parameters (duration, focus, intensity).
+        Agent fetches posture count from duration, computes all prompt inputs,
+        and passes pre-computed values to prompt builders.
         """
+        # Agent: fetch and process all data
+        posture_range_lo, posture_range_hi = duration_to_posture_range(duration_minutes)
+        intensity_instruction = get_intensity_instruction(intensity_level, duration_minutes)
         catalogue = format_posture_catalogue(ALL_POSTURES)
-        developer_prompt = get_sequence_composer_developer_prompt(catalogue)
         ctx = await self._get_profile_context(user_id)
+
+        # Build prompts with pre-computed values (no function calls inside)
+        developer_prompt = get_sequence_composer_developer_prompt(catalogue)
         user_prompt = get_sequence_user_prompt(
             ctx=ctx,
-            duration_minutes=duration_minutes,
+            posture_range_lo=posture_range_lo,
+            posture_range_hi=posture_range_hi,
             focus=focus,
-            intensity_level=intensity_level,
+            intensity_instruction=intensity_instruction,
         )
+
         return await asyncio.to_thread(
             self.llm_client.generate_with_schema,
             prompt=user_prompt,

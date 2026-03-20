@@ -1,10 +1,12 @@
-"""User prompt: custom yoga sequence generation."""
+"""User prompt: custom yoga sequence generation.
+
+Prompt functions receive pre-computed values only. No function calls inside.
+All data fetching and processing is done by the SequenceComposer agent.
+"""
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Optional
-
-from app.prompts.user.sequence_intensity import get_intensity_instruction
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from app.prompts.developer.profile_context import ProfileContext
@@ -12,14 +14,17 @@ if TYPE_CHECKING:
 
 def get_sequence_user_prompt(
     ctx: ProfileContext,
-    duration_minutes: Optional[int] = None,
-    focus: Optional[str] = None,
-    intensity_level: Optional[str] = None,
+    posture_range_lo: int,
+    posture_range_hi: int,
+    focus: str | None,
+    intensity_instruction: str,
 ) -> str:
     """
     Build the user prompt for sequence generation. Contains only session-specific
     information: user profile (medical history, priorities), what the user intends,
     and difficulty level.
+
+    Receives pre-computed values. No function calls inside.
     """
     sections = []
 
@@ -40,14 +45,12 @@ def get_sequence_user_prompt(
     sections.append("SESSION PARAMETERS")
     sections.append("")
     params = []
-    if duration_minutes:
-        params.append(f"- Target duration: approximately {duration_minutes} minutes.")
+    params.append(
+        f"- Aim for approximately {posture_range_lo}–{posture_range_hi} postures total. Prioritize smooth transitions over hitting an exact count."
+    )
     if focus:
         params.append(f"- Primary focus: {focus}.")
-    if intensity_level:
-        params.append(f"- {get_intensity_instruction(intensity_level, duration_minutes)}")
-    if not params:
-        params.append("- No specific duration, focus, or intensity; design a balanced sequence.")
+    params.append(f"- {intensity_instruction}")
     sections.extend(params)
     sections.append("")
     sections.append(

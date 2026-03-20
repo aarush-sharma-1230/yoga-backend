@@ -38,14 +38,14 @@ class SequenceService:
     async def generate_sequence(
         self,
         user_id: str,
-        duration_minutes: int | None = None,
-        focus: str | None = None,
-        intensity_level: str | None = None,
+        duration_minutes: int = 30,
+        focus: str = "strength_and_flexibility_balanced",
+        intensity_level: str = "balanced",
         user_notes: str | None = None,
     ) -> dict:
         """
         Generate a sequence using the LLM, user profile, and posture catalogue.
-        Saves to DB and returns the new sequence.
+        Agent fetches posture count from duration. Saves to DB and returns the new sequence.
         """
         if not self.sequence_composer:
             raise RuntimeError("SequenceComposer is required for sequence generation")
