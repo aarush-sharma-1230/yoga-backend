@@ -101,7 +101,7 @@ SUPINE_POSTURES = [
         "typical_exits": ["p_corpse_pose", "p_happy_baby", "p_knees_to_chest"],
     },
     {
-        "anatomical_signature": {"is_inverted": False, "spinal_shape": "mild_flexion", "weight_bearing_points": ["entire_back", "sacrum", "back_of_head"], "laterality": {"type": "symmetrical", "active_side": "neutral"}, "requires_counter_pose": True, "recommended_counter_poses": ["p_corpse_pose", "p_bridge"]},
+        "anatomical_signature": {"is_inverted": False, "spinal_shape": "mild_flexion", "weight_bearing_points": ["entire_back", "sacrum", "back_of_head"], "laterality": {"type": "symmetrical", "active_side": "neutral"}, "requires_counter_pose": False, "recommended_counter_poses": []},
         "intensity_profile": {
             "overall_exertion": 2,
             "balance_requirement": 1,

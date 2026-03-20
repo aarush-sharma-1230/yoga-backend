@@ -1,7 +1,7 @@
 # --- Inversion postures (head below heart) ---
 INVERSION_POSTURES = [
     {
-        "anatomical_signature": {"is_inverted": True, "spinal_shape": "neutral", "weight_bearing_points": ["palms", "feet"], "laterality": {"type": "symmetrical", "active_side": "neutral"}, "requires_counter_pose": True, "recommended_counter_poses": ["p_childs_pose"]},
+        "anatomical_signature": {"is_inverted": True, "spinal_shape": "neutral", "weight_bearing_points": ["palms", "feet"], "laterality": {"type": "symmetrical", "active_side": "neutral"}, "requires_counter_pose": False, "recommended_counter_poses": []},
         "intensity_profile": {
             "overall_exertion": 3,
             "balance_requirement": 1,

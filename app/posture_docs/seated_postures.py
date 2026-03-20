@@ -88,7 +88,7 @@ SEATED_POSTURES = [
         "typical_exits": ["p_seated_forward_fold", "p_head_to_knee_left", "p_head_to_knee_right", "p_easy_pose"],
     },
     {
-        "anatomical_signature": {"is_inverted": False, "spinal_shape": "flexion", "weight_bearing_points": ["sit_bones", "heels", "calves"], "laterality": {"type": "symmetrical", "active_side": "neutral"}, "requires_counter_pose": True, "recommended_counter_poses": ["p_staff_pose", "p_bridge"]},
+        "anatomical_signature": {"is_inverted": False, "spinal_shape": "flexion", "weight_bearing_points": ["sit_bones", "heels", "calves"], "laterality": {"type": "symmetrical", "active_side": "neutral"}, "requires_counter_pose": False, "recommended_counter_poses": []},
         "intensity_profile": {
             "overall_exertion": 2,
             "balance_requirement": 1,

@@ -38,7 +38,7 @@ STANDING_POSTURES = [
         "typical_exits": ["p_upward_salute", "p_chair", "p_forward_fold", "p_tree_left", "p_tree_right"],
     },
     {
-        "anatomical_signature": {"is_inverted": False, "spinal_shape": "mild_extension", "weight_bearing_points": ["feet"], "laterality": {"type": "symmetrical", "active_side": "neutral"}, "requires_counter_pose": True, "recommended_counter_poses": ["p_forward_fold", "p_mountain"]},
+        "anatomical_signature": {"is_inverted": False, "spinal_shape": "mild_extension", "weight_bearing_points": ["feet"], "laterality": {"type": "symmetrical", "active_side": "neutral"}, "requires_counter_pose": False, "recommended_counter_poses": []},
         "intensity_profile": {
             "overall_exertion": 1,
             "balance_requirement": 1,
@@ -80,7 +80,7 @@ STANDING_POSTURES = [
         "typical_exits": ["p_forward_fold", "p_chair", "p_mountain"],
     },
     {
-        "anatomical_signature": {"is_inverted": False, "spinal_shape": "neutral", "weight_bearing_points": ["feet"], "laterality": {"type": "symmetrical", "active_side": "neutral"}, "requires_counter_pose": True, "recommended_counter_poses": ["p_forward_fold", "p_mountain"]},
+        "anatomical_signature": {"is_inverted": False, "spinal_shape": "neutral", "weight_bearing_points": ["feet"], "laterality": {"type": "symmetrical", "active_side": "neutral"}, "requires_counter_pose": False, "recommended_counter_poses": []},
         "intensity_profile": {
             "overall_exertion": 4,
             "balance_requirement": 1,
@@ -133,7 +133,7 @@ STANDING_POSTURES = [
         "typical_exits": ["p_forward_fold", "p_mountain", "p_halfway_lift"],
     },
     {
-        "anatomical_signature": {"is_inverted": True, "spinal_shape": "flexion", "weight_bearing_points": ["feet"], "laterality": {"type": "symmetrical", "active_side": "neutral"}, "requires_counter_pose": True, "recommended_counter_poses": ["p_halfway_lift", "p_mountain"]},
+        "anatomical_signature": {"is_inverted": True, "spinal_shape": "flexion", "weight_bearing_points": ["feet"], "laterality": {"type": "symmetrical", "active_side": "neutral"}, "requires_counter_pose": False, "recommended_counter_poses": []},
         "intensity_profile": {
             "overall_exertion": 2,
             "balance_requirement": 1,

@@ -254,7 +254,7 @@ PRONE_POSTURES = [
         "typical_exits": ["p_cobra", "p_upward_dog", "p_downward_dog"],
     },
     {
-        "anatomical_signature": {"is_inverted": False, "spinal_shape": "extension", "weight_bearing_points": ["pelvis", "tops_of_feet", "palms (lightly)"], "laterality": {"type": "symmetrical", "active_side": "neutral"}, "requires_counter_pose": True, "recommended_counter_poses": ["p_childs_pose"]},
+        "anatomical_signature": {"is_inverted": False, "spinal_shape": "extension", "weight_bearing_points": ["pelvis", "tops_of_feet", "palms (lightly)"], "laterality": {"type": "symmetrical", "active_side": "neutral"}, "requires_counter_pose": False, "recommended_counter_poses": []},
         "intensity_profile": {
             "overall_exertion": 3,
             "balance_requirement": 1,
@@ -346,7 +346,7 @@ PRONE_POSTURES = [
         "typical_exits": ["p_childs_pose"],
     },
     {
-        "anatomical_signature": {"is_inverted": False, "spinal_shape": "extension", "weight_bearing_points": ["palms", "tops_of_feet"], "laterality": {"type": "symmetrical", "active_side": "neutral"}, "requires_counter_pose": True, "recommended_counter_poses": ["p_childs_pose", "p_downward_dog"]},
+        "anatomical_signature": {"is_inverted": False, "spinal_shape": "extension", "weight_bearing_points": ["palms", "tops_of_feet"], "laterality": {"type": "symmetrical", "active_side": "neutral"}, "requires_counter_pose": False, "recommended_counter_poses": []},
         "intensity_profile": {
             "overall_exertion": 4,
             "balance_requirement": 1,
