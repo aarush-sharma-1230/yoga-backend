@@ -1,5 +1,6 @@
 import traceback
 import uuid
+import os
 from typing import Type, TypeVar
 
 import openai
@@ -14,7 +15,8 @@ T = TypeVar("T", bound=BaseModel)
 
 class OpenAIClient:
     def __init__(self, openai_api_key: str):
-        self.is_api_enabled = True
+        self.is_text_enabled = True
+        self.is_audio_enabled = False
         self.api_key = openai_api_key
         self.audio_model = "gpt-4o-mini-tts"
         self.temperature = 0.7
@@ -85,7 +87,7 @@ class OpenAIClient:
         model: str,
         temperature: float = 0.7,
     ) -> str:
-        if self.is_api_enabled:
+        if self.is_text_enabled:
             input = [{"role": "developer", "content": developer_prompt}, {"role": "user", "content": prompt}]
             response = openai.responses.create(model=model, input=input, temperature=temperature)
             resp_dict = response.to_dict()
@@ -94,7 +96,7 @@ class OpenAIClient:
             return resp_dict
 
     def generate_audio(self, text: str, instructions: str | None = None, model: str = "gpt-4o-mini-tts", voice: str = "nova"):
-        if self.is_api_enabled:
+        if self.is_audio_enabled:
             with openai.audio.speech.with_streaming_response.create(model=model, voice=voice, input=text) as response:
                 for chunk in response.iter_bytes():
                     yield chunk

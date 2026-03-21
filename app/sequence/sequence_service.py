@@ -4,10 +4,7 @@ from bson import ObjectId
 from motor.motor_asyncio import AsyncIOMotorDatabase
 
 from app.agents.sequence_composer import SequenceComposer
-from app.posture_docs.all_postures import ALL_POSTURES
 from app.schemas.custom_sequence import CustomSequenceOutput
-
-POSTURE_BY_ID = {p["client_id"]: p for p in ALL_POSTURES}
 
 
 class SequenceService:
@@ -32,13 +29,36 @@ class SequenceService:
 
     async def get_sequence(self, sequence_id: str):
         sequence = await self.db["sequences"].find_one({"_id": ObjectId(sequence_id)})
-        return {"status": True, "result": sequence}
+        postures = [self._posture_for_sequence(p) for p in sequence.get("postures", [])]
+        return {"status": True, "result": {**sequence, "postures": postures}}
 
-    def _posture_for_sequence(self, posture: dict) -> dict:
-        """Build sequence posture format: name as string for display, full object for transitions."""
-        name = posture.get("name") or {}
-        english = name.get("english", "Unknown")
-        return {**posture, "name": english}
+    def _posture_for_sequence(
+        self,
+        posture: dict,
+        entry_transitions: list[str] | None = None,
+        recommended_modification: str | None = None,
+    ) -> dict:
+        """Build the posture shape stored in sequences and returned by sequence APIs."""
+        name = posture.get("name")
+        if isinstance(name, dict):
+            english = name.get("english", "Unknown")
+            sanskrit = name.get("sanskrit", "")
+        else:
+            english = name or "Unknown"
+            sanskrit = posture.get("sanskrit_name", "")
+
+        posture_id = posture.get("_id") or posture.get("id") or posture.get("client_id")
+        et = entry_transitions if entry_transitions is not None else posture.get("entry_transitions", [])
+        rm = recommended_modification if recommended_modification is not None else posture.get("recommended_modification", "")
+
+        return {
+            "_id": str(posture_id),
+            "name": english,
+            "sanskrit_name": sanskrit,
+            "client_id": posture.get("client_id", ""),
+            "entry_transitions": et,
+            "recommended_modification": rm,
+        }
 
     async def generate_sequence(
         self,
@@ -68,14 +88,23 @@ class SequenceService:
             user_notes=user_notes,
         )
 
+        requested_posture_ids = [item.posture_id for item in output.postures]
+        db_postures = {}
+        async for doc in self.db["postures"].find({"client_id": {"$in": requested_posture_ids}}):
+            db_postures[doc["client_id"]] = doc
+
         postures = []
         for item in output.postures:
             pid = item.posture_id
-            if pid in POSTURE_BY_ID:
-                posture = self._posture_for_sequence(POSTURE_BY_ID[pid])
-                posture["entry_transitions"] = item.entry_transitions
-                posture["recommended_modification"] = item.recommended_modification or ""
-                postures.append(posture)
+            posture_doc = db_postures.get(pid)
+            if posture_doc:
+                postures.append(
+                    self._posture_for_sequence(
+                        posture_doc,
+                        entry_transitions=item.entry_transitions,
+                        recommended_modification=item.recommended_modification or "",
+                    )
+                )
             # Skip invalid IDs; LLM may occasionally hallucinate
 
         if not postures:
