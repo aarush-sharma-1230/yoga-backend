@@ -63,12 +63,13 @@ async def generate_sequence(
     try:
         response = await service.generate_sequence(
             user_id=USER_ID_TEMP,
+            practice_theme_id=data.practice_theme_id,
             duration_minutes=data.duration_minutes,
-            focus=data.focus,
-            intensity_level=data.intensity_level,
             user_notes=data.user_notes,
         )
         return response
+    except ValueError as e:
+        raise CustomException(str(e))
     except RuntimeError as e:
         raise CustomException(str(e))
     except Exception as e:

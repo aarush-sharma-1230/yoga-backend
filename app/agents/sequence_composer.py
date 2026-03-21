@@ -38,8 +38,8 @@ class SequenceComposer:
         response_format: Type[T],
         user_id: str,
         duration_minutes: int,
-        focus: str | None,
-        intensity_level: str,
+        theme: dict,
+        user_notes: str | None = None,
     ) -> T:
         """
         Generate a structured sequence (e.g. CustomSequenceOutput) from the LLM.
@@ -47,19 +47,18 @@ class SequenceComposer:
         Agent fetches posture count from duration, computes all prompt inputs,
         and passes pre-computed values to prompt builders.
         """
-        # Agent: fetch and process all data
         posture_range_lo, posture_range_hi = duration_to_posture_range(duration_minutes)
-        intensity_instruction = get_intensity_instruction(intensity_level, duration_minutes)
+        intensity_instruction = get_intensity_instruction("balanced", duration_minutes)
         catalogue = format_posture_catalogue(ALL_POSTURES)
         ctx = await self._get_profile_context(user_id)
 
-        # Build prompts with pre-computed values (no function calls inside)
         developer_prompt = get_sequence_composer_developer_prompt(catalogue)
         user_prompt = get_sequence_user_prompt(
             ctx=ctx,
             posture_range_lo=posture_range_lo,
             posture_range_hi=posture_range_hi,
-            focus=focus,
+            theme=theme,
+            user_notes=user_notes,
             intensity_instruction=intensity_instruction,
         )
 

@@ -16,13 +16,13 @@ def get_sequence_user_prompt(
     ctx: ProfileContext,
     posture_range_lo: int,
     posture_range_hi: int,
-    focus: str | None,
+    theme: dict,
+    user_notes: str | None,
     intensity_instruction: str,
 ) -> str:
     """
     Build the user prompt for sequence generation. Contains only session-specific
-    information: user profile (medical history, priorities), what the user intends,
-    and difficulty level.
+    information: user profile, theme, what the user intends.
 
     Receives pre-computed values. No function calls inside.
     """
@@ -41,16 +41,20 @@ def get_sequence_user_prompt(
             sections.append(ctx.laws_context)
         sections.append("")
 
-    # What the user intends
+    # Session parameters
     sections.append("SESSION PARAMETERS")
     sections.append("")
     params = []
     params.append(
         f"- Aim for approximately {posture_range_lo}–{posture_range_hi} postures total. Prioritize smooth transitions over hitting an exact count."
     )
-    if focus:
-        params.append(f"- Primary focus: {focus}.")
+    display_name = theme.get("display_name") or ""
+    functional_category = theme.get("functional_category") or ""
+    description = theme.get("description") or ""
+    params.append(f"- Practice theme: {display_name} ({functional_category}). {description}")
     params.append(f"- {intensity_instruction}")
+    if user_notes:
+        params.append(f"- User notes: {user_notes}")
     sections.extend(params)
     sections.append("")
     sections.append(

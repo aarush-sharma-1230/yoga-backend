@@ -8,15 +8,10 @@ class SequenceData(BaseModel):
 
 
 class GenerateSequenceData(BaseModel):
-    """Request body for generating a sequence via LLM.
+    """Request body for generating a sequence via LLM."""
 
-    duration_minutes, focus, intensity_level are optional in the API body.
-    Defaults are applied when omitted; downstream they are passed compulsorily.
-    """
-
-    duration_minutes: Optional[int] = 30
-    focus: Optional[str] = "strength_and_flexibility_balanced"
-    intensity_level: Optional[str] = "balanced"
+    practice_theme_id: str
+    duration_minutes: int
     user_notes: Optional[str] = None
 
 

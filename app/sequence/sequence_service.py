@@ -1,5 +1,4 @@
 from datetime import datetime
-from typing import Optional
 
 from bson import ObjectId
 from motor.motor_asyncio import AsyncIOMotorDatabase
@@ -44,24 +43,29 @@ class SequenceService:
     async def generate_sequence(
         self,
         user_id: str,
-        duration_minutes: Optional[int] = 30,
-        focus: Optional[str] = "strength_and_flexibility_balanced",
-        intensity_level: Optional[str] = "balanced",
+        practice_theme_id: str,
+        duration_minutes: int,
         user_notes: str | None = None,
     ) -> dict:
         """
-        Generate a sequence using the LLM, user profile, and posture catalogue.
-        Agent fetches posture count from duration. Saves to DB and returns the new sequence.
+        Generate a sequence using the LLM, user profile, theme, and posture catalogue.
         """
         if not self.sequence_composer:
             raise RuntimeError("SequenceComposer is required for sequence generation")
+
+        try:
+            theme = await self.db["themes"].find_one({"_id": ObjectId(practice_theme_id)})
+        except Exception:
+            raise ValueError(f"Invalid theme ID: {practice_theme_id}")
+        if not theme:
+            raise ValueError(f"Theme not found: {practice_theme_id}")
 
         output: CustomSequenceOutput = await self.sequence_composer.compose_sequence(
             response_format=CustomSequenceOutput,
             user_id=user_id,
             duration_minutes=duration_minutes,
-            focus=focus,
-            intensity_level=intensity_level,
+            theme=theme,
+            user_notes=user_notes,
         )
 
         postures = []
@@ -82,6 +86,7 @@ class SequenceService:
             "postures": postures,
             "type": "generated",
             "user_id": user_id,
+            "practice_theme_id": practice_theme_id,
             "created_at": datetime.utcnow(),
         }
         result = await self.db["sequences"].insert_one(sequence_doc)
