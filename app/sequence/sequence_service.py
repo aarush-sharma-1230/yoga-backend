@@ -35,7 +35,7 @@ class SequenceService:
     def _posture_for_sequence(
         self,
         posture: dict,
-        entry_transitions: list[str] | None = None,
+        entry_transitions: list[str] | list[dict] | None = None,
         recommended_modification: str | None = None,
     ) -> dict:
         """Build the posture shape stored in sequences and returned by sequence APIs."""
@@ -49,6 +49,8 @@ class SequenceService:
 
         posture_id = posture.get("_id") or posture.get("id") or posture.get("client_id")
         et = entry_transitions if entry_transitions is not None else posture.get("entry_transitions", [])
+        if et and isinstance(et[0], dict):
+            et = [self._posture_for_sequence(x) for x in et]
         rm = recommended_modification if recommended_modification is not None else posture.get("recommended_modification", "")
 
         return {
@@ -89,8 +91,13 @@ class SequenceService:
         )
 
         requested_posture_ids = [item.posture_id for item in output.postures]
+        entry_transition_ids = [
+            eid for item in output.postures for eid in item.entry_transitions
+        ]
+        all_posture_ids = list(set(requested_posture_ids) | set(entry_transition_ids))
+
         db_postures = {}
-        async for doc in self.db["postures"].find({"client_id": {"$in": requested_posture_ids}}):
+        async for doc in self.db["postures"].find({"client_id": {"$in": all_posture_ids}}):
             db_postures[doc["client_id"]] = doc
 
         postures = []
@@ -98,10 +105,15 @@ class SequenceService:
             pid = item.posture_id
             posture_doc = db_postures.get(pid)
             if posture_doc:
+                entry_transition_objects = [
+                    self._posture_for_sequence(db_postures[eid])
+                    for eid in item.entry_transitions
+                    if eid in db_postures
+                ]
                 postures.append(
                     self._posture_for_sequence(
                         posture_doc,
-                        entry_transitions=item.entry_transitions,
+                        entry_transitions=entry_transition_objects,
                         recommended_modification=item.recommended_modification or "",
                     )
                 )
