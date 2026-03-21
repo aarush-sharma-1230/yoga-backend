@@ -15,7 +15,6 @@ from app.prompts.developer import extract_profile_context, get_sequence_composer
 from app.prompts.helpers import (
     duration_to_posture_range,
     format_posture_catalogue,
-    get_intensity_instruction,
 )
 from app.prompts.user import get_sequence_user_prompt
 
@@ -48,7 +47,6 @@ class SequenceComposer:
         and passes pre-computed values to prompt builders.
         """
         posture_range_lo, posture_range_hi = duration_to_posture_range(duration_minutes)
-        intensity_instruction = get_intensity_instruction("balanced", duration_minutes)
         catalogue = format_posture_catalogue(ALL_POSTURES)
         ctx = await self._get_profile_context(user_id)
 
@@ -59,7 +57,6 @@ class SequenceComposer:
             posture_range_hi=posture_range_hi,
             theme=theme,
             user_notes=user_notes,
-            intensity_instruction=intensity_instruction,
         )
 
         return await asyncio.to_thread(
