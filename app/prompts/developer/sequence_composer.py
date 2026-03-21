@@ -38,5 +38,5 @@ RULES FOR SEQUENCE DESIGN
 * Select only from the postures in the catalogue above; use their client_id exactly.
 * Create logical and smooth transitions flow using typical_entries and typical_exits between poses.
 * Start with grounding (e.g. Mountain, Easy Pose) and end with rest (e.g. Child's Pose, Corpse Pose).
-* Return a JSON object with "reasoning", "name", and "posture_ids" as specified in the user prompt.
+* Output format: Return a JSON object with "reasoning", "name", and "postures". Each item in postures has "posture_id" (the main pose to hold), "entry_transitions" (transitional poses to flow through before it—e.g. p_downward_dog when moving between standing poses), and "recommended_modification". Use entry_transitions for poses that should not be held long; include them only as transitions into the next held pose.
 """

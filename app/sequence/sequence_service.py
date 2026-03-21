@@ -60,9 +60,13 @@ class SequenceService:
         )
 
         postures = []
-        for pid in output.posture_ids:
+        for item in output.postures:
+            pid = item.posture_id
             if pid in POSTURE_BY_ID:
-                postures.append(self._posture_for_sequence(POSTURE_BY_ID[pid]))
+                posture = self._posture_for_sequence(POSTURE_BY_ID[pid])
+                posture["entry_transitions"] = item.entry_transitions
+                posture["recommended_modification"] = item.recommended_modification or ""
+                postures.append(posture)
             # Skip invalid IDs; LLM may occasionally hallucinate
 
         if not postures:
