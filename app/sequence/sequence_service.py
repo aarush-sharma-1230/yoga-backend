@@ -26,6 +26,11 @@ class SequenceService:
         postures = await self.db["postures"].find().to_list(length=None)
         return {"status": True, "result": postures}
 
+    async def get_themes(self):
+        """Fetch all themes from the themes collection."""
+        themes = await self.db["themes"].find().to_list(length=None)
+        return {"status": True, "result": themes}
+
     async def get_sequence(self, sequence_id: str):
         sequence = await self.db["sequences"].find_one({"_id": ObjectId(sequence_id)})
         return {"status": True, "result": sequence}

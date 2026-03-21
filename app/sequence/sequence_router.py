@@ -25,7 +25,16 @@ async def get_postures(service: SequenceService = Depends(DependencyInjector.get
     try:
         response = await service.get_postures()
         return response
+    except Exception as e:
+        raise CustomException(e)
 
+
+@router.get("/sequence/get_themes")
+async def get_themes(service: SequenceService = Depends(DependencyInjector.get_sequence_service)):
+    """Get all themes from the themes collection."""
+    try:
+        response = await service.get_themes()
+        return response
     except Exception as e:
         raise CustomException(e)
 
