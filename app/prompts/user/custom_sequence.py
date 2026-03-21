@@ -54,10 +54,11 @@ def get_sequence_user_prompt(
     sections.extend(params)
     sections.append("")
     sections.append(
-        "Design a yoga sequence for this practitioner based on the catalogue in the system prompt. "
-        "Match their profile and session parameters. Return a JSON object with reasoning, name, and postures. "
-        "Each posture has posture_id (main pose to hold), entry_transitions (transitional poses to flow through before holding—e.g. p_downward_dog between standing poses), and recommended_modification. "
-        "Use entry_transitions for poses that are meant to be quick passes rather than held; leave empty when none."
+        "Design a yoga sequence in two steps: (1) Select postures that match intent and are safe for this practitioner. "
+        "(2) Order them and use entry_transitions only to bridge two held postures that lack a direct transition link (typical_entries/typical_exits). "
+        "Entry_transitions must contain ONLY valid client_ids from the catalogue—never invent IDs. Leave entry_transitions empty when the previous pose connects directly. "
+        "For short sequences (6–7 postures), use fewer position categories; for long sequences, include more variety. "
+        "Return JSON with reasoning, name, and postures (each: posture_id, entry_transitions, recommended_modification)."
     )
 
     return "\n".join(sections)
