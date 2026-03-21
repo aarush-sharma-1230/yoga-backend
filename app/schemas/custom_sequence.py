@@ -11,7 +11,8 @@ class SequencePosture(BaseModel):
     )
     entry_transitions: list[str] = Field(
         default_factory=list,
-        description="ONLY when the previous held pose has no direct link to this one (per typical_entries/typical_exits): list client_ids from the catalogue that bridge the gap. Use only valid catalogue IDs. Leave empty when the previous pose connects directly.",
+        max_length=3,
+        description="ONLY when the previous held pose has no direct link to this one (per typical_entries/typical_exits): list client_ids from the catalogue that bridge the gap. Keep minimal and logical—aim for 1–2 postures on average, maximum 3. Use only valid catalogue IDs. Leave empty when the previous pose connects directly.",
     )
     recommended_modification: str = Field(
         default="",

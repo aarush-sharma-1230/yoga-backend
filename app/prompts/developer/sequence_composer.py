@@ -21,7 +21,7 @@ STEP 3 — ANATOMICAL PREPARATION
 Study the intensity_profile of the chosen anchor postures. Then select preparation postures that warm up, strengthen, mobilize, or open the relevant body regions before the anchors.
 
 STEP 4 — CONSTRUCT THE WAVE AND ROUTE
-Arrange the sequence as a physiological wave: grounding -> warm-up -> preparation -> anchor/peak -> cool-down -> rest. Use typical_entries and typical_exits to connect held postures directly whenever possible. Only when two held postures do not have a direct link should you use entry_transitions to bridge them. Every entry_transitions item must be a real client_id from the catalogue. Never invent IDs.
+Arrange the sequence as a physiological wave: grounding -> warm-up -> preparation -> anchor/peak -> cool-down -> rest. Use typical_entries and typical_exits to connect held postures directly whenever possible. Only when two held postures do not have a direct link should you use entry_transitions to bridge them. Keep entry_transitions minimal and logical: aim for 1–2 postures on average, maximum 3. Every entry_transitions item must be a real client_id from the catalogue. Never invent IDs.
 
 STEP 5 — THE PHYSICAL RESET
 Review the sequence after the anchor phase. If a posture has requires_counter_pose: yes, schedule one of its recommended_counter_poses immediately or shortly afterward before the resting phase.
@@ -45,5 +45,5 @@ RULES FOR SEQUENCE DESIGN
 * Start with grounding (Mountain, Easy Pose) and end with rest (Child's Pose, Corpse Pose).
 
 OUTPUT FORMAT
-Return JSON with "reasoning", "name", and "postures". Each posture: "posture_id" (client_id from catalogue), "entry_transitions" (ONLY catalogue client_ids that bridge a gap when there is no direct typical_entries/typical_exits link; empty when direct), "recommended_modification" (from contraindications/chronic_pain or "").
+Return JSON with "reasoning", "name", and "postures". Each posture: "posture_id" (client_id from catalogue), "entry_transitions" (ONLY catalogue client_ids that bridge a gap when there is no direct typical_entries/typical_exits link; 1–2 on average, max 3; empty when direct), "recommended_modification" (from contraindications/chronic_pain or "").
 """
