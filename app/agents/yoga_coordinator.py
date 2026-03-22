@@ -44,7 +44,7 @@ class YogaCoordinator:
         }
 
     async def generate_structured_text(self, prompt: str, user_id: Optional[str] = None) -> Dict[str, Any]:
-        """Return structured micro-instructions (movement, breath, awareness) for transitions."""
+        """Return structured micro-instructions (transition_movements, basic_instruction, sensory_cue) for transitions."""
         dp = await self._get_developer_prompt(user_id)
         return await asyncio.to_thread(
             self.llm_client.generate_structured_text,

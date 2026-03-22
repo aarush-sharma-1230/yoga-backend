@@ -6,6 +6,7 @@ from bson import ObjectId
 from datetime import datetime
 
 from app.prompts.user import get_ending_prompt, get_introduction_prompt, get_transition_prompt
+from app.session.transition_context import build_transition_context
 from app.session.session_trace_logger import trace
 
 
@@ -155,10 +156,30 @@ class SessionService:
             {"$push": {"instructions": {"category": "intro", "text": text, "message_id": message_id, "audio_path": audio_path}}},
         )
 
+    def _collect_posture_client_ids(self, postures: list) -> list[str]:
+        """Collect all client_ids from main postures and entry_transitions."""
+        ids = set()
+        for p in postures:
+            cid = p.get("client_id")
+            if cid:
+                ids.add(cid)
+            for et in p.get("entry_transitions") or []:
+                etcid = et.get("client_id") if isinstance(et, dict) else None
+                if etcid:
+                    ids.add(etcid)
+        return list(ids)
+
     async def _generate_transitions(self, postures: list, session_id: str, user_id: str | None = None) -> None:
         """Generate transition micro-instructions and audio, store as flat array with category=transition."""
+        client_ids = self._collect_posture_client_ids(postures)
+        posture_docs = {}
+        async for doc in self.db["postures"].find({"client_id": {"$in": client_ids}}):
+            posture_docs[doc["client_id"]] = doc
+        sensory_cues_map = {cid: (doc.get("sensory_cues") or []) for cid, doc in posture_docs.items()}
+
         for from_idx in range(-1, len(postures) - 1):
-            transition_prompt = get_transition_prompt(transition_from_idx=from_idx, postures=postures)
+            ctx = build_transition_context(from_idx, postures, sensory_cues_map)
+            transition_prompt = get_transition_prompt(ctx)
             response = await self.yoga_coordinator.generate_structured_text(prompt=transition_prompt, user_id=user_id)
             instructions = response["instructions"]
             base_message_id = response["message_id"]

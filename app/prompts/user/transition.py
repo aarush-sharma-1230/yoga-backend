@@ -1,122 +1,101 @@
-"""User prompt: transition between yoga postures."""
+"""User prompt: transition between yoga postures.
 
-from langchain_core.prompts import PromptTemplate
+Prompt receives pre-computed TransitionContext only. No function calls inside.
+All data fetching and formatting is done in the session layer (transition_context).
+"""
+
+from app.session.transition_context import TransitionContext
 
 
-def get_transition_prompt(transition_from_idx: int, postures: list) -> str:
-    """Build transition prompt for moving from one posture to the next."""
-    postures_context = ", ".join([f"{posture['name']}" for posture in postures])
+def get_transition_prompt(ctx: TransitionContext) -> str:
+    """
+    Build the transition prompt from pre-computed context.
+    Pure template—no logic, no function calls.
+    """
+    entry_list = ", ".join(ctx.entry_transition_names) if ctx.entry_transition_names else "None"
 
-    if transition_from_idx == -1:
-        template = f"""
-        Your task is to guide the practitioner from the initial breathing phase into the first posture of the yoga sequence.
+    if ctx.is_initial:
+        return f"""Your task is to guide the practitioner from the initial breathing phase into the first posture of the yoga sequence.
 
 INPUT
 
-Full Sequence: {postures_context}
+Full Sequence: {ctx.full_sequence}
+First Posture (to hold): {ctx.to_posture_name}
+Entry Transitions (postures to pass through before the first): {entry_list}
+Recommended Modification for this practitioner: {ctx.recommended_modification}
 
-First Posture: {postures[0]['name']}
+Sensory Cues (available for the first posture):
+{ctx.sensory_cues_formatted}
+
+CRITICAL: ENTRY TRANSITIONS RULE
+When entry_transitions contains postures (i.e., the list above is NOT "None"), you MUST produce transition_movement instructions—exactly one per posture in the list. Do NOT skip them. When entry_transitions is empty, transition_movements must be an empty array.
 
 GOAL
 
-Gently transition the practitioner from a calm breathing state into the first posture of the yoga sequence.
+Gently transition the practitioner from a calm breathing state into the first posture.
+
+If there are entry_transitions, first give brief movement cues to pass through each transitional posture. Then guide into the main posture with a basic instruction and a sensory cue.
 
 INSTRUCTIONS
 
-Begin by softly bringing the practitioner's awareness back from the breathing exercise.
+Begin by bringing awareness back from breathing.
+If their eyes are closed, invite them to open their eyes.
 
-Invite them to slowly deepen their breath and become aware of their body again.
+If there are entry_transitions: for EACH posture in the list, produce one transition_movement with a short movement cue (how to move through it)—no alignment detail or sensory cues. Keep each to one or two sentences.
 
-If their eyes are closed, gently invite them to open their eyes.
+For the main posture: provide a basic_instruction (posture name, body positioning, movement, key alignment) and a sensory_cue (select or adapt from the sensory cues above).
 
-Guide them to notice their posture and grounding, such as the contact of the feet with the floor or the steadiness of their seat.
-
-Mention the first posture the user will transition into and begin guiding the movement toward the first posture of the sequence..
-
-Describe clearly how the practitioner should position their body to arrive in the first posture. Guide the movement step by step, helping them place their feet, hands, hips, and spine appropriately.
-
-Once they arrive in the posture, provide a few important alignment cues that help establish the shape of the pose.
-
-Then guide their attention inward again by suggesting where the gaze may rest and what sensations they may notice in the body.
-
-Encourage the practitioner to take a few calm breaths in this first posture before continuing the sequence.
+Incorporate the recommended_modification in your alignment guidance when present.
 
 OUTPUT FORMAT
 
-Return a JSON object with up to five optional fields. Each field, if present, must have "text".
-Use at most one object per type. Combine all guidance of the same intent into a single text.
+Return JSON:
+- transition_movements: Array of {{"text": "..."}} — exactly one per entry_transition when the list has postures; EMPTY array when there are none.
+- basic_instruction: {{"text": "..."}} — posture name, movement, alignment for the main posture.
+- sensory_cue: {{"text": "..."}} or null — awareness cue for the main posture.
 
-Keep each instruction to one or two short lines maximum (roughly 15–25 words each).
-
-- movement_instruction (required): Firstly mention the next posture name followed by body positioning, movement and posture refinement cues all in one combined text (how to move into the posture). Should sound like a new phase of the sequence by optionally using words like "Now", "Alright", "Let's" etc. since it marks a new posture or phase.
-- breath_instruction: All breathing guidance for the posture. Should sound like continuity of the same phase.
-- awareness_instruction: Attention to sensations, gaze, inner focus. Should sound like continuity of the same phase.
-
-PHRASING RULES
-
-- movement_instruction: Should sound like a new phase of the sequence by optionally using words like "Now", "Alright", "Let's" etc. since it marks a new posture or phase.
-- alignment_instruction, breath_instruction, awareness_instruction: Should sound like continuity of the same phase. Do NOT use "now", "alright", "let's", "so", "next". These are refinements within the same posture—flow directly without transitional openers.
-
-The guidance should smoothly shift from stillness into the first posture.
+Keep each instruction to one or two short lines (roughly 15–25 words). Sound like spoken guidance.
 """
 
-    else:
-        template = f"""
-    Your task is to guide the practitioner from one yoga posture to the next.
+    # Non-initial transition (from one posture to the next)
+    return f"""Your task is to guide the practitioner from one yoga posture to the next.
 
 INPUT
 
-Full Sequence: {postures_context}
+Full Sequence: {ctx.full_sequence}
+Current Posture (leaving): {ctx.from_posture_name}
+Next Posture (to hold): {ctx.to_posture_name}
+Entry Transitions (postures to pass through before the next): {entry_list}
+Recommended Modification for this practitioner: {ctx.recommended_modification}
 
-Current Posture: {postures[transition_from_idx]['name']}
+Sensory Cues (available for the next posture):
+{ctx.sensory_cues_formatted}
 
-Next Posture: {postures[transition_from_idx + 1]['name']}
+CRITICAL: ENTRY TRANSITIONS RULE
+When entry_transitions contains postures (i.e., the list above is NOT "None"), you MUST produce transition_movement instructions—exactly one per posture in the list. Do NOT skip them. When entry_transitions is empty, transition_movements must be an empty array.
 
 GOAL
 
-Guide the practitioner smoothly and safely from the current posture into the next posture.
+Guide the practitioner smoothly and safely from the current posture into the next.
+
+If there are entry_transitions, the previous pose does not connect directly. First give brief movement cues to pass through each transitional posture. Then guide into the main posture with a basic instruction and a sensory cue.
 
 INSTRUCTIONS
 
-Mention the posture the user will transition into.
+Prepare the practitioner to move out of the current posture.
 
-Begin by gently preparing the practitioner to move out of the current posture.
+If there are entry_transitions: for EACH posture in the list, produce one transition_movement with a short movement cue (how to move through it)—no alignment detail or sensory cues. Keep each to one or two sentences.
 
-Then guide the transition step by step in the natural order of body movement.
+For the main posture: provide a basic_instruction (posture name, body positioning, movement, key alignment) and a sensory_cue (select or adapt from the sensory cues above).
 
-Describe clearly how different parts of the body move during the transition, such as:
-
-* shifting weight
-* repositioning hands or feet
-* lifting or lowering the hips
-* bending or straightening the legs
-* lengthening the spine
-
-Once the practitioner arrives in the next posture, provide a few important alignment cues that help refine the posture. Focus on the most meaningful details, such as the placement of the knees, hips, spine, shoulders, or feet.
-
-After the posture is established, guide the practitioner to settle into it.
-
-Suggest where the gaze may rest and invite them to notice sensations in the body such as areas of stability, stretch, or grounding.
-
-Encourage a few slow and steady breaths in the posture.
+Incorporate the recommended_modification in your alignment guidance when present.
 
 OUTPUT FORMAT
 
-Return a JSON object with up to five optional fields. Each field, if present, must have "text".
-Use at most one object per type. Combine all guidance of the same intent into a single text.
+Return JSON:
+- transition_movements: Array of {{"text": "..."}} — exactly one per entry_transition when the list has postures; EMPTY array when there are none.
+- basic_instruction: {{"text": "..."}} — posture name, movement, alignment for the main posture.
+- sensory_cue: {{"text": "..."}} or null — awareness cue for the main posture.
 
-Keep each instruction to one or two short lines maximum (roughly 15–25 words each).
-
-- movement_instruction (required): Firstly mention the next posture name followed by body positioning, movement and posture refinement cues all in one combined text (how to move into the posture). Should sound like a new phase of the sequence by optionally using words like "Now", "Alright", "Let's" etc. since it marks a new posture or phase.
-- breath_instruction: All breathing guidance for the posture. Should sound like continuity of the same phase.
-- awareness_instruction: Attention to sensations, gaze, inner focus. Should sound like continuity of the same phase.
-
-PHRASING RULES
-
-- movement_instruction: Should sound like a new phase of the sequence by optionally using words like "Now", "Alright", "Let's" etc. since it marks a new posture or phase.
-- alignment_instruction, breath_instruction, awareness_instruction: Should sound like continuity of the same phase. Do NOT use "now", "alright", "let's", "so", "next". These are refinements within the same posture—flow directly without transitional openers.
-
-Clearly guide movement and allow the practitioner to settle into the final posture.
+Keep each instruction to one or two short lines (roughly 15–25 words). Sound like spoken guidance.
 """
-    prompt_template = PromptTemplate(template=template)
-    return prompt_template.format()

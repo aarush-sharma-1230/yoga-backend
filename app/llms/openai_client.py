@@ -46,13 +46,11 @@ class OpenAIClient:
         self._log_api_call("generate_structured_text", developer_prompt, prompt, input_tokens, output_tokens)
 
         instructions = []
-        for type_name, block in [
-            ("movement_instruction", parsed.movement_instruction),
-            ("breath_instruction", parsed.breath_instruction),
-            ("awareness_instruction", parsed.awareness_instruction),
-        ]:
-            if block is not None:
-                instructions.append({"type": type_name, "text": block.text})
+        for block in parsed.transition_movements:
+            instructions.append({"type": "transition_movement", "text": block.text})
+        instructions.append({"type": "basic_instruction", "text": parsed.basic_instruction.text})
+        if parsed.sensory_cue is not None:
+            instructions.append({"type": "sensory_cue", "text": parsed.sensory_cue.text})
 
         return {"instructions": instructions, "message_id": message_id}
 
