@@ -16,7 +16,7 @@ T = TypeVar("T", bound=BaseModel)
 class OpenAIClient:
     def __init__(self, openai_api_key: str):
         self.is_text_enabled = True
-        self.is_audio_enabled = False
+        self.is_audio_enabled = True
         self.api_key = openai_api_key
         self.audio_model = "gpt-4o-mini-tts"
         self.temperature = 0.7
@@ -94,8 +94,15 @@ class OpenAIClient:
             return resp_dict
 
     def generate_audio(self, text: str, instructions: str | None = None, model: str = "gpt-4o-mini-tts", voice: str = "nova"):
+        style = (
+        "Speak slowly, calmly, and gently. "
+        "Use natural pauses. "
+        "Sound like a yoga teacher guiding a session."
+    )
+
         if self.is_audio_enabled:
-            with openai.audio.speech.with_streaming_response.create(model=model, voice=voice, input=text) as response:
+            input = f"{style}\n\n{text}"
+            with openai.audio.speech.with_streaming_response.create(model=model, voice=voice, input=input) as response:
                 for chunk in response.iter_bytes():
                     yield chunk
 

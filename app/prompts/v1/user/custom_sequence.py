@@ -9,7 +9,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from app.prompts.developer.profile_context import ProfileContext
+    from app.prompts.v1.developer.profile_context import ProfileContext
 
 
 def get_sequence_user_prompt(

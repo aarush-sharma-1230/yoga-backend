@@ -1,6 +1,6 @@
 """Developer prompt for YogaCoordinator: session guidance persona."""
 
-from app.prompts.developer.profile_context import ProfileContext
+from app.prompts.v1.developer.profile_context import ProfileContext
 
 
 def get_yoga_coordinator_developer_prompt(ctx: ProfileContext) -> str:

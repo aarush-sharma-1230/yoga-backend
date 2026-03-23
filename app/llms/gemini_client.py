@@ -4,8 +4,8 @@ import uuid
 from google import genai
 from google.genai import types
 
-from app.prompts.developer import get_yoga_coordinator_developer_prompt
-from app.prompts.developer.profile_context import ProfileContext
+from app.prompts.v_latest.developer import get_yoga_coordinator_developer_prompt
+from app.prompts.v_latest.developer.profile_context import ProfileContext
 
 
 class GeminiService:
