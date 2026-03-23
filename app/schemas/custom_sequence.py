@@ -1,18 +1,24 @@
 """Schema for LLM-generated custom yoga sequence."""
 
+from typing import Literal
+
 from pydantic import BaseModel, Field
+
+POSTURE_INTENT_STATIC_HOLD = "static_hold"
+POSTURE_INTENT_TRANSITIONAL_HUB = "transitional_hub"
+
+PostureIntent = Literal["static_hold", "transitional_hub"]
 
 
 class SequencePosture(BaseModel):
-    """A posture in the sequence with optional transitional poses before it."""
+    """A posture in a flat sequence. Order in the array is flow order."""
 
     posture_id: str = Field(
-        description="The main posture client_id (e.g. p_mountain, p_warrior_1_left). Must be valid from the catalogue. This is the pose the practitioner will hold."
+        description="The posture client_id (e.g. p_mountain, p_downward_dog). Must be valid from the catalogue."
     )
-    entry_transitions: list[str] = Field(
-        default_factory=list,
-        max_length=3,
-        description="ONLY when the previous held pose has no direct link to this one (per typical_entries/typical_exits): list client_ids from the catalogue that bridge the gap. Keep minimal and logical—aim for 1–2 postures on average, maximum 3. Use only valid catalogue IDs. Leave empty when the previous pose connects directly.",
+    posture_intent: PostureIntent = Field(
+        default=POSTURE_INTENT_STATIC_HOLD,
+        description="static_hold = main posture to hold (default). transitional_hub = pass-through posture to bridge gaps between two main postures.",
     )
     recommended_modification: str = Field(
         default="",
@@ -28,5 +34,5 @@ class CustomSequenceOutput(BaseModel):
     )
     name: str = Field(description="A short, descriptive name for the sequence (e.g. 'Morning Flow', 'Hip Opener')")
     postures: list[SequencePosture] = Field(
-        description="Ordered list of postures to hold. Each has posture_id (main pose to hold), entry_transitions (transitional poses to flow through before it), and recommended_modification. Use entry_transitions for poses that should not be held long—e.g. passing through downward dog on the way to warrior. Must use valid client_ids from the catalogue."
+        description="Flat ordered list of postures in flow order. Each has posture_id, posture_intent (static_hold or transitional_hub), recommended_modification. Use static_hold for main poses to hold; use transitional_hub when injecting pass-through poses to bridge gaps (e.g. downward dog between warrior and forward fold). Must use valid client_ids from the catalogue."
     )

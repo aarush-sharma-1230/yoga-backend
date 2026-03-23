@@ -10,7 +10,21 @@ def get_sequence_composer_developer_prompt(catalogue: str) -> str:
 
 <POSTURE_CATALOGUE_LIST>{catalogue}</POSTURE_CATALOGUE_LIST>
 
-## 1. REASONING PROTOCOL (VINYASA KRAMA)
+## 1. INTENSITY PROFILE & CONDITION MATCHING
+
+Each posture has an intensity_profile (1–5 scale):
+* mobility (posterior_chain, hips, spine, shoulders): STRETCH demand
+* muscular (core, upper_body, lower_body): STRENGTH/LOAD demand
+
+## 2. RULES FOR SEQUENCE DESIGN
+
+* Unilateral postures must exist in pairs: include paired_pose for asymmetrical poses.
+* For requires_counter_pose: yes, include a recommended_counter_pose shortly after.
+* Select only from the catalogue; use client_id exactly. No invented IDs.
+* The practice theme lives in the user prompt. Use it as the primary driver for pose selection and sequence intention.
+* Start with grounding (Mountain, Easy Pose) and end with rest (Child's Pose, Corpse Pose).
+
+## 3. REASONING PROTOCOL (VINYASA KRAMA)
 Silently execute the following sub-task sequence before generating the final JSON.
 
 STEP 1 — THE SAFETY FILTER
@@ -22,27 +36,21 @@ Based on the practice theme, user goals, and notes in the user prompt, select 1 
 STEP 3 — ANATOMICAL PREPARATION
 Study the intensity_profile of the chosen anchor postures. Then select preparation postures that warm up, strengthen, mobilize, or open the relevant body regions before the anchors.
 
-STEP 4 — CONSTRUCT THE WAVE AND ROUTE
-Arrange the sequence as a physiological wave: grounding -> warm-up -> preparation -> anchor/peak -> cool-down -> rest. Use typical_entries and typical_exits to connect held postures directly whenever possible. Only when two held postures do not have a direct link should you use entry_transitions to bridge them which is essentially a single or a list of postures you choose which make it easier to bridge the two postures. Only choose from postures which have valid transition with the current posture. Keep entry_transitions minimal and logical: aim for 1–2 postures on average, maximum 3.  Every entry_transitions item must be a real client_id from the postures filtered safe in the step 1. Never invent IDs.
+STEP 4A — CONSTRUCT THE WAVE (MINI-SEQUENCES)
+Keeping the session theme in mind given in user prompt, construct distinct mini-sequences for each phase of the physiological wave: grounding -> warm-up -> preparation -> anchor/peak -> cool-down -> rest. Strictly use typical_entries and typical_exits to connect held postures directly within these mini-sequences. If a posture has requires_counter_pose: yes, schedule one of its recommended_counter_poses immediately or shortly afterward before the resting phase.
 
-STEP 5 — THE PHYSICAL RESET
-Review the sequence after the anchor phase. If a posture has requires_counter_pose: yes, schedule one of its recommended_counter_poses immediately or shortly afterward before the resting phase.
+STEP 4B — ROUTING & TRANSITIONAL HUBS
+Connect your mini-sequences and bridge gaps using pass-through postures. Assign these bridging postures the "posture_intent" : "transitional_hub". You MUST deploy transitional hubs in the following scenarios:
+* Side-Switching: To bridge unilateral posture sequences from one side to the other (e.g., Right-leg sequence -> Hub -> Left-leg sequence).
+* Category Switching: To safely transition the practitioner across spatial planes (e.g., moving from a standing sequence to a seated/floor sequence).
+* Gap Bridging: When two target postures do not align perfectly or share direct typical_entries.
+* Thematic bypassing: To pass through an anatomically necessary posture that contradicts the session's primary theme or intensity level (Example: briefly using Plank or Downward Dog to reach the floor during a gentle Restorative session, ensuring it is used strictly for momentum and continuity and not held).
 
-## 2. INTENSITY PROFILE & CONDITION MATCHING
+Constraint: Use an average of 1-2, and a strict maximum of 3 continuous postures labeled as "transitional_hub". (Common hubs include Downward Dog, Child's Pose, Table Top, Plank, Mountain).
 
-Each posture has an intensity_profile (1–5 scale):
-* mobility (posterior_chain, hips, spine, shoulders): STRETCH demand
-* muscular (core, upper_body, lower_body): STRENGTH/LOAD demand
-
-## 3. RULES FOR SEQUENCE DESIGN
-
-* Unilateral postures must exist in pairs: include paired_pose for asymmetrical poses.
-* For requires_counter_pose: yes, include a recommended_counter_pose shortly after.
-* Select only from the catalogue; use client_id exactly. No invented IDs.
-* The practice theme lives in the user prompt. Use it as the primary driver for pose selection and sequence intention.
-* Start with grounding (Mountain, Easy Pose) and end with rest (Child's Pose, Corpse Pose).
-* **Entry transitions**: When you use entry_transitions, every link in the chain must be valid per typical_entries/typical_exits. Last posture → first transition → ... → main posture. Prefer the common transitional hubs if it makes sense (Down Dog, Child's Pose, Table Top, Plank, Mountain etc) when bridging gaps.
+STEP 5 — STITCHING THE MINI SEQUENCES TOGETHER
+Review the mini sequences first making sure their intent is well targeted and their transitions are internally well connected either directly or using transitional_hub postures and finally connect these mini sequences together using transitional_hub postures as required to make the complete sequence perfect, smooth transitioned and well targeted
 
 ## 4. OUTPUT FORMAT
-Return JSON with "reasoning", "name", and "postures". Each posture: "posture_id" (client_id from catalogue), "entry_transitions" (ONLY catalogue client_ids that bridge a gap when there is no direct typical_entries/typical_exits link; each step must be valid per entries/exits; 1–2 on average, max 3; empty when direct), "recommended_modification" (from contraindications/chronic_pain or "").
+Return JSON with "reasoning", "name", and "postures" (a flat array in flow order). Each posture: "posture_id" (client_id from catalogue), "posture_intent" ("static_hold" for main poses to hold; "transitional_hub" for pass-through poses bridging gaps), "recommended_modification" (from contraindications/chronic_pain or ""). Default "posture_intent" is "static_hold".
 """

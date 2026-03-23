@@ -4,7 +4,7 @@ from bson import ObjectId
 from motor.motor_asyncio import AsyncIOMotorDatabase
 
 from app.agents.sequence_composer import SequenceComposer
-from app.schemas.custom_sequence import CustomSequenceOutput
+from app.schemas.custom_sequence import CustomSequenceOutput, POSTURE_INTENT_STATIC_HOLD
 
 
 class SequenceService:
@@ -35,7 +35,7 @@ class SequenceService:
     def _posture_for_sequence(
         self,
         posture: dict,
-        entry_transitions: list[str] | list[dict] | None = None,
+        posture_intent: str = POSTURE_INTENT_STATIC_HOLD,
         recommended_modification: str | None = None,
     ) -> dict:
         """Build the posture shape stored in sequences and returned by sequence APIs."""
@@ -48,9 +48,6 @@ class SequenceService:
             sanskrit = posture.get("sanskrit_name", "")
 
         posture_id = posture.get("_id") or posture.get("id") or posture.get("client_id")
-        et = entry_transitions if entry_transitions is not None else posture.get("entry_transitions", [])
-        if et and isinstance(et[0], dict):
-            et = [self._posture_for_sequence(x) for x in et]
         rm = recommended_modification if recommended_modification is not None else posture.get("recommended_modification", "")
 
         return {
@@ -58,7 +55,7 @@ class SequenceService:
             "name": english,
             "sanskrit_name": sanskrit,
             "client_id": posture.get("client_id", ""),
-            "entry_transitions": et,
+            "posture_intent": posture.get("posture_intent", posture_intent),
             "recommended_modification": rm,
         }
 
@@ -90,11 +87,7 @@ class SequenceService:
             user_notes=user_notes,
         )
 
-        requested_posture_ids = [item.posture_id for item in output.postures]
-        entry_transition_ids = [
-            eid for item in output.postures for eid in item.entry_transitions
-        ]
-        all_posture_ids = list(set(requested_posture_ids) | set(entry_transition_ids))
+        all_posture_ids = [item.posture_id for item in output.postures]
 
         db_postures = {}
         async for doc in self.db["postures"].find({"client_id": {"$in": all_posture_ids}}):
@@ -105,15 +98,10 @@ class SequenceService:
             pid = item.posture_id
             posture_doc = db_postures.get(pid)
             if posture_doc:
-                entry_transition_objects = [
-                    self._posture_for_sequence(db_postures[eid])
-                    for eid in item.entry_transitions
-                    if eid in db_postures
-                ]
                 postures.append(
                     self._posture_for_sequence(
                         posture_doc,
-                        entry_transitions=entry_transition_objects,
+                        posture_intent=item.posture_intent,
                         recommended_modification=item.recommended_modification or "",
                     )
                 )

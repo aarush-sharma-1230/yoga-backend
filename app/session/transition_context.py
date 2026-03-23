@@ -1,42 +1,43 @@
 """
 Transition context: builds pre-computed context for transition prompts.
-
-All data fetching and formatting is done here. Prompt builders receive
-pre-computed values only—no function calls inside prompts.
+Expects a flat posture array with posture_intent (static_hold | transitional_hub).
 """
 
 from dataclasses import dataclass
+
+from app.schemas.custom_sequence import POSTURE_INTENT_TRANSITIONAL_HUB
 
 
 def _format_sensory_cues(sensory_cues: list[dict]) -> str:
     """Format sensory cues from posture doc for prompt context."""
     if not sensory_cues:
         return "None provided."
-    lines = []
-    for sc in sensory_cues:
-        area = sc.get("area", "")
-        cue = sc.get("cue", "")
-        lines.append(f"- {area}: {cue}")
-    return "\n".join(lines)
+    return "\n".join(f"- {sc.get('area', '')}: {sc.get('cue', '')}" for sc in sensory_cues)
 
 
-def _entry_transition_names(entry_transitions: list) -> list[str]:
-    """Extract names from entry_transitions (objects or legacy client_id strings)."""
-    names = []
-    for e in entry_transitions or []:
-        if isinstance(e, dict):
-            names.append(e.get("name", "?"))
+def _entry_transitions_for_target(postures: list, target_idx: int) -> list[str]:
+    """
+    For a static_hold target: transitional_hub postures immediately before it.
+    For transitional_hub target: empty (we pass through, nothing to pass through before).
+    """
+    if target_idx <= 0:
+        return []
+    to_posture = postures[target_idx]
+    if to_posture.get("posture_intent") == POSTURE_INTENT_TRANSITIONAL_HUB:
+        return []
+
+    result = []
+    for j in range(target_idx - 1, -1, -1):
+        if postures[j].get("posture_intent") == POSTURE_INTENT_TRANSITIONAL_HUB:
+            result.insert(0, postures[j].get("name", "?"))
         else:
-            names.append(str(e))
-    return names
+            break
+    return result
 
 
 @dataclass
 class TransitionContext:
-    """
-    Pre-computed context for a single transition prompt.
-    Built by the session service; consumed by the prompt template.
-    """
+    """Pre-computed context for a single transition prompt."""
 
     is_initial: bool
     full_sequence: str
@@ -49,40 +50,30 @@ class TransitionContext:
 
 
 def build_transition_context(
-    transition_from_idx: int,
+    target_idx: int,
     postures: list,
     sensory_cues_map: dict[str, list[dict]],
 ) -> TransitionContext:
     """
-    Build fully resolved context for a transition prompt.
-    Call from session service before passing to get_transition_prompt.
+    Build context for transitioning into the posture at target_idx.
+    One transition per posture in the flat array.
     """
-    postures_context = ", ".join([p.get("name", "?") for p in postures])
-    is_initial = transition_from_idx == -1
+    to_posture = postures[target_idx]
+    is_initial = target_idx == 0
+    entry_transition_names = _entry_transitions_for_target(postures, target_idx)
 
-    if is_initial:
-        to_posture = postures[0]
-        from_posture_name = None
-    else:
-        from_posture = postures[transition_from_idx]
-        to_posture = postures[transition_from_idx + 1]
-        from_posture_name = from_posture.get("name", "?")
-
-    to_posture_name = to_posture.get("name", "?")
-    entry_transitions = to_posture.get("entry_transitions") or []
-    entry_transition_names = _entry_transition_names(entry_transitions)
-    has_entry_transitions = len(entry_transition_names) > 0
-    recommended_mod = to_posture.get("recommended_modification") or ""
-    sensory_cues = sensory_cues_map.get(to_posture.get("client_id", ""), [])
-    sensory_cues_formatted = _format_sensory_cues(sensory_cues)
+    from_posture_name = None if is_initial else postures[target_idx - 1].get("name", "?")
+    full_sequence = ", ".join(p.get("name", "?") for p in postures)
 
     return TransitionContext(
         is_initial=is_initial,
-        full_sequence=postures_context,
+        full_sequence=full_sequence,
         from_posture_name=from_posture_name,
-        to_posture_name=to_posture_name,
+        to_posture_name=to_posture.get("name", "?"),
         entry_transition_names=entry_transition_names,
-        has_entry_transitions=has_entry_transitions,
-        recommended_modification=recommended_mod or "None",
-        sensory_cues_formatted=sensory_cues_formatted,
+        has_entry_transitions=len(entry_transition_names) > 0,
+        recommended_modification=to_posture.get("recommended_modification") or "None",
+        sensory_cues_formatted=_format_sensory_cues(
+            sensory_cues_map.get(to_posture.get("client_id", ""), [])
+        ),
     )
