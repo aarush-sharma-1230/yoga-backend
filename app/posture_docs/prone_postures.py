@@ -32,7 +32,7 @@ PRONE_POSTURES = [
             {"area": "spine", "cue": "Imagine your spine as a flat table from crown to tailbone."},
             {"area": "hands", "cue": "Spread your fingers wide and press evenly through the palms."},
         ],
-        "typical_entries": ["p_childs_pose", "p_easy_pose"],
+        "typical_entries": ["p_childs_pose", "p_easy_pose", "p_downward_dog"],
         "typical_exits": ["p_cat", "p_cow", "p_childs_pose", "p_downward_dog", "p_plank", "p_pigeon_left", "p_pigeon_right"],
     },
     {

@@ -1,4 +1,4 @@
-"""Log OpenAI API calls: developer prompt, user prompt, and token usage."""
+"""Log OpenAI API calls: developer prompt, user prompt, token usage, and output."""
 
 from datetime import datetime
 from pathlib import Path
@@ -14,6 +14,7 @@ def log_api_call(
     user_prompt: str,
     input_tokens: int | None = None,
     output_tokens: int | None = None,
+    output: str | None = None,
 ) -> None:
     """Write one API call log to a timestamped file under app/logs."""
     LOGS_DIR.mkdir(parents=True, exist_ok=True)
@@ -39,6 +40,8 @@ def log_api_call(
             "",
         ]
     )
+    if output is not None:
+        lines.extend(["--- Output ---", output, ""])
 
     try:
         with open(filepath, "w", encoding="utf-8") as f:

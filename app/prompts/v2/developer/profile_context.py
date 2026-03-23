@@ -3,7 +3,7 @@
 from dataclasses import dataclass
 from typing import Optional
 
-from app.prompts.v_latest.medical_conditions_laws import get_yoga_laws_context
+from app.prompts.v2.medical_conditions_laws import get_yoga_laws_context
 
 
 @dataclass

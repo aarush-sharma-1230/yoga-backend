@@ -42,7 +42,7 @@ INVERSION_POSTURES = [
             {"area": "legs", "cue": "Imagine your heels gently melting toward the mat."},
         ],
         "typical_entries": ["p_plank", "p_table_top", "p_cow", "p_chaturanga", "p_upward_dog"],
-        "typical_exits": ["p_plank", "p_forward_fold", "p_childs_pose", "p_chaturanga", "p_warrior_1_left", "p_warrior_1_right", "p_pigeon_left", "p_pigeon_right"],
+        "typical_exits": ["p_plank", "p_forward_fold", "p_childs_pose", "p_table_top", "p_chaturanga", "p_warrior_1_left", "p_warrior_1_right", "p_pigeon_left", "p_pigeon_right"],
     },
     {
         "anatomical_signature": {"is_inverted": True, "spinal_shape": "flexion", "weight_bearing_points": ["shoulders", "back_of_head", "elbows"], "laterality": {"type": "symmetrical", "active_side": "neutral"}, "requires_counter_pose": True, "recommended_counter_poses": ["p_fish_pose"]},

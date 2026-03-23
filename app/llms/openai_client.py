@@ -1,3 +1,4 @@
+import json
 import traceback
 import uuid
 import os
@@ -43,16 +44,24 @@ class OpenAIClient:
         message_id = getattr(completion, "id", None) or f"msg_{uuid.uuid4().hex}"
 
         input_tokens, output_tokens = self._extract_usage_from_chat_completion(completion)
-        self._log_api_call("generate_structured_text", developer_prompt, prompt, input_tokens, output_tokens)
 
         instructions = []
         for block in parsed.transition_movements:
             instructions.append({"type": "transition_movement", "text": block.text})
-        instructions.append({"type": "basic_instruction", "text": parsed.basic_instruction.text})
+        instructions.append({"type": "instruction", "text": parsed.basic_instruction.text})
         if parsed.sensory_cue is not None:
             instructions.append({"type": "sensory_cue", "text": parsed.sensory_cue.text})
 
-        return {"instructions": instructions, "message_id": message_id}
+        result = {"instructions": instructions, "message_id": message_id}
+        self._log_api_call(
+            "generate_structured_text",
+            developer_prompt,
+            prompt,
+            input_tokens,
+            output_tokens,
+            output=json.dumps(result, indent=2),
+        )
+        return result
 
     def generate_with_schema(
         self,
@@ -75,7 +84,15 @@ class OpenAIClient:
         )
         parsed = completion.choices[0].message.parsed
         input_tokens, output_tokens = self._extract_usage_from_chat_completion(completion)
-        self._log_api_call("generate_with_schema", developer_prompt, prompt, input_tokens, output_tokens)
+        output_str = parsed.model_dump_json(indent=2) if hasattr(parsed, "model_dump_json") else str(parsed)
+        self._log_api_call(
+            "generate_with_schema",
+            developer_prompt,
+            prompt,
+            input_tokens,
+            output_tokens,
+            output=output_str,
+        )
         return parsed
 
     def generate_text(
@@ -90,7 +107,14 @@ class OpenAIClient:
             response = openai.responses.create(model=model, input=input, temperature=temperature)
             resp_dict = response.to_dict()
             input_tokens, output_tokens = self._extract_usage_from_response_dict(resp_dict)
-            self._log_api_call("generate_text", developer_prompt, prompt, input_tokens, output_tokens)
+            self._log_api_call(
+                "generate_text",
+                developer_prompt,
+                prompt,
+                input_tokens,
+                output_tokens,
+                output=json.dumps(resp_dict, indent=2),
+            )
             return resp_dict
 
     def generate_audio(self, text: str, instructions: str | None = None, model: str = "gpt-4o-mini-tts", voice: str = "nova"):
@@ -131,12 +155,14 @@ class OpenAIClient:
         user_prompt: str,
         input_tokens: int | None = None,
         output_tokens: int | None = None,
+        output: str | None = None,
     ) -> None:
-        """Log an API call to disk."""
+        """Log an API call to disk (including output for non-audio calls)."""
         log_api_call(
             call_type=call_type,
             developer_prompt=developer_prompt,
             user_prompt=user_prompt,
             input_tokens=input_tokens,
             output_tokens=output_tokens,
+            output=output,
         )

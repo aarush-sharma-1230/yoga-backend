@@ -11,12 +11,12 @@ from typing import Type, TypeVar
 from pydantic import BaseModel
 
 from app.posture_docs.all_postures import ALL_POSTURES
-from app.prompts.v_latest.developer import extract_profile_context, get_sequence_composer_developer_prompt
-from app.prompts.v_latest.helpers import (
+from app.prompts.v2.developer import extract_profile_context, get_sequence_composer_developer_prompt
+from app.prompts.v2.helpers import (
     duration_to_posture_range,
     format_posture_catalogue,
 )
-from app.prompts.v_latest.user import get_sequence_user_prompt
+from app.prompts.v2.user import get_sequence_user_prompt
 
 T = TypeVar("T", bound=BaseModel)
 

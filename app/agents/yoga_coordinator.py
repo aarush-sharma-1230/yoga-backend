@@ -9,7 +9,7 @@ and TTS.
 import asyncio
 from typing import Any, Dict, Optional
 
-from app.prompts.v_latest.developer import (
+from app.prompts.v2.developer import (
     extract_profile_context,
     get_yoga_coordinator_developer_prompt,
 )
