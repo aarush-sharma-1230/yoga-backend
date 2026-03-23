@@ -52,7 +52,7 @@ def get_sequence_user_prompt(
     description = theme.get("description") or ""
     params.append(f"- Practice theme: {display_name} ({functional_category}). {description}")
     if user_notes:
-        params.append(f"- User notes: {user_notes}")
+        params.append(f"- Current session user notes which have to be given priority above user's other goals and medical histories if conflicting: {user_notes}")
     sections.extend(params)
     sections.append("")
     sections.append(
