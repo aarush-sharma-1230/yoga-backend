@@ -43,7 +43,8 @@ RULES FOR SEQUENCE DESIGN
 * Select only from the catalogue; use client_id exactly. No invented IDs.
 * The practice theme lives in the user prompt. Use it as the primary driver for pose selection and sequence intention.
 * Start with grounding (Mountain, Easy Pose) and end with rest (Child's Pose, Corpse Pose).
+* **Entry transitions**: When you use entry_transitions, every link in the chain must be valid per typical_entries/typical_exits. Last posture → first transition → ... → main posture. Prefer transitional hubs (Down Dog, Child's Pose, Table Top, Plank) when bridging gaps.
 
 OUTPUT FORMAT
-Return JSON with "reasoning", "name", and "postures". Each posture: "posture_id" (client_id from catalogue), "entry_transitions" (ONLY catalogue client_ids that bridge a gap when there is no direct typical_entries/typical_exits link; 1–2 on average, max 3; empty when direct), "recommended_modification" (from contraindications/chronic_pain or "").
+Return JSON with "reasoning", "name", and "postures". Each posture: "posture_id" (client_id from catalogue), "entry_transitions" (ONLY catalogue client_ids that bridge a gap when there is no direct typical_entries/typical_exits link; each step must be valid per entries/exits; 1–2 on average, max 3; empty when direct), "recommended_modification" (from contraindications/chronic_pain or "").
 """
