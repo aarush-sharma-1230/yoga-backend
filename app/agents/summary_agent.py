@@ -8,10 +8,10 @@ Uses static developer prompt. Parallel with YogaCoordinator and SequenceComposer
 import asyncio
 from typing import Any, Dict, Literal
 
-from app.prompts.v2.developer import get_summary_developer_prompt
-from app.prompts.v2.user.profile_summaries import (
+from app.prompts.active import (
     get_hard_priority_summary_prompt,
     get_medium_priority_summary_prompt,
+    get_summary_developer_prompt,
 )
 
 
