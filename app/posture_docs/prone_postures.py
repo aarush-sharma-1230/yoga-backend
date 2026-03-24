@@ -32,7 +32,7 @@ PRONE_POSTURES = [
             {"area": "spine", "cue": "Imagine your spine as a flat table from crown to tailbone."},
             {"area": "hands", "cue": "Spread your fingers wide and press evenly through the palms."},
         ],
-        "typical_entries": ["p_childs_pose", "p_easy_pose", "p_downward_dog"],
+        "typical_entries": ["p_childs_pose", "p_easy_pose", "p_downward_dog", "p_cat", "p_cow"],
         "typical_exits": ["p_cat", "p_cow", "p_childs_pose", "p_downward_dog", "p_plank", "p_pigeon_left", "p_pigeon_right"],
     },
     {
@@ -76,7 +76,7 @@ PRONE_POSTURES = [
             {"area": "upper_back", "cue": "Feel your shoulder blades spreading wide apart."},
         ],
         "typical_entries": ["p_table_top", "p_cow"],
-        "typical_exits": ["p_cow", "p_childs_pose", "p_downward_dog"],
+        "typical_exits": ["p_cow", "p_childs_pose", "p_downward_dog", "p_table_top"],
     },
     {
         "anatomical_signature": {"is_inverted": False, "spinal_shape": "extension", "weight_bearing_points": ["palms", "knees", "shins"], "laterality": {"type": "symmetrical", "active_side": "neutral"}, "requires_counter_pose": True, "recommended_counter_poses": ["p_cat"]},
@@ -118,7 +118,7 @@ PRONE_POSTURES = [
             {"area": "chest", "cue": "Imagine your heart melting forward between your biceps."},
         ],
         "typical_entries": ["p_table_top", "p_cat"],
-        "typical_exits": ["p_cat", "p_downward_dog", "p_childs_pose"],
+        "typical_exits": ["p_cat", "p_downward_dog", "p_childs_pose", "p_table_top"],
     },
     {
         "anatomical_signature": {"is_inverted": False, "spinal_shape": "flexion", "weight_bearing_points": ["shins", "forehead", "forearms"], "laterality": {"type": "symmetrical", "active_side": "neutral"}, "requires_counter_pose": False, "recommended_counter_poses": []},

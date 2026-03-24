@@ -4,7 +4,15 @@ from bson import ObjectId
 from motor.motor_asyncio import AsyncIOMotorDatabase
 
 from app.agents.sequence_composer import SequenceComposer
-from app.schemas.custom_sequence import CustomSequenceOutput, POSTURE_INTENT_STATIC_HOLD
+from app.schemas.custom_sequence import (
+    POSTURE_INTENT_INTERVAL_SET,
+    POSTURE_INTENT_STATIC_HOLD,
+    CustomSequenceOutput,
+    SequencePostureItem,
+)
+from app.sequence.posture_row import canonical_posture_row
+
+DEFAULT_MANUAL_HOLD_SECONDS = 60
 
 
 class SequenceService:
@@ -29,35 +37,119 @@ class SequenceService:
 
     async def get_sequence(self, sequence_id: str):
         sequence = await self.db["sequences"].find_one({"_id": ObjectId(sequence_id)})
-        postures = [self._posture_for_sequence(p) for p in sequence.get("postures", [])]
+        if not sequence:
+            raise ValueError(f"Sequence not found: {sequence_id}")
+        client_ids = self._client_ids_from_stored_postures(sequence.get("postures", []))
+        db_by_client = {}
+        if client_ids:
+            async for doc in self.db["postures"].find({"client_id": {"$in": client_ids}}):
+                db_by_client[doc["client_id"]] = doc
+        postures = [self._normalize_stored_posture(p, db_by_client) for p in sequence.get("postures", [])]
         return {"status": True, "result": {**sequence, "postures": postures}}
 
-    def _posture_for_sequence(
-        self,
-        posture: dict,
-        posture_intent: str = POSTURE_INTENT_STATIC_HOLD,
-        recommended_modification: str | None = None,
-    ) -> dict:
-        """Build the posture shape stored in sequences and returned by sequence APIs."""
-        name = posture.get("name")
-        if isinstance(name, dict):
-            english = name.get("english", "Unknown")
-            sanskrit = name.get("sanskrit", "")
-        else:
-            english = name or "Unknown"
-            sanskrit = posture.get("sanskrit_name", "")
+    def _client_ids_from_stored_postures(self, postures: list) -> list[str]:
+        """Collect client_ids from stored sequence postures (flat or interval_set wrapper)."""
+        ids: set[str] = set()
+        for p in postures:
+            intent = p.get("posture_intent")
+            if intent == POSTURE_INTENT_INTERVAL_SET:
+                wp = p.get("work_posture") or {}
+                rp = p.get("recovery_posture") or {}
+                if wp.get("client_id"):
+                    ids.add(wp["client_id"])
+                if rp.get("client_id"):
+                    ids.add(rp["client_id"])
+            elif p.get("client_id"):
+                ids.add(p["client_id"])
+        return list(ids)
 
-        posture_id = posture.get("_id") or posture.get("id") or posture.get("client_id")
-        rm = recommended_modification if recommended_modification is not None else posture.get("recommended_modification", "")
+    def _normalize_stored_posture(self, p: dict, db_by_client: dict[str, dict]) -> dict:
+        """Refresh names from DB while keeping stored intent, modifications, and timing fields."""
+        intent = p.get("posture_intent")
+        if intent == POSTURE_INTENT_INTERVAL_SET:
+            wp, rp = p.get("work_posture") or {}, p.get("recovery_posture") or {}
+            wdoc, rdoc = db_by_client.get(wp.get("client_id")), db_by_client.get(rp.get("client_id"))
+            if not wdoc or not rdoc:
+                return p
+            return {
+                "posture_intent": POSTURE_INTENT_INTERVAL_SET,
+                "rounds": p["rounds"],
+                "hold_time_seconds": p["hold_time_seconds"],
+                "rest_time_seconds": p["rest_time_seconds"],
+                "work_posture": canonical_posture_row(
+                    wdoc,
+                    posture_intent=POSTURE_INTENT_STATIC_HOLD,
+                    recommended_modification=wp.get("recommended_modification", ""),
+                ),
+                "recovery_posture": canonical_posture_row(
+                    rdoc,
+                    posture_intent=POSTURE_INTENT_STATIC_HOLD,
+                    recommended_modification=rp.get("recommended_modification", ""),
+                ),
+            }
 
-        return {
-            "_id": str(posture_id),
-            "name": english,
-            "sanskrit_name": sanskrit,
-            "client_id": posture.get("client_id", ""),
-            "posture_intent": posture.get("posture_intent", posture_intent),
-            "recommended_modification": rm,
-        }
+        doc = db_by_client.get(p.get("client_id"))
+        if not doc:
+            return p
+        row = canonical_posture_row(
+            doc,
+            posture_intent=p.get("posture_intent", POSTURE_INTENT_STATIC_HOLD),
+            recommended_modification=p.get("recommended_modification", ""),
+        )
+        if intent == POSTURE_INTENT_STATIC_HOLD and "hold_time_seconds" in p:
+            row["hold_time_seconds"] = p["hold_time_seconds"]
+        return row
+
+    def _client_ids_from_llm_output(self, output: CustomSequenceOutput) -> set[str]:
+        ids: set[str] = set()
+        for item in output.postures:
+            if item.posture_intent == POSTURE_INTENT_INTERVAL_SET:
+                assert item.work_posture is not None and item.recovery_posture is not None
+                ids.add(item.work_posture.posture_id)
+                ids.add(item.recovery_posture.posture_id)
+            else:
+                ids.add(item.posture_id)
+        return ids
+
+    def _stored_posture_from_llm_item(
+        self, item: SequencePostureItem, db_postures: dict[str, dict]
+    ) -> dict | None:
+        """Build one stored sequence row from a validated LLM posture item."""
+        if item.posture_intent == POSTURE_INTENT_INTERVAL_SET:
+            assert item.work_posture is not None and item.recovery_posture is not None
+            wdoc = db_postures.get(item.work_posture.posture_id)
+            rdoc = db_postures.get(item.recovery_posture.posture_id)
+            if not wdoc or not rdoc:
+                return None
+            return {
+                "posture_intent": POSTURE_INTENT_INTERVAL_SET,
+                "rounds": item.rounds,
+                "hold_time_seconds": item.hold_time_seconds,
+                "rest_time_seconds": item.rest_time_seconds,
+                "work_posture": canonical_posture_row(
+                    wdoc,
+                    posture_intent=POSTURE_INTENT_STATIC_HOLD,
+                    recommended_modification=item.work_posture.recommended_modification,
+                ),
+                "recovery_posture": canonical_posture_row(
+                    rdoc,
+                    posture_intent=POSTURE_INTENT_STATIC_HOLD,
+                    recommended_modification=item.recovery_posture.recommended_modification,
+                ),
+            }
+
+        assert item.posture_id is not None
+        doc = db_postures.get(item.posture_id)
+        if not doc:
+            return None
+        row = canonical_posture_row(
+            doc,
+            posture_intent=item.posture_intent,
+            recommended_modification=item.recommended_modification,
+        )
+        if item.posture_intent == POSTURE_INTENT_STATIC_HOLD:
+            row["hold_time_seconds"] = item.hold_time_seconds
+        return row
 
     async def generate_sequence(
         self,
@@ -87,7 +179,7 @@ class SequenceService:
             user_notes=user_notes,
         )
 
-        all_posture_ids = [item.posture_id for item in output.postures]
+        all_posture_ids = list(self._client_ids_from_llm_output(output))
 
         db_postures = {}
         async for doc in self.db["postures"].find({"client_id": {"$in": all_posture_ids}}):
@@ -95,17 +187,9 @@ class SequenceService:
 
         postures = []
         for item in output.postures:
-            pid = item.posture_id
-            posture_doc = db_postures.get(pid)
-            if posture_doc:
-                postures.append(
-                    self._posture_for_sequence(
-                        posture_doc,
-                        posture_intent=item.posture_intent,
-                        recommended_modification=item.recommended_modification or "",
-                    )
-                )
-            # Skip invalid IDs; LLM may occasionally hallucinate
+            row = self._stored_posture_from_llm_item(item, db_postures)
+            if row:
+                postures.append(row)
 
         if not postures:
             raise RuntimeError("No valid postures selected; sequence generation failed")
@@ -134,7 +218,7 @@ class SequenceService:
     ) -> dict:
         """
         Create a manual sequence from user-provided posture client_ids.
-        Resolves postures from DB, preserving order.
+        Resolves postures from DB, preserving order. Each row is a static_hold with default hold time.
         """
         if not posture_client_ids:
             raise ValueError("posture_client_ids cannot be empty")
@@ -149,7 +233,13 @@ class SequenceService:
 
         postures = []
         for pid in posture_client_ids:
-            postures.append(self._posture_for_sequence(id_to_posture[pid]))
+            row = canonical_posture_row(
+                id_to_posture[pid],
+                posture_intent=POSTURE_INTENT_STATIC_HOLD,
+                recommended_modification="",
+            )
+            row["hold_time_seconds"] = DEFAULT_MANUAL_HOLD_SECONDS
+            postures.append(row)
 
         sequence_doc = {
             "name": name,

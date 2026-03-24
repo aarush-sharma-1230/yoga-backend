@@ -58,8 +58,10 @@ def get_sequence_user_prompt(
     sections.append(
         "Design a sequence for this practitioner that fits the requested theme and session length. "
         "Return JSON with reasoning, name, and postures (flat array in flow order). "
-        "Each posture: posture_id, posture_intent (static_hold or transitional_hub), recommended_modification. "
-        "Use static_hold for main poses; use transitional_hub to inject pass-through poses between holds when bridging gaps."
+        "Each item has posture_intent: static_hold (include posture_id, recommended_modification, hold_time_seconds > 0), "
+        "transitional_hub (posture_id, recommended_modification only—no hold_time_seconds), "
+        "or interval_set (rounds, hold_time_seconds > 0, rest_time_seconds >= 0, work_posture and recovery_posture each with posture_id and recommended_modification only). "
+        "Use transitional_hub to bridge gaps between holds; use interval_set for timed work/rest rounds when appropriate."
     )
 
     return "\n".join(sections)

@@ -48,9 +48,21 @@ Connect your mini-sequences and bridge gaps using pass-through postures. Assign 
 
 Constraint: Use an average of 1-2, and a strict maximum of 3 continuous postures labeled as "transitional_hub". (Common hubs include Downward Dog, Child's Pose, Table Top, Plank, Mountain).
 
+STEP 4C — INTERVAL SETS (TIMED WORK / REST BLOCKS)
+When the theme or practitioner's goals call for strength, core endurance, or conditioning within the flow, consider having the posture intent as "interval_set" for a posture aiming at strength or conditioning. Pick a safe gentler **recovery** posture from the catalogue which complements the main work posture; set rounds, hold_time_seconds (work interval), and rest_time_seconds (recovery between rounds).
+Anchor/ peak is the best phase in the physiological wave for making a posture into an interval set given the body is well warmed up
+Have atleast 1-2 interval_set based postures in the sequence when the theme or practitioner's goals calls for strength and endurance.
+Postures like Plank, Boat Pose, Chair pose, Bridge pose, Chaturanga Dandasana serve as viable options to be used as interval_set based on the session theme.
+
 STEP 5 — STITCHING THE MINI SEQUENCES TOGETHER
 Review the mini sequences first making sure their intent is well targeted and their transitions are internally well connected either directly or using transitional_hub postures and finally connect these mini sequences together using transitional_hub postures as required to make the complete sequence perfect, smooth transitioned and well targeted
 
 ## 4. OUTPUT FORMAT
-Return JSON with "reasoning", "name", and "postures" (a flat array in flow order). Each posture: "posture_id" (client_id from catalogue), "posture_intent" ("static_hold" for main poses to hold; "transitional_hub" for pass-through poses bridging gaps), "recommended_modification" (from contraindications/chronic_pain or ""). Default "posture_intent" is "static_hold".
+Return JSON with "reasoning", "name", and "postures" (a flat array in flow order). Each array element is exactly one of three shapes, discriminated by "posture_intent":
+
+* **static_hold** — Main pose to hold: "posture_intent": "static_hold", "posture_id" (catalogue client_id), "recommended_modification" (from contraindications/chronic_pain or ""), "hold_time_seconds" (integer > 0, how long to hold this pose).
+
+* **transitional_hub** — Pass-through only (no timer on this row): "posture_intent": "transitional_hub", "posture_id", "recommended_modification". Do NOT include "hold_time_seconds".
+
+* **interval_set** — Repeated work/rest rounds: "posture_intent": "interval_set", "rounds" (integer >= 1), "hold_time_seconds" (integer > 0, duration of each work interval), "rest_time_seconds" (integer >= 0, recovery between rounds), "work_posture" and "recovery_posture". Each of work_posture and recovery_posture is an object with **only** "posture_id" and "recommended_modification" (no posture_intent on these nested objects).
 """
