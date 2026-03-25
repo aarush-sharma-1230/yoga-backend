@@ -23,6 +23,8 @@ Each posture has an intensity_profile (1–5 scale):
 * Select only from the catalogue; use client_id exactly. No invented IDs.
 * The practice theme lives in the user prompt. Use it as the primary driver for pose selection and sequence intention.
 * Start with grounding (Mountain, Easy Pose) and end with rest (Child's Pose, Corpse Pose).
+* **Warm-up and early flow — ease first:** In grounding and warm-up phases, favour catalogue postures that are **easier on the joints** (smaller ranges, more support, lower load in intensity_profile) than what you plan for preparation/anchor/peak. Do not open with deep end-range or high muscular demand for the same patterns you will use later.
+* **Progressive `hold_time_seconds` (static_hold only):** Scale hold times with the physiological wave. Holds in **grounding and warm-up** must be **noticeably shorter** than holds for comparable body regions at **anchor/peak**; preparation/build phases sit **between**. **Cool-down** uses moderate, settling durations—not peak depth timers. Transitional hubs have no timer; interval_set work intervals belong in the **peak-ready** phase, not in the opening warm-up.
 
 ## 3. POSTURE INTENT & FUNCTIONAL MODES
 You must consider a "posture_intent" to every posture in the sequence. By default, postures are assumed to be "static_hold", but you MUST switch the intent based on the following functional criteria:
@@ -65,10 +67,12 @@ STEP 2 — ESTABLISH THE ANCHOR
 Based on the practice theme, user goals, and notes in the user prompt, select 1 to 2 anchor postures from the remaining safe postures. These should represent the deepest mobility demand, highest exertion, or main intention of the session.
 
 STEP 3 — ANATOMICAL PREPARATION
-Study the intensity_profile of the chosen anchor postures. Then select preparation postures that warm up, strengthen, mobilize, or open the relevant body regions before the anchors.
+Study the intensity_profile of the chosen anchor postures. Select preparation and warm-up postures that mobilize and prepare the same regions **before** anchors, but with **gentler** joint demand and loading than the anchor choices—escalate range, load, and hold length only as the wave progresses.
 
 STEP 4A — CONSTRUCT THE WAVE (MINI-SEQUENCES)
 Keeping the session theme in mind given in user prompt, construct distinct mini-sequences for each phase of the physiological wave: grounding -> warm-up -> preparation -> anchor/peak -> cool-down -> rest. Strictly use typical_entries and typical_exits to connect held postures directly within these mini-sequences. If a posture has requires_counter_pose: yes, schedule one of its recommended_counter_poses immediately or shortly afterward before the resting phase.
+
+When assigning **static_hold** rows, **set `hold_time_seconds` per phase**: grounding and warm-up use the **shortest** appropriate holds for that practitioner; preparation/build **increase** modestly toward peak; anchor/peak may use the **longest** holds where safe; cool-down returns to **gentler, moderate** durations. The warm-up block should **feel easy**—joint-friendly pose choices **and** shorter timers, not an abbreviated version of peak intensity.
 
 STEP 4B — ROUTING & TRANSITIONAL HUBS
 Connect your mini-sequences and bridge gaps using pass-through postures. Assign these bridging postures the "posture_intent" : "transitional_hub". You MUST deploy transitional hubs in the following scenarios:
@@ -94,7 +98,7 @@ Review the mini sequences first making sure their intent is well targeted and th
 ## 5. OUTPUT FORMAT
 Return JSON with "reasoning", "name", and "postures" (a flat array in flow order). Each array element is exactly one of four shapes, discriminated by "posture_intent":
 
-* **static_hold** — Main pose to hold: "posture_intent": "static_hold", "posture_id" (catalogue client_id), "recommended_modification" (from contraindications/chronic_pain or ""), "hold_time_seconds" (integer > 0, how long to hold this pose).
+* **static_hold** — Main pose to hold: "posture_intent": "static_hold", "posture_id" (catalogue client_id), "recommended_modification" (from contraindications/chronic_pain or ""), "hold_time_seconds" (integer > 0; shorter in warm-up/grounding than at anchor/peak for comparable work).
 
 * **transitional_hub** — Pass-through only (no timer on this row): "posture_intent": "transitional_hub", "posture_id", "recommended_modification". Do NOT include "hold_time_seconds".
 

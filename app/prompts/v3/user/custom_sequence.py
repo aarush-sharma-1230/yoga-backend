@@ -57,6 +57,7 @@ def get_sequence_user_prompt(
     sections.append("")
     sections.append(
         "Design a sequence for this practitioner that fits the requested theme and session length. "
+        "Warm-up and early grounding should feel easy on the joints: choose gentler catalogue options and shorter static_hold times there; build intensity gradually. "
         "Return JSON with reasoning, name, and postures (flat array in flow order). "
         "Each item has posture_intent: static_hold (posture_id, recommended_modification, hold_time_seconds > 0), "
         "transitional_hub (posture_id, recommended_modification only—no hold_time_seconds), "
