@@ -24,7 +24,38 @@ Each posture has an intensity_profile (1–5 scale):
 * The practice theme lives in the user prompt. Use it as the primary driver for pose selection and sequence intention.
 * Start with grounding (Mountain, Easy Pose) and end with rest (Child's Pose, Corpse Pose).
 
-## 3. REASONING PROTOCOL (VINYASA KRAMA)
+## 3. POSTURE INTENT & FUNCTIONAL MODES
+You must consider a "posture_intent" to every posture in the sequence. By default, postures are assumed to be "static_hold", but you MUST switch the intent based on the following functional criteria:
+
+### A — STATIC_HOLD (Standard Alignment & Depth)
+* **Criteria:** Use for the majority of the sequence where the goal is flexibility, balance, or neurological "settling" into a pose.
+* **Application:** Balance poses (Tree), deep stretches (Pigeon), and rest (Savasana).
+
+### B — TRANSITIONAL_HUB (Routing & Flow)
+* **Criteria:** Use for pass-through postures that connect mini-sequences or bridge anatomical gaps.
+* **Scenarios:** * **Side-Switching:** To bridge unilateral sequences (Right -> Hub -> Left).
+    * **Category Switching:** To move between planes (Standing -> Hub -> Seated).
+    * **Gap Bridging:** When typical_entries/exits do not align.
+    * **Thematic Bypassing:** When a posture is anatomically required to reach a destination but contradicts the session's intensity (e.g., a quick Plank used in a Gentle session).
+* **Constraint:** Max 3 continuous hub postures. Keep guidance brief and momentum-focused.
+
+### C — INTERVAL_SET (Strength & Conditioning)
+* **Criteria:** Use when the session theme or user goals call for core endurance, heat building, or muscular "armor."
+* **Application:** Best deployed during the **Anchor/Peak** phase.
+* **Requirements:** You must define:
+    1.  `target_posture_id`: The high-exertion pose (e.g., Plank, Boat, Chair, Bridge).
+    2.  `recovery_posture_id`: A gentler, safe posture for rest between rounds.
+    3.  `rounds`, `hold_time_seconds` (Work), and `rest_time_seconds` (Recovery).
+* **Logic:** At least 1-2 interval_sets must be present if the theme is "Strength" or "Fire."
+
+### D — VINYASA_LOOP (Rhythmic Repetition)
+* **Criteria:** Use for postures traditionally done as a continuous cycle linked to breath.
+* **Application:** Cat-Cow, Sun Salutation cycles, or Low Lunge to Half-Splits.
+* **Requirements:** * List 2+ postures in `cycle_postures`.
+    * Set `rounds` (e.g., 5 cycles).
+    * Omit standard `hold_time_seconds` as the pace is breath-based.
+
+## 4. REASONING PROTOCOL (VINYASA KRAMA)
 Silently execute the following sub-task sequence before generating the final JSON.
 
 STEP 1 — THE SAFETY FILTER
@@ -54,15 +85,20 @@ Anchor/ peak is the best phase in the physiological wave for making a posture in
 Have atleast 1-2 interval_set based postures in the sequence when the theme or practitioner's goals calls for strength and endurance.
 Postures like Plank, Boat Pose, Chair pose, Bridge pose, Chaturanga Dandasana serve as viable options to be used as interval_set based on the session theme.
 
+STEP 4D — VINYASA LOOPS (REPEATED CYCLE)
+When the theme calls for flowing repetition (e.g. Cat–Cow, Sun Salutation–style cycles), use "posture_intent": "vinyasa_loop". List the ordered poses once in "cycle_postures" (minimum 2 entries); each entry has only "posture_id" and "recommended_modification". Set "rounds" to how many full cycles to repeat. Omit posture_id, hold_time_seconds, work_posture, and recovery_posture on the parent.
+
 STEP 5 — STITCHING THE MINI SEQUENCES TOGETHER
 Review the mini sequences first making sure their intent is well targeted and their transitions are internally well connected either directly or using transitional_hub postures and finally connect these mini sequences together using transitional_hub postures as required to make the complete sequence perfect, smooth transitioned and well targeted
 
-## 4. OUTPUT FORMAT
-Return JSON with "reasoning", "name", and "postures" (a flat array in flow order). Each array element is exactly one of three shapes, discriminated by "posture_intent":
+## 5. OUTPUT FORMAT
+Return JSON with "reasoning", "name", and "postures" (a flat array in flow order). Each array element is exactly one of four shapes, discriminated by "posture_intent":
 
 * **static_hold** — Main pose to hold: "posture_intent": "static_hold", "posture_id" (catalogue client_id), "recommended_modification" (from contraindications/chronic_pain or ""), "hold_time_seconds" (integer > 0, how long to hold this pose).
 
 * **transitional_hub** — Pass-through only (no timer on this row): "posture_intent": "transitional_hub", "posture_id", "recommended_modification". Do NOT include "hold_time_seconds".
 
 * **interval_set** — Repeated work/rest rounds: "posture_intent": "interval_set", "rounds" (integer >= 1), "hold_time_seconds" (integer > 0, duration of each work interval), "rest_time_seconds" (integer >= 0, recovery between rounds), "work_posture" and "recovery_posture". Each of work_posture and recovery_posture is an object with **only** "posture_id" and "recommended_modification" (no posture_intent on these nested objects).
+
+* **vinyasa_loop** — Repeat a short ordered cycle: "posture_intent": "vinyasa_loop", "rounds" (integer >= 1), "cycle_postures" (array of at least 2 objects, each **only** "posture_id" and "recommended_modification"). Top-level "recommended_modification" must be "" (empty string). No hold_time_seconds on the parent row.
 """

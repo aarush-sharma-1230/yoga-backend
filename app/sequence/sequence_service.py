@@ -7,6 +7,7 @@ from app.agents.sequence_composer import SequenceComposer
 from app.schemas.custom_sequence import (
     POSTURE_INTENT_INTERVAL_SET,
     POSTURE_INTENT_STATIC_HOLD,
+    POSTURE_INTENT_VINYASA_LOOP,
     CustomSequenceOutput,
     SequencePostureItem,
 )
@@ -48,7 +49,7 @@ class SequenceService:
         return {"status": True, "result": {**sequence, "postures": postures}}
 
     def _client_ids_from_stored_postures(self, postures: list) -> list[str]:
-        """Collect client_ids from stored sequence postures (flat or interval_set wrapper)."""
+        """Collect client_ids from stored sequence postures (flat, interval_set, or vinyasa_loop)."""
         ids: set[str] = set()
         for p in postures:
             intent = p.get("posture_intent")
@@ -59,6 +60,11 @@ class SequenceService:
                     ids.add(wp["client_id"])
                 if rp.get("client_id"):
                     ids.add(rp["client_id"])
+            elif intent == POSTURE_INTENT_VINYASA_LOOP:
+                for slot in p.get("cycle_postures") or []:
+                    cid = slot.get("client_id")
+                    if cid:
+                        ids.add(cid)
             elif p.get("client_id"):
                 ids.add(p["client_id"])
         return list(ids)
@@ -88,6 +94,26 @@ class SequenceService:
                 ),
             }
 
+        if intent == POSTURE_INTENT_VINYASA_LOOP:
+            slots = p.get("cycle_postures") or []
+            rebuilt = []
+            for slot in slots:
+                doc = db_by_client.get(slot.get("client_id"))
+                if not doc:
+                    return p
+                rebuilt.append(
+                    canonical_posture_row(
+                        doc,
+                        posture_intent=POSTURE_INTENT_STATIC_HOLD,
+                        recommended_modification=slot.get("recommended_modification", ""),
+                    )
+                )
+            return {
+                "posture_intent": POSTURE_INTENT_VINYASA_LOOP,
+                "rounds": p["rounds"],
+                "cycle_postures": rebuilt,
+            }
+
         doc = db_by_client.get(p.get("client_id"))
         if not doc:
             return p
@@ -107,7 +133,12 @@ class SequenceService:
                 assert item.work_posture is not None and item.recovery_posture is not None
                 ids.add(item.work_posture.posture_id)
                 ids.add(item.recovery_posture.posture_id)
+            elif item.posture_intent == POSTURE_INTENT_VINYASA_LOOP:
+                assert item.cycle_postures is not None
+                for slot in item.cycle_postures:
+                    ids.add(slot.posture_id)
             else:
+                assert item.posture_id is not None
                 ids.add(item.posture_id)
         return ids
 
@@ -136,6 +167,26 @@ class SequenceService:
                     posture_intent=POSTURE_INTENT_STATIC_HOLD,
                     recommended_modification=item.recovery_posture.recommended_modification,
                 ),
+            }
+
+        if item.posture_intent == POSTURE_INTENT_VINYASA_LOOP:
+            assert item.cycle_postures is not None and item.rounds is not None
+            rows = []
+            for slot in item.cycle_postures:
+                doc = db_postures.get(slot.posture_id)
+                if not doc:
+                    return None
+                rows.append(
+                    canonical_posture_row(
+                        doc,
+                        posture_intent=POSTURE_INTENT_STATIC_HOLD,
+                        recommended_modification=slot.recommended_modification,
+                    )
+                )
+            return {
+                "posture_intent": POSTURE_INTENT_VINYASA_LOOP,
+                "rounds": item.rounds,
+                "cycle_postures": rows,
             }
 
         assert item.posture_id is not None
