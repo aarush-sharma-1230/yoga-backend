@@ -1,6 +1,9 @@
 """
 Session-built DTO for transition generation: raw posture data and prompt-facing strings.
 YogaCoordinator consumes this; no LLM schema selection here.
+
+Transitional hubs never trigger their own LLM call: we skip those indices and attach the
+consecutive hubs before a static / interval / vinyasa row to that target's context.
 """
 
 from dataclasses import dataclass
@@ -23,40 +26,42 @@ def _format_sensory_cues(sensory_cues: list[dict]) -> str:
     return "\n".join(f"- {sc.get('area', '')}: {sc.get('cue', '')}" for sc in sensory_cues)
 
 
-def _entry_transitions_for_static_target(postures: list, target_idx: int) -> list[str]:
+def should_skip_transition_for_index(postures: list, target_idx: int) -> bool:
+    """Skip LLM for transitional_hub rows; they are folded into the next real posture's prompt."""
+    if target_idx < 0 or target_idx >= len(postures):
+        return True
+    return _default_intent(postures[target_idx]) == POSTURE_INTENT_TRANSITIONAL_HUB
+
+
+def _first_non_hub_index(postures: list) -> int | None:
+    """Index of the first posture that is not a transitional hub (first guided block)."""
+    for i, p in enumerate(postures):
+        if _default_intent(p) != POSTURE_INTENT_TRANSITIONAL_HUB:
+            return i
+    return None
+
+
+def _last_non_hub_index_before_target(postures: list, target_idx: int) -> int | None:
+    """Last held / main row before target, skipping a trailing run of transitional hubs."""
+    j = target_idx - 1
+    while j >= 0:
+        if _default_intent(postures[j]) != POSTURE_INTENT_TRANSITIONAL_HUB:
+            return j
+        j -= 1
+    return None
+
+
+def _preceding_transitional_hub_names(postures: list, target_idx: int) -> list[str]:
+    """Consecutive transitional hubs immediately before target_idx (in order)."""
     if target_idx <= 0:
         return []
-    to_posture = postures[target_idx]
-    if _default_intent(to_posture) != POSTURE_INTENT_STATIC_HOLD:
-        return []
-    result = []
+    result: list[str] = []
     for j in range(target_idx - 1, -1, -1):
         if _default_intent(postures[j]) == POSTURE_INTENT_TRANSITIONAL_HUB:
             result.insert(0, postures[j].get("name", "?"))
         else:
             break
     return result
-
-
-def should_skip_transition_for_index(postures: list, target_idx: int) -> bool:
-    """Skip LLM when this hub row is continued from the previous hub (one call covers the run)."""
-    if target_idx < 0 or target_idx >= len(postures):
-        return True
-    if _default_intent(postures[target_idx]) != POSTURE_INTENT_TRANSITIONAL_HUB:
-        return False
-    if target_idx > 0 and _default_intent(postures[target_idx - 1]) == POSTURE_INTENT_TRANSITIONAL_HUB:
-        return True
-    return False
-
-
-def _collect_hub_chain_names(postures: list, start_idx: int) -> list[str]:
-    names: list[str] = []
-    j = start_idx
-    n = len(postures)
-    while j < n and _default_intent(postures[j]) == POSTURE_INTENT_TRANSITIONAL_HUB:
-        names.append(postures[j].get("name", "?"))
-        j += 1
-    return names
 
 
 def _format_sequence_context_entry(index: int, p: dict) -> str:
@@ -102,41 +107,6 @@ def _row_display_name(p: dict | None) -> str | None:
     return p.get("name")
 
 
-def _hub_block_label(chain: list[str], dest: str | None) -> str:
-    arrow = " → ".join(chain)
-    if dest:
-        return f"{arrow} → {dest}"
-    return arrow
-
-
-def _primary_client_id_for_destination_sensory(row: dict | None) -> str | None:
-    if not row:
-        return None
-    intent = _default_intent(row)
-    if intent == POSTURE_INTENT_INTERVAL_SET:
-        return (row.get("work_posture") or {}).get("client_id")
-    if intent == POSTURE_INTENT_VINYASA_LOOP:
-        cyc = row.get("cycle_postures") or []
-        if cyc:
-            return cyc[0].get("client_id")
-        return None
-    return row.get("client_id")
-
-
-def _destination_mod_summary(row: dict | None) -> str:
-    if not row:
-        return "None"
-    intent = _default_intent(row)
-    if intent == POSTURE_INTENT_INTERVAL_SET:
-        return (row.get("work_posture") or {}).get("recommended_modification") or "None"
-    if intent == POSTURE_INTENT_VINYASA_LOOP:
-        cyc = row.get("cycle_postures") or []
-        if cyc:
-            return cyc[0].get("recommended_modification") or "None"
-        return "None"
-    return row.get("recommended_modification") or "None"
-
-
 def _format_interval_outline(p: dict) -> str:
     work = p.get("work_posture") or {}
     rec = p.get("recovery_posture") or {}
@@ -175,13 +145,9 @@ class TransitionRequestContext:
     from_posture_name: str | None
     target_posture_intent: str
     to_posture_name: str
-    entry_transition_names: list[str]
+    preceding_transitional_hub_names: list[str]
     recommended_modification: str
     sensory_cues_formatted: str
-    hub_chain_names: list[str]
-    destination_hold_summary: str | None
-    destination_recommended_modification: str
-    destination_sensory_cues_formatted: str
     timed_flow_outline: str
     expected_step_count: int
 
@@ -196,33 +162,24 @@ def build_transition_request(
 
     to_posture = postures[target_idx]
     intent = _default_intent(to_posture)
-    is_initial = target_idx == 0
-    from_posture_name = (
-        None
-        if is_initial
-        else _row_display_name(postures[target_idx - 1]) or postures[target_idx - 1].get("name", "?")
-    )
-    full_sequence = _format_full_sequence_context(postures)
+    first_real_idx = _first_non_hub_index(postures)
+    is_initial = first_real_idx is not None and target_idx == first_real_idx
 
-    hub_chain_names: list[str] = []
-    destination_hold_summary: str | None = None
-    destination_recommended_modification = "None"
-    destination_sensory_cues_formatted = "None provided."
+    prev_hold_idx = _last_non_hub_index_before_target(postures, target_idx)
+    if is_initial:
+        from_posture_name = None
+    elif prev_hold_idx is not None:
+        from_posture_name = _row_display_name(postures[prev_hold_idx]) or postures[prev_hold_idx].get("name", "?")
+    else:
+        from_posture_name = None
+
+    full_sequence = _format_full_sequence_context(postures)
+    preceding_transitional_hub_names = _preceding_transitional_hub_names(postures, target_idx)
+
     timed_flow_outline = ""
     expected_step_count = 0
 
-    entry_transition_names: list[str] = []
     if intent == POSTURE_INTENT_STATIC_HOLD:
-        entry_transition_names = _entry_transitions_for_static_target(postures, target_idx)
-        expected_step_count = 1
-    elif intent == POSTURE_INTENT_TRANSITIONAL_HUB:
-        hub_chain_names = _collect_hub_chain_names(postures, target_idx)
-        j = target_idx + len(hub_chain_names)
-        following = postures[j] if j < len(postures) else None
-        destination_hold_summary = _row_display_name(following)
-        destination_recommended_modification = _destination_mod_summary(following)
-        dest_cid = _primary_client_id_for_destination_sensory(following)
-        destination_sensory_cues_formatted = _format_sensory_cues(sensory_cues_map.get(dest_cid or "", []))
         expected_step_count = 1
     elif intent == POSTURE_INTENT_INTERVAL_SET:
         timed_flow_outline = _format_interval_outline(to_posture)
@@ -234,12 +191,8 @@ def build_transition_request(
         cyc = to_posture.get("cycle_postures") or []
         expected_step_count = r * len(cyc)
 
-    if intent == POSTURE_INTENT_TRANSITIONAL_HUB:
-        to_posture_name = _hub_block_label(hub_chain_names, destination_hold_summary)
-        recommended_modification = "None"
-    else:
-        to_posture_name = _row_display_name(to_posture) or to_posture.get("name", "?")
-        recommended_modification = to_posture.get("recommended_modification") or "None"
+    to_posture_name = _row_display_name(to_posture) or to_posture.get("name", "?")
+    recommended_modification = to_posture.get("recommended_modification") or "None"
 
     target_cid = to_posture.get("client_id") if intent == POSTURE_INTENT_STATIC_HOLD else None
     if intent == POSTURE_INTENT_STATIC_HOLD:
@@ -254,13 +207,9 @@ def build_transition_request(
         from_posture_name=from_posture_name,
         target_posture_intent=intent,
         to_posture_name=to_posture_name or "?",
-        entry_transition_names=entry_transition_names,
+        preceding_transitional_hub_names=preceding_transitional_hub_names,
         recommended_modification=recommended_modification,
         sensory_cues_formatted=sensory_cues_formatted,
-        hub_chain_names=hub_chain_names,
-        destination_hold_summary=destination_hold_summary,
-        destination_recommended_modification=destination_recommended_modification,
-        destination_sensory_cues_formatted=destination_sensory_cues_formatted,
         timed_flow_outline=timed_flow_outline,
         expected_step_count=expected_step_count,
     )

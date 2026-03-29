@@ -18,8 +18,8 @@ class TransitionGuidanceOutput(BaseModel):
 
     steps: list[TransitionGuidanceStep] = Field(
         description=(
-            "Ordered steps. static_hold or transitional_hub: exactly 1. "
-            "interval_set: 2 × rounds (work then recovery each round). "
-            "vinyasa_loop: rounds × len(cycle_postures)."
+            "Ordered steps. static_hold: 1 (hubs before the hold are spoken inside that step). "
+            "interval_set: 2 × rounds; if hubs precede the block, step 0 also completes hub travel and the first timed-flow beat. "
+            "vinyasa_loop: rounds × len(cycle_postures); if hubs precede, step 0 includes hub travel plus the first cycle beat."
         )
     )
