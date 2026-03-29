@@ -11,8 +11,11 @@ from typing import Any, Dict, Optional
 
 from app.prompts.active import (
     extract_profile_context,
+    get_transition_prompt,
     get_yoga_coordinator_developer_prompt,
 )
+from app.schemas.transition_guidance import TransitionGuidanceOutput
+from app.session.transition_request import TransitionRequestContext
 
 
 class YogaCoordinator:
@@ -50,8 +53,40 @@ class YogaCoordinator:
             self.llm_client.generate_structured_text,
             prompt=prompt,
             developer_prompt=dp,
-            model=self.model
+            model=self.model,
         )
+
+    async def generate_transition_guidance(
+        self,
+        ctx: TransitionRequestContext,
+        user_id: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        """
+        Build v4 transition prompts, call the LLM with TransitionGuidanceOutput, validate step count,
+        and return serialized steps (no flattening to legacy instruction rows).
+        """
+        prompt = get_transition_prompt(ctx)
+        dp = await self._get_developer_prompt(user_id)
+        parsed, message_id = await asyncio.to_thread(
+            self.llm_client.generate_with_schema_meta,
+            prompt=prompt,
+            developer_prompt=dp,
+            response_format=TransitionGuidanceOutput,
+            model=self.model,
+            temperature=0.7,
+        )
+        if parsed is None:
+            raise RuntimeError("LLM returned no parsed transition guidance")
+        steps = parsed.steps
+        expected = ctx.expected_step_count
+        if expected > 0 and len(steps) != expected:
+            raise RuntimeError(
+                f"Transition step count mismatch for index {ctx.target_idx}: expected {expected}, got {len(steps)}"
+            )
+        return {
+            "message_id": message_id,
+            "steps": [s.model_dump() for s in steps],
+        }
 
     def generate_audio_from_text(self, text: str):
         """Generate audio chunks from text via TTS."""

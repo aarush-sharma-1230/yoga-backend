@@ -17,7 +17,7 @@ T = TypeVar("T", bound=BaseModel)
 class OpenAIClient:
     def __init__(self, openai_api_key: str):
         self.is_text_enabled = True
-        self.is_audio_enabled = True
+        self.is_audio_enabled = False
         self.api_key = openai_api_key
         self.audio_model = "gpt-4o-mini-tts"
         self.temperature = 0.7
@@ -63,15 +63,18 @@ class OpenAIClient:
         )
         return result
 
-    def generate_with_schema(
+    def generate_with_schema_meta(
         self,
         prompt: str,
         developer_prompt: str,
         response_format: Type[T],
         model: str,
         temperature: float = 0.5,
-    ) -> T:
-        """Generate structured output conforming to the given Pydantic schema."""
+    ) -> tuple[T, str]:
+        """
+        Parse chat completion into the given schema. Returns (parsed_model, message_id).
+        Does not reshape into legacy instruction rows; callers own validation.
+        """
         messages = [
             {"role": "system", "content": developer_prompt},
             {"role": "user", "content": prompt},
@@ -83,6 +86,7 @@ class OpenAIClient:
             temperature=temperature,
         )
         parsed = completion.choices[0].message.parsed
+        message_id = getattr(completion, "id", None) or f"msg_{uuid.uuid4().hex}"
         input_tokens, output_tokens = self._extract_usage_from_chat_completion(completion)
         output_str = parsed.model_dump_json(indent=2) if hasattr(parsed, "model_dump_json") else str(parsed)
         self._log_api_call(
@@ -92,6 +96,24 @@ class OpenAIClient:
             input_tokens,
             output_tokens,
             output=output_str,
+        )
+        return parsed, message_id
+
+    def generate_with_schema(
+        self,
+        prompt: str,
+        developer_prompt: str,
+        response_format: Type[T],
+        model: str,
+        temperature: float = 0.5,
+    ) -> T:
+        """Generate structured output conforming to the given Pydantic schema."""
+        parsed, _message_id = self.generate_with_schema_meta(
+            prompt=prompt,
+            developer_prompt=developer_prompt,
+            response_format=response_format,
+            model=model,
+            temperature=temperature,
         )
         return parsed
 

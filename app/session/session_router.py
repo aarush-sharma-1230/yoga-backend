@@ -50,8 +50,8 @@ async def get_session(session_id: str, service: SessionService = Depends(Depende
 async def get_instructions(data: GetInstructionsData, service: SessionService = Depends(DependencyInjector.get_session_service)):
     """Return instructions for a session. Excludes audio_path from each instruction."""
     try:
-        instructions = await service.get_instructions(data.session_id)
-        return {"status": True, "instructions": instructions}
+        payload = await service.get_instructions(data.session_id)
+        return {"status": True, **payload}
     except RuntimeError as e:
         if "not found" in str(e).lower():
             raise HTTPException(status_code=404, detail=str(e))
