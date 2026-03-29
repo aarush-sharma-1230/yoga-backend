@@ -13,7 +13,7 @@ router = APIRouter()
 async def start_user_session(series_data: SeriesData, service: SessionService = Depends(DependencyInjector.get_session_service)):
     """
     Start a new yoga session.
-    Pre-generates all guidance texts (intro, transitions, ending) and stores them in the session document.
+    Pre-generates guidance: `intro` and `ending` as top-level fields; per-posture transition audio under `sequence.postures`.
     """
     try:
         sequence_id = series_data.sequence_id
@@ -34,7 +34,7 @@ async def start_user_session(series_data: SeriesData, service: SessionService = 
 
 @router.get("/session/{session_id}")
 async def get_session(session_id: str, service: SessionService = Depends(DependencyInjector.get_session_service)):
-    """Return session info by session_id. Excludes instructions."""
+    """Return session info by session_id. Omits legacy `instructions` if present; intro/ending are top-level on the document."""
     try:
         response = await service.get_session_info(session_id)
         return response
@@ -48,7 +48,7 @@ async def get_session(session_id: str, service: SessionService = Depends(Depende
 
 @router.post("/session/get_instructions")
 async def get_instructions(data: GetInstructionsData, service: SessionService = Depends(DependencyInjector.get_session_service)):
-    """Return instructions for a session. Excludes audio_path from each instruction."""
+    """Return `intro`, `ending`, and `posture_guidance` (audio_path stripped)."""
     try:
         payload = await service.get_instructions(data.session_id)
         return {"status": True, **payload}

@@ -45,27 +45,35 @@ class SessionService:
 
     async def get_session_info(self, session_id: str) -> dict:
         """
-        Return session document excluding the flat `instructions` array.
-        Spoken transition guidance is stored per posture on `sequence.postures[i].guidance_steps`;
-        intro and ending remain in `instructions` on the document (omitted here).
+        Return the session document. Transition guidance uses `sequence.postures[i].guidance_steps` (arrays).
+        Intro and ending are top-level single objects `{text, message_id, audio_path}` each—no `steps`.
+        Legacy `instructions` is omitted if present.
         """
         session = await self.get_session_by_id(session_id)
         session = {k: v for k, v in session.items() if k != "instructions"}
         return {"status": True, "result": session}
 
+    @staticmethod
+    def _strip_audio_path(obj: dict | None) -> dict | None:
+        """Return a shallow copy without audio_path for API responses."""
+        if not obj:
+            return None
+        return {k: v for k, v in obj.items() if k != "audio_path"}
+
+    @staticmethod
+    def _bookend_spoken_document(text: str, message_id: str, audio_path: str) -> dict:
+        """
+        Persisted shape for intro and ending: one clip each, not a `steps` array.
+        Keys match for both: spoken `text`, API `message_id`, on-disk `audio_path`.
+        """
+        return {"text": text, "message_id": message_id, "audio_path": str(audio_path)}
+
     async def get_instructions(self, session_id: str) -> dict:
         """
-        Return intro/ending rows from `instructions` plus per-posture `guidance_steps` (without audio_path).
-
-        Transitions are no longer flattened into `instructions`; clients should read `posture_guidance`.
+        Return top-level `intro` and `ending`: same flat shape each, `audio_path` stripped, not step arrays.
+        Plus `posture_guidance` for per-posture transition clips.
         """
         session = await self.get_session_by_id(session_id)
-        flat = session.get("instructions") or []
-        intro_ending = [
-            {k: v for k, v in i.items() if k != "audio_path"}
-            for i in flat
-            if i.get("category") in ("intro", "ending")
-        ]
         postures = (session.get("sequence") or {}).get("postures") or []
         posture_guidance = []
         for i, p in enumerate(postures):
@@ -77,7 +85,11 @@ class SessionService:
                     "guidance_steps": [{k: v for k, v in s.items() if k != "audio_path"} for s in steps],
                 }
             )
-        return {"instructions": intro_ending, "posture_guidance": posture_guidance}
+        return {
+            "intro": self._strip_audio_path(session.get("intro")),
+            "ending": self._strip_audio_path(session.get("ending")),
+            "posture_guidance": posture_guidance,
+        }
 
     @staticmethod
     def _posture_identity_for_client(p: dict) -> dict:
@@ -134,10 +146,12 @@ class SessionService:
 
     def _find_instruction(self, session: dict, message_id: str) -> dict:
         """Return a dict with `text` for TTS and enough context to persist audio_path after generation."""
-        instructions = session.get("instructions") or []
-        for i in instructions:
-            if i.get("message_id") == message_id:
-                return {"kind": "flat", **i}
+        intro = session.get("intro")
+        if isinstance(intro, dict) and intro.get("message_id") == message_id:
+            return {"kind": "intro", **intro}
+        ending = session.get("ending")
+        if isinstance(ending, dict) and ending.get("message_id") == message_id:
+            return {"kind": "ending", **ending}
 
         for pi, p in enumerate((session.get("sequence") or {}).get("postures") or []):
             for si, step in enumerate(p.get("guidance_steps") or []):
@@ -204,7 +218,7 @@ class SessionService:
             yield chunk
 
     async def _persist_instruction_audio_path(self, session_id: str, message_id: str, file_path: Path) -> None:
-        """Write audio_path onto the flat instruction row or nested guidance_step."""
+        """Persist audio_path for `intro`, `ending`, or a `guidance_steps` item after on-demand TTS."""
         session = await self.get_session_by_id(session_id)
         payload = self._find_instruction(session, message_id)
         if payload.get("kind") == "guidance_step":
@@ -215,10 +229,19 @@ class SessionService:
                 {"$set": {f"sequence.postures.{pi}.guidance_steps.{si}.audio_path": str(file_path)}},
             )
             return
-        await self.db["session"].update_one(
-            {"_id": ObjectId(session_id), "instructions.message_id": message_id},
-            {"$set": {"instructions.$.audio_path": str(file_path)}},
-        )
+        if payload.get("kind") == "intro":
+            await self.db["session"].update_one(
+                {"_id": ObjectId(session_id)},
+                {"$set": {"intro.audio_path": str(file_path)}},
+            )
+            return
+        if payload.get("kind") == "ending":
+            await self.db["session"].update_one(
+                {"_id": ObjectId(session_id)},
+                {"$set": {"ending.audio_path": str(file_path)}},
+            )
+            return
+        raise RuntimeError("Unknown instruction payload kind for audio path update")
 
     async def get_audio_chunks(self, session_id: str, message_id: str):
         """
@@ -252,18 +275,19 @@ class SessionService:
         return str(audio_path)
 
     async def _generate_intro(self, sequence_name: str, session_id: str, user_name: str, user_id: str | None = None) -> None:
-        """Generate introduction micro-instructions and audio, store as flat array with category=introduction."""
+        """Generate intro copy and TTS; store a single flat `intro` object (same shape as `ending`, not `steps`)."""
         prompt = get_introduction_prompt(sequence_name=sequence_name, user_name=user_name)
         response = await self.yoga_coordinator.generate_text(prompt=prompt, user_id=user_id)
         text = response["text"]
         message_id = response["message_id"]
         audio_chunks = self.yoga_coordinator.generate_audio_from_text(text)
         audio_path = self._save_audio_to_file(session_id, message_id, audio_chunks)
+        doc = self._bookend_spoken_document(text, message_id, audio_path)
 
         trace("Saving intro", session_id=session_id)
         await self.db["session"].update_one(
             {"_id": ObjectId(session_id)},
-            {"$push": {"instructions": {"category": "intro", "text": text, "message_id": message_id, "audio_path": audio_path}}},
+            {"$set": {"intro": doc}},
         )
 
     async def _generate_transitions(self, postures: list, session_id: str, user_id: str | None = None) -> None:
@@ -308,18 +332,19 @@ class SessionService:
             )
 
     async def _generate_ending_note(self, sequence_name: str, session_id: str, user_id: str | None = None) -> None:
-        """Generate ending micro-instructions and audio, store as flat array with category=ending."""
+        """Generate ending copy and TTS; store a single flat `ending` object (identical keys to `intro`, not `steps`)."""
         prompt = get_ending_prompt(sequence_name=sequence_name)
         response = await self.yoga_coordinator.generate_text(prompt=prompt, user_id=user_id)
         text = response["text"]
         message_id = response["message_id"]
         audio_chunks = self.yoga_coordinator.generate_audio_from_text(text)
         audio_path = self._save_audio_to_file(session_id, message_id, audio_chunks)
+        doc = self._bookend_spoken_document(text, message_id, audio_path)
 
         trace("Saving ending note", session_id=session_id)
         await self.db["session"].update_one(
             {"_id": ObjectId(session_id)},
-            {"$push": {"instructions": {"category": "ending", "text": text, "message_id": message_id, "audio_path": audio_path}}, "$set": {"generation_status": "completed"}},
+            {"$set": {"ending": doc, "generation_status": "completed"}},
         )
 
     async def _generate_remaining_guidance_background(self, session_id: str, postures: list, sequence_name: str, user_name: str, user_id: str | None = None) -> None:
@@ -329,7 +354,7 @@ class SessionService:
         await self._generate_ending_note(sequence_name, session_id, user_id)
 
     def _create_session_document(self, user_id: str, sequence: dict) -> dict:
-        """Create session document with intro only."""
+        """Create session document; `intro` and `ending` are set when background generation completes."""
         current_timestamp = datetime.utcnow()
         postures = sequence["postures"]
 
@@ -340,7 +365,6 @@ class SessionService:
             "current_posture": None,
             "total_number_of_postures": len(postures),
             "generation_status": "in_progress",
-            "instructions": [],
         }
 
     async def start_user_session(self, user_id: str, sequence_id: str, user_name: str):
