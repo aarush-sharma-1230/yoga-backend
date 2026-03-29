@@ -31,20 +31,11 @@ class HardPriorityStrategy(BaseModel):
     medical_conditions: list[MedicalCondition]
     chronic_pain_areas: list[ChronicPainArea]
     recent_surgery: Optional[bool] = None
-    medical_conditions_notes: Optional[str] = None
-    chronic_pain_areas_notes: Optional[str] = None
-    recent_surgery_notes: Optional[str] = None
+    user_notes: Optional[str] = None
 
 
 class MediumPriorityStrategy(BaseModel):
     experience_level: Optional[ExperienceLevel] = None
     activity_level: Optional[ActivityLevel] = None
     primary_goal: list[PrimaryGoal]
-    experience_level_notes: Optional[str] = None
-    activity_level_notes: Optional[str] = None
-    primary_goal_notes: Optional[str] = None
-
-
-class UserProfilePayload(BaseModel):
-    hard_priority_strategy: HardPriorityStrategy
-    medium_priority_strategy: MediumPriorityStrategy
+    user_notes: Optional[str] = None

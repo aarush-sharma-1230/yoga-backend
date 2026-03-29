@@ -21,8 +21,8 @@ class SequenceService:
         self.db = db
         self.sequence_composer = sequence_composer
 
-    async def get_sequences(self):
-        pipeline = [{"$project": {"_id": 1, "name": 1, "postures": 1, "type": 1, "user_id": 1}}]
+    async def get_sequences(self, user_id: str):
+        pipeline = [{"$match": {"user_id": ObjectId(user_id)}}, {"$sort": {"created_at": -1}}, {"$project": {"_id": 1, "name": 1, "postures": 1, "type": 1, "user_id": 1, "duration_minutes": 1, "practice_theme_id": 1, "user_notes": 1, "created_at": 1}}]
         sequences = await self.db["sequences"].aggregate(pipeline).to_list(length=None)
         return {"status": True, "result": sequences}
 
@@ -249,8 +249,10 @@ class SequenceService:
             "name": output.name,
             "postures": postures,
             "type": "generated",
-            "user_id": user_id,
-            "practice_theme_id": practice_theme_id,
+            "duration_minutes": duration_minutes,
+            "user_id": ObjectId(user_id),
+            "practice_theme_id": ObjectId(practice_theme_id),
+            "user_notes": user_notes,
             "created_at": datetime.utcnow(),
         }
         result = await self.db["sequences"].insert_one(sequence_doc)

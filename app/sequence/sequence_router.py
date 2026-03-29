@@ -12,7 +12,7 @@ USER_ID_TEMP = "67d5632a3a9bdddef290e127"
 @router.post("/sequence/get_sequences")
 async def get_sequences(service: SequenceService = Depends(DependencyInjector.get_sequence_service)):
     try:
-        response = await service.get_sequences()
+        response = await service.get_sequences(user_id=USER_ID_TEMP)
         return response
 
     except Exception as e:
