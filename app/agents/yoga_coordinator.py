@@ -35,7 +35,7 @@ class YogaCoordinator:
         ctx = extract_profile_context(user)
         return get_yoga_coordinator_developer_prompt(ctx)
 
-    async def generate_text(self, prompt: str, user_id: Optional[str] = None) -> Dict[str, Any]:
+    async def generate_intro_or_ending(self, prompt: str, user_id: Optional[str] = None) -> Dict[str, Any]:
         """Generate spoken guidance text from the LLM."""
         dp = await self._get_developer_prompt(user_id)
         response = await asyncio.to_thread(self.llm_client.generate_text, prompt=prompt, developer_prompt=dp, model=self.model)
@@ -45,16 +45,6 @@ class YogaCoordinator:
             "text": text,
             "message_id": response.get("output", [{}])[0].get("id"),
         }
-
-    async def generate_structured_text(self, prompt: str, user_id: Optional[str] = None) -> Dict[str, Any]:
-        """Return structured micro-instructions (transition_movements, basic_instruction, sensory_cue) for transitions."""
-        dp = await self._get_developer_prompt(user_id)
-        return await asyncio.to_thread(
-            self.llm_client.generate_structured_text,
-            prompt=prompt,
-            developer_prompt=dp,
-            model=self.model,
-        )
 
     async def generate_transition_guidance(
         self,

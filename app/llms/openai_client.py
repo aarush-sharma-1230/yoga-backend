@@ -9,7 +9,6 @@ from openai import OpenAI
 from pydantic import BaseModel
 
 from app.logs.api_call_logger import log_api_call
-from app.schemas.micro_instruction import StructuredInstructionOutput
 
 T = TypeVar("T", bound=BaseModel)
 
@@ -23,45 +22,6 @@ class OpenAIClient:
         self.temperature = 0.7
         openai.api_key = openai_api_key
         self._client = OpenAI(api_key=openai_api_key)
-
-    def generate_structured_text(
-        self,
-        prompt: str,
-        developer_prompt: str,
-        model: str,
-        temperature: float = 0.7,
-    ) -> dict:
-        """Return structured micro-instructions: at most one per type (movement, alignment, awareness, breath)."""
-        messages = [{"role": "system", "content": developer_prompt}, {"role": "user", "content": prompt}]
-        completion = self._client.chat.completions.parse(
-            model=model,
-            messages=messages,
-            response_format=StructuredInstructionOutput,
-            temperature=temperature,
-        )
-
-        parsed = completion.choices[0].message.parsed
-        message_id = getattr(completion, "id", None) or f"msg_{uuid.uuid4().hex}"
-
-        input_tokens, output_tokens = self._extract_usage_from_chat_completion(completion)
-
-        instructions = []
-        for block in parsed.transition_movements:
-            instructions.append({"type": "transition_movement", "text": block.text})
-        instructions.append({"type": "instruction", "text": parsed.basic_instruction.text})
-        if parsed.sensory_cue is not None:
-            instructions.append({"type": "sensory_cue", "text": parsed.sensory_cue.text})
-
-        result = {"instructions": instructions, "message_id": message_id}
-        self._log_api_call(
-            "generate_structured_text",
-            developer_prompt,
-            prompt,
-            input_tokens,
-            output_tokens,
-            output=json.dumps(result, indent=2),
-        )
-        return result
 
     def generate_with_schema_meta(
         self,

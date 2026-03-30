@@ -277,7 +277,7 @@ class SessionService:
     async def _generate_intro(self, sequence_name: str, session_id: str, user_name: str, user_id: str | None = None) -> None:
         """Generate intro copy and TTS; store a single flat `intro` object (same shape as `ending`, not `steps`)."""
         prompt = get_introduction_prompt(sequence_name=sequence_name, user_name=user_name)
-        response = await self.yoga_coordinator.generate_text(prompt=prompt, user_id=user_id)
+        response = await self.yoga_coordinator.generate_intro_or_ending(prompt=prompt, user_id=user_id)
         text = response["text"]
         message_id = response["message_id"]
         audio_chunks = self.yoga_coordinator.generate_audio_from_text(text)
@@ -334,7 +334,7 @@ class SessionService:
     async def _generate_ending_note(self, sequence_name: str, session_id: str, user_id: str | None = None) -> None:
         """Generate ending copy and TTS; store a single flat `ending` object (identical keys to `intro`, not `steps`)."""
         prompt = get_ending_prompt(sequence_name=sequence_name)
-        response = await self.yoga_coordinator.generate_text(prompt=prompt, user_id=user_id)
+        response = await self.yoga_coordinator.generate_intro_or_ending(prompt=prompt, user_id=user_id)
         text = response["text"]
         message_id = response["message_id"]
         audio_chunks = self.yoga_coordinator.generate_audio_from_text(text)
