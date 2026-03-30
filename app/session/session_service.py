@@ -11,7 +11,6 @@ from app.prompts.active import (
 )
 from app.schemas.custom_sequence import (
     POSTURE_INTENT_INTERVAL_SET,
-    POSTURE_INTENT_STATIC_HOLD,
     POSTURE_INTENT_VINYASA_LOOP,
 )
 from app.session.session_trace_logger import trace
@@ -54,64 +53,12 @@ class SessionService:
         return {"status": True, "result": session}
 
     @staticmethod
-    def _strip_audio_path(obj: dict | None) -> dict | None:
-        """Return a shallow copy without audio_path for API responses."""
-        if not obj:
-            return None
-        return {k: v for k, v in obj.items() if k != "audio_path"}
-
-    @staticmethod
     def _bookend_spoken_document(text: str, message_id: str, audio_path: str) -> dict:
         """
         Persisted shape for intro and ending: one clip each, not a `steps` array.
         Keys match for both: spoken `text`, API `message_id`, on-disk `audio_path`.
         """
         return {"text": text, "message_id": message_id, "audio_path": str(audio_path)}
-
-    async def get_instructions(self, session_id: str) -> dict:
-        """
-        Return top-level `intro` and `ending`: same flat shape each, `audio_path` stripped, not step arrays.
-        Plus `posture_guidance` for per-posture transition clips.
-        """
-        session = await self.get_session_by_id(session_id)
-        postures = (session.get("sequence") or {}).get("postures") or []
-        posture_guidance = []
-        for i, p in enumerate(postures):
-            steps = p.get("guidance_steps") or []
-            posture_guidance.append(
-                {
-                    "posture_index": i,
-                    **SessionService._posture_identity_for_client(p),
-                    "guidance_steps": [{k: v for k, v in s.items() if k != "audio_path"} for s in steps],
-                }
-            )
-        return {
-            "intro": self._strip_audio_path(session.get("intro")),
-            "ending": self._strip_audio_path(session.get("ending")),
-            "posture_guidance": posture_guidance,
-        }
-
-    @staticmethod
-    def _posture_identity_for_client(p: dict) -> dict:
-        """Fields the client can use to match a guidance block to a sequence row (client_id varies by intent)."""
-        intent = p.get("posture_intent") or POSTURE_INTENT_STATIC_HOLD
-        if intent == POSTURE_INTENT_INTERVAL_SET:
-            wp = p.get("work_posture") or {}
-            rp = p.get("recovery_posture") or {}
-            return {
-                "posture_intent": intent,
-                "client_id": wp.get("client_id"),
-                "work_client_id": wp.get("client_id"),
-                "recovery_client_id": rp.get("client_id"),
-            }
-        if intent == POSTURE_INTENT_VINYASA_LOOP:
-            cycle_ids = [x.get("client_id") for x in (p.get("cycle_postures") or []) if x.get("client_id")]
-            return {
-                "posture_intent": intent,
-                "client_id": cycle_ids[0] if cycle_ids else None,
-                "cycle_client_ids": cycle_ids,
-            }
-        return {"posture_intent": intent, "client_id": p.get("client_id")}
 
     @staticmethod
     def _client_ids_from_stored_postures(postures: list) -> list[str]:

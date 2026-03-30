@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import StreamingResponse
 from app.session.session_service import SessionService
-from app.session.session_interfaces import SeriesData, GetInstructionsData
+from app.session.session_interfaces import SeriesData
 from app.dependency_injector import DependencyInjector
 from app.globals.errors import CustomException
 from bson import ObjectId
@@ -38,20 +38,6 @@ async def get_session(session_id: str, service: SessionService = Depends(Depende
     try:
         response = await service.get_session_info(session_id)
         return response
-    except RuntimeError as e:
-        if "not found" in str(e).lower():
-            raise HTTPException(status_code=404, detail=str(e))
-        raise CustomException(str(e))
-    except Exception as e:
-        raise CustomException(str(e))
-
-
-@router.post("/session/get_instructions")
-async def get_instructions(data: GetInstructionsData, service: SessionService = Depends(DependencyInjector.get_session_service)):
-    """Return `intro`, `ending`, and `posture_guidance` (audio_path stripped)."""
-    try:
-        payload = await service.get_instructions(data.session_id)
-        return {"status": True, **payload}
     except RuntimeError as e:
         if "not found" in str(e).lower():
             raise HTTPException(status_code=404, detail=str(e))
