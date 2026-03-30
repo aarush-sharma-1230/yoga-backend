@@ -11,7 +11,6 @@ from app.schemas.custom_sequence import (
     CustomSequenceOutput,
     SequencePostureItem,
 )
-from app.sequence.posture_row import canonical_posture_row
 
 DEFAULT_MANUAL_HOLD_SECONDS = 60
 
@@ -37,94 +36,33 @@ class SequenceService:
         return {"status": True, "result": themes}
 
     async def get_sequence(self, sequence_id: str):
+        """Return the sequence document as stored; postures are not re-fetched from the catalogue."""
         sequence = await self.db["sequences"].find_one({"_id": ObjectId(sequence_id)})
         if not sequence:
             raise ValueError(f"Sequence not found: {sequence_id}")
-        client_ids = self._client_ids_from_stored_postures(sequence.get("postures", []))
-        db_by_client = {}
-        if client_ids:
-            async for doc in self.db["postures"].find({"client_id": {"$in": client_ids}}):
-                db_by_client[doc["client_id"]] = doc
-        postures = [self._normalize_stored_posture(p, db_by_client) for p in sequence.get("postures", [])]
-        return {"status": True, "result": {**sequence, "postures": postures}}
+        return {"status": True, "result": sequence}
 
-    def _client_ids_from_stored_postures(self, postures: list) -> list[str]:
-        """Collect client_ids from stored sequence postures (flat, interval_set, or vinyasa_loop)."""
-        ids: set[str] = set()
-        for p in postures:
-            intent = p.get("posture_intent")
-            if intent == POSTURE_INTENT_INTERVAL_SET:
-                wp = p.get("work_posture") or {}
-                rp = p.get("recovery_posture") or {}
-                if wp.get("client_id"):
-                    ids.add(wp["client_id"])
-                if rp.get("client_id"):
-                    ids.add(rp["client_id"])
-            elif intent == POSTURE_INTENT_VINYASA_LOOP:
-                for slot in p.get("cycle_postures") or []:
-                    cid = slot.get("client_id")
-                    if cid:
-                        ids.add(cid)
-            elif p.get("client_id"):
-                ids.add(p["client_id"])
-        return list(ids)
+    def canonical_posture_row(posture_doc: dict, *, posture_intent: str, recommended_modification: str) -> dict:
+        """
+        Map a posture document from the database to the uniform six-field shape.
 
-    def _normalize_stored_posture(self, p: dict, db_by_client: dict[str, dict]) -> dict:
-        """Refresh names from DB while keeping stored intent, modifications, and timing fields."""
-        intent = p.get("posture_intent")
-        if intent == POSTURE_INTENT_INTERVAL_SET:
-            wp, rp = p.get("work_posture") or {}, p.get("recovery_posture") or {}
-            wdoc, rdoc = db_by_client.get(wp.get("client_id")), db_by_client.get(rp.get("client_id"))
-            if not wdoc or not rdoc:
-                return p
-            return {
-                "posture_intent": POSTURE_INTENT_INTERVAL_SET,
-                "rounds": p["rounds"],
-                "hold_time_seconds": p["hold_time_seconds"],
-                "rest_time_seconds": p["rest_time_seconds"],
-                "work_posture": canonical_posture_row(
-                    wdoc,
-                    posture_intent=POSTURE_INTENT_STATIC_HOLD,
-                    recommended_modification=wp.get("recommended_modification", ""),
-                ),
-                "recovery_posture": canonical_posture_row(
-                    rdoc,
-                    posture_intent=POSTURE_INTENT_STATIC_HOLD,
-                    recommended_modification=rp.get("recommended_modification", ""),
-                ),
-            }
+        Expects flat `name` (English string) and `sanskrit_name` on the posture doc.
+        Returns _id, name, sanskrit_name, client_id, posture_intent, recommended_modification.
+        Does not include aliases on this row.
+        """
+        english = posture_doc.get("name") or "Unknown"
+        sanskrit = posture_doc.get("sanskrit_name") or ""
 
-        if intent == POSTURE_INTENT_VINYASA_LOOP:
-            slots = p.get("cycle_postures") or []
-            rebuilt = []
-            for slot in slots:
-                doc = db_by_client.get(slot.get("client_id"))
-                if not doc:
-                    return p
-                rebuilt.append(
-                    canonical_posture_row(
-                        doc,
-                        posture_intent=POSTURE_INTENT_STATIC_HOLD,
-                        recommended_modification=slot.get("recommended_modification", ""),
-                    )
-                )
-            return {
-                "posture_intent": POSTURE_INTENT_VINYASA_LOOP,
-                "rounds": p["rounds"],
-                "cycle_postures": rebuilt,
-            }
+        oid = posture_doc.get("_id") or posture_doc.get("id") or posture_doc.get("client_id")
 
-        doc = db_by_client.get(p.get("client_id"))
-        if not doc:
-            return p
-        row = canonical_posture_row(
-            doc,
-            posture_intent=p.get("posture_intent", POSTURE_INTENT_STATIC_HOLD),
-            recommended_modification=p.get("recommended_modification", ""),
-        )
-        if intent == POSTURE_INTENT_STATIC_HOLD and "hold_time_seconds" in p:
-            row["hold_time_seconds"] = p["hold_time_seconds"]
-        return row
+        return {
+            "_id": str(oid),
+            "name": english,
+            "sanskrit_name": sanskrit,
+            "client_id": posture_doc.get("client_id", ""),
+            "posture_intent": posture_intent,
+            "recommended_modification": recommended_modification,
+        }
 
     def _client_ids_from_llm_output(self, output: CustomSequenceOutput) -> set[str]:
         ids: set[str] = set()
@@ -157,12 +95,12 @@ class SequenceService:
                 "rounds": item.rounds,
                 "hold_time_seconds": item.hold_time_seconds,
                 "rest_time_seconds": item.rest_time_seconds,
-                "work_posture": canonical_posture_row(
+                "work_posture": self.canonical_posture_row(
                     wdoc,
                     posture_intent=POSTURE_INTENT_STATIC_HOLD,
                     recommended_modification=item.work_posture.recommended_modification,
                 ),
-                "recovery_posture": canonical_posture_row(
+                "recovery_posture": self.canonical_posture_row(
                     rdoc,
                     posture_intent=POSTURE_INTENT_STATIC_HOLD,
                     recommended_modification=item.recovery_posture.recommended_modification,
@@ -177,7 +115,7 @@ class SequenceService:
                 if not doc:
                     return None
                 rows.append(
-                    canonical_posture_row(
+                    self.canonical_posture_row(
                         doc,
                         posture_intent=POSTURE_INTENT_STATIC_HOLD,
                         recommended_modification=slot.recommended_modification,
@@ -193,7 +131,7 @@ class SequenceService:
         doc = db_postures.get(item.posture_id)
         if not doc:
             return None
-        row = canonical_posture_row(
+        row = self.canonical_posture_row(
             doc,
             posture_intent=item.posture_intent,
             recommended_modification=item.recommended_modification,
@@ -286,7 +224,7 @@ class SequenceService:
 
         postures = []
         for pid in posture_client_ids:
-            row = canonical_posture_row(
+            row = self.canonical_posture_row(
                 id_to_posture[pid],
                 posture_intent=POSTURE_INTENT_STATIC_HOLD,
                 recommended_modification="",

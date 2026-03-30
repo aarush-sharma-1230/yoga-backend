@@ -1,6 +1,7 @@
 """
-Transition context: builds pre-computed context for transition prompts.
-Expects a flat posture array with posture_intent (static_hold | transitional_hub).
+Legacy transition context for v1 transition prompts only.
+
+Pre-computed context for a flat posture array (static_hold | transitional_hub).
 """
 
 from dataclasses import dataclass

@@ -50,7 +50,7 @@ class SessionService:
         Legacy `instructions` is omitted if present.
         """
         session = await self.get_session_by_id(session_id)
-        session = {k: v for k, v in session.items() if k != "instructions"}
+       
         return {"status": True, "result": session}
 
     @staticmethod

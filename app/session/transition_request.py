@@ -1,29 +1,16 @@
 """
-Session-built DTO for transition generation: raw posture data and prompt-facing strings.
-YogaCoordinator consumes this; no LLM schema selection here.
+Session entrypoint for building v4 transition request DTOs.
 
-Transitional hubs never trigger their own LLM call: we skip those indices and attach the
-consecutive hubs before a static / interval / vinyasa row to that target's context.
+Implements `build_transition_request` in app.prompts.v4.transition_request; SessionService
+imports from here so session orchestration keeps a stable module path.
 """
 
 from dataclasses import dataclass
 
-from app.schemas.custom_sequence import (
-    POSTURE_INTENT_INTERVAL_SET,
-    POSTURE_INTENT_STATIC_HOLD,
-    POSTURE_INTENT_TRANSITIONAL_HUB,
-    POSTURE_INTENT_VINYASA_LOOP,
-)
-
+from app.schemas.custom_sequence import POSTURE_INTENT_INTERVAL_SET, POSTURE_INTENT_STATIC_HOLD, POSTURE_INTENT_TRANSITIONAL_HUB, POSTURE_INTENT_VINYASA_LOOP
 
 def _default_intent(p: dict) -> str:
     return p.get("posture_intent") or POSTURE_INTENT_STATIC_HOLD
-
-
-def _format_sensory_cues(sensory_cues: list[dict]) -> str:
-    if not sensory_cues:
-        return "None provided."
-    return "\n".join(f"- {sc.get('area', '')}: {sc.get('cue', '')}" for sc in sensory_cues)
 
 
 def should_skip_transition_for_index(postures: list, target_idx: int) -> bool:
@@ -32,14 +19,12 @@ def should_skip_transition_for_index(postures: list, target_idx: int) -> bool:
         return True
     return _default_intent(postures[target_idx]) == POSTURE_INTENT_TRANSITIONAL_HUB
 
-
 def _first_non_hub_index(postures: list) -> int | None:
     """Index of the first posture that is not a transitional hub (first guided block)."""
     for i, p in enumerate(postures):
         if _default_intent(p) != POSTURE_INTENT_TRANSITIONAL_HUB:
             return i
     return None
-
 
 def _last_non_hub_index_before_target(postures: list, target_idx: int) -> int | None:
     """Last held / main row before target, skipping a trailing run of transitional hubs."""
@@ -50,19 +35,18 @@ def _last_non_hub_index_before_target(postures: list, target_idx: int) -> int | 
         j -= 1
     return None
 
-
-def _preceding_transitional_hub_names(postures: list, target_idx: int) -> list[str]:
-    """Consecutive transitional hubs immediately before target_idx (in order)."""
-    if target_idx <= 0:
-        return []
-    result: list[str] = []
-    for j in range(target_idx - 1, -1, -1):
-        if _default_intent(postures[j]) == POSTURE_INTENT_TRANSITIONAL_HUB:
-            result.insert(0, postures[j].get("name", "?"))
-        else:
-            break
-    return result
-
+def _row_display_name(p: dict | None) -> str | None:
+    if not p:
+        return None
+    intent = _default_intent(p)
+    if intent == POSTURE_INTENT_INTERVAL_SET:
+        w = (p.get("work_posture") or {}).get("name", "?")
+        r = (p.get("recovery_posture") or {}).get("name", "?")
+        return f"Interval set ({w} / {r})"
+    if intent == POSTURE_INTENT_VINYASA_LOOP:
+        names = [x.get("name", "?") for x in (p.get("cycle_postures") or [])]
+        return f"Vinyasa loop ({' → '.join(names)})"
+    return p.get("name")
 
 def _format_sequence_context_entry(index: int, p: dict) -> str:
     """One line in the full-sequence summary, typed for interval/vinyasa/static/hub."""
@@ -87,25 +71,26 @@ def _format_sequence_context_entry(index: int, p: dict) -> str:
     hold_part = f", hold {hold}s" if hold is not None else ""
     return f"{n}. [static_hold] {p.get('name', '?')}{hold_part}"
 
-
 def _format_full_sequence_context(postures: list) -> str:
     """Human-readable sequence outline; interval and vinyasa rows are expanded, not a single name."""
     return "\n".join(_format_sequence_context_entry(i, p) for i, p in enumerate(postures))
 
+def _preceding_transitional_hub_names(postures: list, target_idx: int) -> list[str]:
+    """Consecutive transitional hubs immediately before target_idx (in order)."""
+    if target_idx <= 0:
+        return []
+    result: list[str] = []
+    for j in range(target_idx - 1, -1, -1):
+        if _default_intent(postures[j]) == POSTURE_INTENT_TRANSITIONAL_HUB:
+            result.insert(0, postures[j].get("name", "?"))
+        else:
+            break
+    return result
 
-def _row_display_name(p: dict | None) -> str | None:
-    if not p:
-        return None
-    intent = _default_intent(p)
-    if intent == POSTURE_INTENT_INTERVAL_SET:
-        w = (p.get("work_posture") or {}).get("name", "?")
-        r = (p.get("recovery_posture") or {}).get("name", "?")
-        return f"Interval set ({w} / {r})"
-    if intent == POSTURE_INTENT_VINYASA_LOOP:
-        names = [x.get("name", "?") for x in (p.get("cycle_postures") or [])]
-        return f"Vinyasa loop ({' → '.join(names)})"
-    return p.get("name")
-
+def _format_sensory_cues(sensory_cues: list[dict]) -> str:
+    if not sensory_cues:
+        return "None provided."
+    return "\n".join(f"- {sc.get('area', '')}: {sc.get('cue', '')}" for sc in sensory_cues)
 
 def _format_interval_outline(p: dict) -> str:
     work = p.get("work_posture") or {}
@@ -122,7 +107,6 @@ def _format_interval_outline(p: dict) -> str:
         step += 1
     return "\n".join(lines) if lines else ""
 
-
 def _format_vinyasa_outline(p: dict) -> str:
     rounds = int(p.get("rounds") or 0)
     cyc = p.get("cycle_postures") or []
@@ -133,6 +117,9 @@ def _format_vinyasa_outline(p: dict) -> str:
             lines.append(f"Step {step}: {pose.get('name', '?')} — round {r + 1} of {rounds}")
             step += 1
     return "\n".join(lines) if lines else ""
+
+
+
 
 
 @dataclass

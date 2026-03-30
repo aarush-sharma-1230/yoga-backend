@@ -15,7 +15,7 @@ from app.prompts.active import (
     get_yoga_coordinator_developer_prompt,
 )
 from app.schemas.transition_guidance import TransitionGuidanceOutput
-from app.session.transition_request import TransitionRequestContext
+from app.prompts.v4.transition_request import TransitionRequestContext
 
 
 class YogaCoordinator:

@@ -1,10 +1,10 @@
 """User prompt: transition between yoga postures.
 
 Prompt receives pre-computed TransitionContext only. No function calls inside.
-All data fetching and formatting is done in the session layer (transition_context).
+Context is built by app.prompts.v3.transition_context when using this prompt version.
 """
 
-from app.session.transition_context import TransitionContext
+from app.prompts.v3.transition_context import TransitionContext
 
 
 def get_transition_prompt(ctx: TransitionContext) -> str:
