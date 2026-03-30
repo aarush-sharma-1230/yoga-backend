@@ -30,7 +30,9 @@ INVERSION_POSTURES = [
             },
             {"instruction": "Bend your knees deeply while keeping your spine long and hips lifting " "up.", "name": "Bend Knees", "target_area": "hamstrings"},
         ],
-        "name": {"aliases": ["Down Dog", "Inverted V"], "english": "Downward Facing Dog", "sanskrit": "Adho Mukha Svanasana"},
+        "name": "Downward Facing Dog",
+        "sanskrit_name": "Adho Mukha Svanasana",
+        "aliases": ["Down Dog", "Inverted V"],
         "pose_intent": ["Lengthen the spine", "Stretch the posterior chain (hamstrings, calves)", "Strengthen shoulders and arms"],
         "progression": {
             "advanced": "Fully extend the legs with stable shoulders and grounded heels.",
@@ -86,7 +88,9 @@ INVERSION_POSTURES = [
                 "target_area": "neck",
             },
         ],
-        "name": {"aliases": ["Shoulderstand", "Queen of Poses"], "english": "Supported Shoulder Stand", "sanskrit": "Salamba Sarvangasana"},
+        "name": "Supported Shoulder Stand",
+        "sanskrit_name": "Salamba Sarvangasana",
+        "aliases": ["Shoulderstand", "Queen of Poses"],
         "pose_intent": ["Improve venous blood return from the legs", "Stimulate the thyroid and parathyroid glands", "Calm the central nervous system deeply"],
         "progression": {
             "advanced": "Perfectly vertical alignment from shoulders to toes, hands resting near the " "shoulder blades.",
@@ -132,7 +136,9 @@ INVERSION_POSTURES = [
             },
             {"instruction": "Skip the neck compression entirely and simply rest your legs up a " "wall.", "name": "Legs Up The Wall", "target_area": "neck"},
         ],
-        "name": {"aliases": ["Plough Pose"], "english": "Plow Pose", "sanskrit": "Halasana"},
+        "name": "Plow Pose",
+        "sanskrit_name": "Halasana",
+        "aliases": ["Plough Pose"],
         "pose_intent": ["Deeply stretch the cervical and thoracic spine", "Stimulate the abdominal organs and thyroid", "Prepare the body for final relaxation"],
         "progression": {
             "advanced": "Toes tucked on the floor behind the head, arms interlaced and pressing into " "the mat.",

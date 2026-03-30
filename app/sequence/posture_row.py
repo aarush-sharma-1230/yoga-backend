@@ -5,15 +5,12 @@ def canonical_posture_row(posture_doc: dict, *, posture_intent: str, recommended
     """
     Map a posture document from the database to the uniform six-field shape.
 
+    Expects flat `name` (English string) and `sanskrit_name` on the posture doc.
     Returns _id, name, sanskrit_name, client_id, posture_intent, recommended_modification.
+    Does not include aliases on this row.
     """
-    name = posture_doc.get("name")
-    if isinstance(name, dict):
-        english = name.get("english", "Unknown")
-        sanskrit = name.get("sanskrit", "")
-    else:
-        english = name or "Unknown"
-        sanskrit = posture_doc.get("sanskrit_name", "")
+    english = posture_doc.get("name") or "Unknown"
+    sanskrit = posture_doc.get("sanskrit_name") or ""
 
     oid = posture_doc.get("_id") or posture_doc.get("id") or posture_doc.get("client_id")
 

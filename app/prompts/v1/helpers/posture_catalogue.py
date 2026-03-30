@@ -21,8 +21,10 @@ def _format_chronic_pain(p: dict) -> str:
 
 def _format_posture_entry(posture: dict) -> str:
     """Build a structured posture entry with anatomical data, intensity_profile, contraindications and chronic_pain."""
-    name = posture.get("name") or {}
-    english = name.get("english", "Unknown")
+    raw_name = posture.get("name")
+    english = raw_name if isinstance(raw_name, str) and raw_name else "Unknown"
+    sanskrit = posture.get("sanskrit_name") or ""
+    aliases = posture.get("aliases") or []
     client_id = posture.get("client_id", "")
     sig = posture.get("anatomical_signature") or {}
     is_inverted = sig.get("is_inverted", False)
@@ -59,13 +61,21 @@ def _format_posture_entry(posture: dict) -> str:
         f"spine={mob.get('spine', 1)} shoulders={mob.get('shoulders_and_chest', 1)}"
     )
 
-    lines = [
-        f"{client_id}: {english}",
-        f"  inverted: {'yes' if is_inverted else 'no'} | spinal_shape: {spinal_shape}",
-        f"  {lat_str}",
-        f"  {counter_str}",
-        f"  {ip_str}",
-    ]
+    title = f"{client_id}: {english}"
+    if sanskrit:
+        title += f" ({sanskrit})"
+
+    lines = [title]
+    if aliases:
+        lines.append(f"  aliases: {', '.join(str(a) for a in aliases)}")
+    lines.extend(
+        [
+            f"  inverted: {'yes' if is_inverted else 'no'} | spinal_shape: {spinal_shape}",
+            f"  {lat_str}",
+            f"  {counter_str}",
+            f"  {ip_str}",
+        ]
+    )
 
     contra = posture.get("contraindications") or []
     if contra:

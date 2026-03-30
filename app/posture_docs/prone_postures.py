@@ -21,7 +21,9 @@ PRONE_POSTURES = [
             {"instruction": "Place a folded blanket under your knees for cushioning.", "name": "Padded Knees", "target_area": "knees"},
             {"instruction": "Make fists or use forearms if wrists are sensitive.", "name": "Fists or Forearms", "target_area": "wrists"},
         ],
-        "name": {"aliases": ["All Fours", "Hands and Knees"], "english": "Table Top Pose", "sanskrit": "Bharmanasana"},
+        "name": "Table Top Pose",
+        "sanskrit_name": "Bharmanasana",
+        "aliases": ["All Fours", "Hands and Knees"],
         "pose_intent": ["Establish neutral spine on all fours", "Prepare for Cat-Cow and transitions", "Build wrist and core awareness"],
         "progression": {
             "advanced": "Maintain perfect neutrality while moving through transitions.",
@@ -64,7 +66,9 @@ PRONE_POSTURES = [
             {"instruction": "Make fists with your hands or drop to your forearms to relieve wrist " "compression.", "name": "Fists or Forearms", "target_area": "wrists"},
             {"instruction": "Place a folded blanket directly under your knees for cushioning.", "name": "Padded Knees", "target_area": "knees"},
         ],
-        "name": {"aliases": ["Cat Stretch"], "english": "Cat Pose", "sanskrit": "Marjaryasana"},
+        "name": "Cat Pose",
+        "sanskrit_name": "Marjaryasana",
+        "aliases": ["Cat Stretch"],
         "pose_intent": ["Stretch the posterior torso and neck", "Provide a gentle massage to the spine and belly organs", "Release tension in the cervical and thoracic spine"],
         "progression": {
             "advanced": "Engage the pelvic floor (Mula Bandha) deeply at the peak of the flexion.",
@@ -106,7 +110,9 @@ PRONE_POSTURES = [
             {"instruction": "Keep your gaze straight ahead rather than craning your neck to look " "up.", "name": "Look Forward", "target_area": "neck"},
             {"instruction": "Keep a slight lifting action in your belly to support your lower back " "as it arches.", "name": "Engage Core", "target_area": "lower_back"},
         ],
-        "name": {"aliases": ["Cow Stretch"], "english": "Cow Pose", "sanskrit": "Bitilasana"},
+        "name": "Cow Pose",
+        "sanskrit_name": "Bitilasana",
+        "aliases": ["Cow Stretch"],
         "pose_intent": ["Stretch the front torso and neck", "Open the chest to encourage deeper breathing", "Mobilize the lumbar and cervical spine"],
         "progression": {
             "advanced": "Isolate the movement, allowing the spine to ripple sequentially from tailbone " "to crown.",
@@ -146,7 +152,9 @@ PRONE_POSTURES = [
             {"instruction": "Take your knees as wide as the mat to create space for your belly and " "chest.", "name": "Wide Knee Childs Pose", "target_area": "hips"},
             {"instruction": "Place a rolled blanket between your calves and hamstrings to reduce " "knee flexion.", "name": "Blanket Support", "target_area": "knees"},
         ],
-        "name": {"aliases": ["Resting Pose"], "english": "Child's Pose", "sanskrit": "Balasana"},
+        "name": "Child's Pose",
+        "sanskrit_name": "Balasana",
+        "aliases": ["Resting Pose"],
         "pose_intent": ["Release tension in the lower back", "Gently stretch hips and thighs", "Calm the mind and regulate breath"],
         "progression": {
             "advanced": "Knees together, arms back, breath directed fully into the posterior ribcage.",
@@ -202,7 +210,9 @@ PRONE_POSTURES = [
                 "target_area": "lower_back",
             },
         ],
-        "name": {"aliases": ["High Plank", "Upper Push-up"], "english": "Plank Pose", "sanskrit": "Phalakasana"},
+        "name": "Plank Pose",
+        "sanskrit_name": "Phalakasana",
+        "aliases": ["High Plank", "Upper Push-up"],
         "pose_intent": ["Build core, shoulder, and arm strength", "Create full-body isometric tension", "Prepare for arm balances and transitions"],
         "progression": {
             "advanced": "Shift weight slightly forward onto the tiptoes in preparation for Chaturanga.",
@@ -239,7 +249,9 @@ PRONE_POSTURES = [
             {"instruction": "Lower to your forearms instead of palms.", "name": "Forearm Chaturanga", "target_area": "wrists"},
             {"instruction": "Lower your knees to the mat, maintaining a straight line from head to knees.", "name": "Knees Down Chaturanga", "target_area": "core"},
         ],
-        "name": {"aliases": ["Four-Limbed Staff", "Low Plank"], "english": "Chaturanga Dandasana", "sanskrit": "Chaturanga Dandasana"},
+        "name": "Chaturanga Dandasana",
+        "sanskrit_name": "Chaturanga Dandasana",
+        "aliases": ["Four-Limbed Staff", "Low Plank"],
         "pose_intent": ["Strengthen arms, shoulders, and core", "Build the foundation for vinyasa flow", "Prepare for Cobra or Upward Dog"],
         "progression": {
             "advanced": "Full expression with elbows at 90 degrees, body in one straight line.",
@@ -289,7 +301,9 @@ PRONE_POSTURES = [
             },
             {"instruction": "Slide your forearms forward and rest on your elbows to reduce the " "arch in your back.", "name": "Sphinx Pose", "target_area": "lower_back"},
         ],
-        "name": {"aliases": ["Baby Cobra"], "english": "Cobra Pose", "sanskrit": "Bhujangasana"},
+        "name": "Cobra Pose",
+        "sanskrit_name": "Bhujangasana",
+        "aliases": ["Baby Cobra"],
         "pose_intent": ["Strengthen the spinal erectors", "Open the chest and shoulders", "Counteract forward-hunching posture"],
         "progression": {
             "advanced": "Full expression with elbows slightly bent, chest pulling actively forward.",
@@ -331,7 +345,9 @@ PRONE_POSTURES = [
                 "target_area": "lower_back",
             }
         ],
-        "name": {"aliases": ["Supported Cobra"], "english": "Sphinx Pose", "sanskrit": "Salamba Bhujangasana"},
+        "name": "Sphinx Pose",
+        "sanskrit_name": "Salamba Bhujangasana",
+        "aliases": ["Supported Cobra"],
         "pose_intent": ["Provide a gentle, supported backbend", "Open the chest and lungs safely", "Alleviate lower back fatigue"],
         "progression": {
             "advanced": "Transition into Seal Pose by straightening the arms.",
@@ -372,7 +388,9 @@ PRONE_POSTURES = [
         "modifications": [
             {"instruction": "Keep your thighs and pelvis on the floor and maintain a slight bend " "in your elbows.", "name": "Cobra Pose", "target_area": "lower_back"}
         ],
-        "name": {"aliases": ["Up Dog"], "english": "Upward Facing Dog", "sanskrit": "Urdhva Mukha Svanasana"},
+        "name": "Upward Facing Dog",
+        "sanskrit_name": "Urdhva Mukha Svanasana",
+        "aliases": ["Up Dog"],
         "pose_intent": ["Deeply stretch the anterior chain (chest, abdomen, hip flexors)", "Strengthen the wrists, arms, and spine", "Stimulate abdominal organs"],
         "progression": {
             "advanced": "Full extension with thighs lifted, chest pulling fiercely through the upper " "arms.",
