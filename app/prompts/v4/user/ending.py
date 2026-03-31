@@ -27,13 +27,11 @@ Encourage them to briefly observe sensations such as:
 * the feeling of relaxation or openness in the body
 * the sense of calm or quiet in the mind
 
-Offer a short reflection that appreciates the time they gave to their practice and to their own well-being.
-
 End the session with a gentle closing message that leaves the practitioner feeling grounded and ready to return to the rest of their day.
 
 OUTPUT FORMAT
 
-* 100-120 words
+* 60-80 words
 * Written as spoken guidance
 * No bullet points
 * No numbered lists

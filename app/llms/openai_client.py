@@ -12,13 +12,22 @@ from app.logs.api_call_logger import log_api_call
 
 T = TypeVar("T", bound=BaseModel)
 
+DEFAULT_YOGA_TTS_INSTRUCTIONS = (
+    "Speak as a calm, experienced yoga teacher guiding a live class. Use a warm, unhurried pace, "
+    "clear articulation, and natural pauses. Gentle, encouraging intonation—never robotic, rushed, or sales-like. "
+    "Fit short movement and breath cues."
+)
+
+DEFAULT_TTS_VOICE = "sage"
+
 
 class OpenAIClient:
     def __init__(self, openai_api_key: str):
         self.is_text_enabled = True
         self.is_audio_enabled = True
         self.api_key = openai_api_key
-        self.audio_model = "gpt-4o-mini-tts"
+        self.audio_model = "gpt-4o-mini-tts-2025-12-15"
+        self.tts_voice = DEFAULT_TTS_VOICE
         self.temperature = 0.7
         openai.api_key = openai_api_key
         self._client = OpenAI(api_key=openai_api_key)
@@ -99,9 +108,24 @@ class OpenAIClient:
             )
             return resp_dict
 
-    def generate_audio(self, text: str, instructions: str | None = None, model: str = "gpt-4o-mini-tts", voice: str = "nova"):
+    def generate_audio(
+        self,
+        text: str,
+        instructions: str | None = None,
+        model: str | None = None,
+        voice: str | None = None,
+    ):
+        """Stream TTS audio chunks using gpt-4o-mini-tts steering and default yoga delivery instructions."""
         if self.is_audio_enabled:
-            with openai.audio.speech.with_streaming_response.create(model=model, voice=voice, input=text) as response:
+            speech_model = model or self.audio_model
+            speech_voice = voice if voice is not None else self.tts_voice
+            speech_instructions = instructions if instructions is not None else DEFAULT_YOGA_TTS_INSTRUCTIONS
+            with self._client.audio.speech.with_streaming_response.create(
+                model=speech_model,
+                voice=speech_voice,
+                input=text,
+                instructions=speech_instructions,
+            ) as response:
                 for chunk in response.iter_bytes():
                     yield chunk
 

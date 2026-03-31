@@ -52,7 +52,10 @@ async def get_audio(
     message_id: str,
     service: SessionService = Depends(DependencyInjector.get_session_service),
 ):
-    """Stream audio chunks for a session instruction. Generates on-demand if file is missing."""
+    """
+    Stream one audio clip. `message_id` is `intro`/`ending` message_id or a guidance step's
+    `instruction_message_id` / `sensory_message_id` from the session document.
+    """
     try:
         chunk_stream = service.get_audio_chunks(session_id=session_id, message_id=message_id)
         return StreamingResponse(chunk_stream, media_type="audio/mpeg")

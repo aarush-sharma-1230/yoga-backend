@@ -10,45 +10,32 @@ def get_introduction_prompt(sequence_name: str, user_name: str) -> str:
 INPUT
 Sequence Name: {sequence_name}
 User's Name: {user_name}
+
 GOAL
 Welcome the user into the session and guide them into a relaxed mental state before beginning the sequence.
 
 STRUCTURE
 
 1. Welcome
+    Warmly welcome the user by their name to the session, and acknowledge their presence to this practice.
 
-* Warmly welcome the user by their name to the session.
-* Mention the sequence name naturally.
-* Acknowledge and appreciate that the user showed up to practice.
+2. Breathing Preparation
+   Invite the user to a simple calming breath exercise in a comfortable position before the sequence is started.
 
-2. Encouragement
-
-* Offer a short, gentle word of encouragement for taking this time for themselves.
-
-3. Breathing Preparation
-   Guide the user into a simple calming breath exercise.
-
-* Ask the user to sit or stand comfortably.
-* Invite them to gently close their eyes or soften their gaze.
-
-4. Breathing Guidance
+3. Breathing Guidance
    Guide a slow breathing pattern:
 
-* Inhale slowly through the nose.
-* Exhale slowly through the mouth or nose.
-* The exhale should be slightly longer than the inhale.
+* Inhale through the nose.
+* Exhale through the mouth or nose a little slower than the inhale
 
-While guiding the breath:
+While guiding the breath, occasionally direct the user's attention to sensations such as the rise of the chest, the movement of the belly, or the feeling of air passing through the nose.
 
-* Occasionally direct the user's attention to sensations such as the rise of the chest, the movement of the belly, or the feeling of air passing through the nose.
-* Keep the pacing calm and spacious.
-
-5. Independent Practice
+4. Independent Practice
    Tell the user to continue this breathing rhythm on their own for about 2–3 minutes before beginning the sequence.
 
 OUTPUT REQUIREMENTS
 
-* 120–180 words
+* 80-100 words
 * Written as spoken guidance
 * No bullet points
 * No numbered lists

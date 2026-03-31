@@ -23,14 +23,15 @@ Return **only** a valid JSON object of this form (no markdown fences, no text be
 {{
   "steps": [
     {{
-      "instruction": "string — the spoken line(s) for this step: movement, pose names, alignment, timing as needed",
-      "sensory_cue": "string or null — breath / body awareness; use null when not needed for this step"
+      "instruction": "string — brief spoken line(s) for this step (Naturally mention posture name followed by movement and alignment cues as needed.) Sound more fresh like start of a new phase or posture.",
+      "sensory_cue": "string or null — brief breath or body awareness when it adds value; use null when not needed. Sound like continuation of the same phase"
     }}
   ]
 }}
 
 * `steps` is an **array** of objects. Each object has **exactly** these two keys: `instruction`, `sensory_cue`.
-* You **MUST** include exactly **{expected_step_count}** element(s) in `steps`, in playback order. Each element becomes one audio segment."""
+* **`instruction` and `sensory_cue` (when not null) should be brief** but still complete the necessary guidance needed. Make it sound natural and human and imperfect using natural discourse markers sometimes ("alright", "from here", "gently", "slowly", "come on").
+* You **MUST** include exactly **{expected_step_count}** element(s) in `steps`, in playback order. Each step’s `instruction` and `sensory_cue` are **separate** spoken clips: keep each one self-contained and easy to hear in sequence."""
 
 
 def _section_session_state(ctx: TransitionRequestContext) -> str:

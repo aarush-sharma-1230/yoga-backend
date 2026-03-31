@@ -4,12 +4,12 @@ from pydantic import BaseModel, Field
 
 
 class TransitionGuidanceStep(BaseModel):
-    """One spoken beat: only `instruction` and `sensory_cue` (no legacy transition_movement fields)."""
+    """One spoken beat: only `instruction` and `sensory_cue`"""
 
-    instruction: str = Field(description="Spoken audio script for this segment (movement, pose name, alignment).")
+    instruction: str = Field(description="Naturally spoken line(s) for this step under 50 words")
     sensory_cue: str | None = Field(
         default=None,
-        description="Breath or body awareness; null when not needed. For a transitional-hub run with one step, cue the final target hold only.",
+        description="Breath or body awareness; null when not needed under 25 words",
     )
 
 

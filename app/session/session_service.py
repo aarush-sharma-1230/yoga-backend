@@ -44,8 +44,10 @@ class SessionService:
 
     async def get_session_info(self, session_id: str) -> dict:
         """
-        Return the session document. Transition guidance uses `sequence.postures[i].guidance_steps` (arrays).
-        Intro and ending are top-level single objects `{text, message_id, audio_path}` each—no `steps`.
+        Return the session document. `sequence.postures[i].guidance_steps` entries hold `instruction` /
+        `sensory_cue` plus optional `instruction_message_id` / `instruction_audio_path` and
+        `sensory_message_id` / `sensory_audio_path` when each clip exists.
+        Intro and ending are top-level `{text, message_id, audio_path}` each.
         Legacy `instructions` is omitted if present.
         """
         session = await self.get_session_by_id(session_id)
@@ -82,17 +84,11 @@ class SessionService:
                 ids.add(p["client_id"])
         return list(ids)
 
-    @staticmethod
-    def _spoken_text_from_guidance_step(step: dict) -> str:
-        """Compose TTS text from a transition guidance step."""
-        inst = (step.get("instruction") or "").strip()
-        sensory = (step.get("sensory_cue") or "").strip()
-        if sensory:
-            return f"{inst} {sensory}".strip()
-        return inst
-
     def _find_instruction(self, session: dict, message_id: str) -> dict:
-        """Return a dict with `text` for TTS and enough context to persist audio_path after generation."""
+        """
+        Return payload for TTS or streaming: `text` plus persistence keys for intro/ending/guidance clips.
+        Guidance steps expose separate instruction and sensory message ids.
+        """
         intro = session.get("intro")
         if isinstance(intro, dict) and intro.get("message_id") == message_id:
             return {"kind": "intro", **intro}
@@ -102,10 +98,22 @@ class SessionService:
 
         for pi, p in enumerate((session.get("sequence") or {}).get("postures") or []):
             for si, step in enumerate(p.get("guidance_steps") or []):
-                if step.get("message_id") == message_id:
-                    text = self._spoken_text_from_guidance_step(step)
+                if step.get("instruction_message_id") == message_id:
+                    text = (step.get("instruction") or "").strip()
                     return {
                         "kind": "guidance_step",
+                        "guidance_clip": "instruction",
+                        "text": text,
+                        "posture_index": pi,
+                        "step_index": si,
+                        "message_id": message_id,
+                    }
+                if step.get("sensory_message_id") == message_id:
+                    sc = step.get("sensory_cue")
+                    text = (sc or "").strip() if sc is not None else ""
+                    return {
+                        "kind": "guidance_step",
+                        "guidance_clip": "sensory",
                         "text": text,
                         "posture_index": pi,
                         "step_index": si,
@@ -171,9 +179,16 @@ class SessionService:
         if payload.get("kind") == "guidance_step":
             pi = payload["posture_index"]
             si = payload["step_index"]
+            clip = payload.get("guidance_clip")
+            if clip == "instruction":
+                path_key = "instruction_audio_path"
+            elif clip == "sensory":
+                path_key = "sensory_audio_path"
+            else:
+                raise RuntimeError("guidance_step missing guidance_clip for audio path update")
             await self.db["session"].update_one(
                 {"_id": ObjectId(session_id)},
-                {"$set": {f"sequence.postures.{pi}.guidance_steps.{si}.audio_path": str(file_path)}},
+                {"$set": {f"sequence.postures.{pi}.guidance_steps.{si}.{path_key}": str(file_path)}},
             )
             return
         if payload.get("kind") == "intro":
@@ -259,18 +274,33 @@ class SessionService:
 
             guidance_steps = []
             for i, step in enumerate(raw_steps):
-                message_id = f"{base_message_id}_step{i}"
-                text = self._spoken_text_from_guidance_step(step)
-                audio_chunks = self.yoga_coordinator.generate_audio_from_text(text)
-                audio_path = self._save_audio_to_file(session_id, message_id, audio_chunks)
-                guidance_steps.append(
-                    {
-                        "instruction": step.get("instruction"),
-                        "sensory_cue": step.get("sensory_cue"),
-                        "message_id": message_id,
-                        "audio_path": audio_path,
-                    }
-                )
+                row: dict = {
+                    "instruction": step.get("instruction"),
+                    "sensory_cue": step.get("sensory_cue"),
+                }
+                inst_text = (step.get("instruction") or "").strip()
+                sensory_raw = step.get("sensory_cue")
+                sensory_text = (sensory_raw or "").strip() if sensory_raw is not None else ""
+
+                if inst_text:
+                    iid = f"{base_message_id}_step{i}_instruction"
+                    ichunks = self.yoga_coordinator.generate_audio_from_text(inst_text)
+                    row["instruction_message_id"] = iid
+                    row["instruction_audio_path"] = self._save_audio_to_file(session_id, iid, ichunks)
+                else:
+                    row["instruction_message_id"] = None
+                    row["instruction_audio_path"] = None
+
+                if sensory_text:
+                    sid = f"{base_message_id}_step{i}_sensory"
+                    schunks = self.yoga_coordinator.generate_audio_from_text(sensory_text)
+                    row["sensory_message_id"] = sid
+                    row["sensory_audio_path"] = self._save_audio_to_file(session_id, sid, schunks)
+                else:
+                    row["sensory_message_id"] = None
+                    row["sensory_audio_path"] = None
+
+                guidance_steps.append(row)
 
             trace(f"Saving transition guidance: idx={idx}", session_id=session_id)
             await self.db["session"].update_one(
