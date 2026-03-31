@@ -5,7 +5,7 @@ from app.schemas.custom_sequence import (
     POSTURE_INTENT_STATIC_HOLD,
     POSTURE_INTENT_VINYASA_LOOP,
 )
-from app.prompts.v4.transition_request import TransitionRequestContext
+from app.session.transition_request import TransitionRequestContext
 
 
 def _section_core_task() -> str:
