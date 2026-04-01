@@ -77,9 +77,9 @@ class YogaCoordinator:
             "steps": [s.model_dump() for s in steps],
         }
 
-    def generate_audio_from_text(self, text: str):
-        """Generate audio chunks from text via TTS."""
-        for chunk in self.llm_client.generate_audio(text=text):
+    def generate_audio_from_text(self, text: str, *, instructions: str | None = None):
+        """Generate audio chunks from text via TTS, optionally overriding steering instructions."""
+        for chunk in self.llm_client.generate_audio(text=text, instructions=instructions):
             yield chunk
 
     def _extract_text(self, response: Dict[str, Any]) -> str:

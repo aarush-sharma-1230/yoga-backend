@@ -18,6 +18,12 @@ DEFAULT_YOGA_TTS_INSTRUCTIONS = (
     "Fit short movement and breath cues."
 )
 
+ENERGETIC_YOGA_TTS_INSTRUCTIONS = (
+    "Speak as a warm, motivating yoga teacher leading a live class. Use a slightly brighter, more upbeat energy than "
+    "usual—still grounded and clear, never shouty or sales-like. Crisp cueing, confident pacing with natural pauses, "
+    "encouraging tone suited to building movement and focus. Fit short movement and breath cues."
+)
+
 DEFAULT_TTS_VOICE = "sage"
 
 
@@ -119,7 +125,9 @@ class OpenAIClient:
         if self.is_audio_enabled:
             speech_model = model or self.audio_model
             speech_voice = voice if voice is not None else self.tts_voice
-            speech_instructions = instructions if instructions is not None else DEFAULT_YOGA_TTS_INSTRUCTIONS
+            speech_instructions = (
+                DEFAULT_YOGA_TTS_INSTRUCTIONS if instructions is None else instructions
+            )
             with self._client.audio.speech.with_streaming_response.create(
                 model=speech_model,
                 voice=speech_voice,

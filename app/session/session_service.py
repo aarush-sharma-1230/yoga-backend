@@ -5,6 +5,10 @@ from motor.motor_asyncio import AsyncIOMotorDatabase
 from bson import ObjectId
 from datetime import datetime
 
+from app.llms.openai_client import (
+    DEFAULT_YOGA_TTS_INSTRUCTIONS,
+    ENERGETIC_YOGA_TTS_INSTRUCTIONS,
+)
 from app.prompts.active import (
     get_ending_prompt,
     get_introduction_prompt,
@@ -63,26 +67,53 @@ class SessionService:
         return {"text": text, "message_id": message_id, "audio_path": str(audio_path)}
 
     @staticmethod
+    def _client_ids_from_posture_row(row: dict) -> list[str]:
+        """Collect client_ids from a single stored posture row."""
+        ids: set[str] = set()
+        intent = row.get("posture_intent")
+        if intent == POSTURE_INTENT_INTERVAL_SET:
+            wp = row.get("work_posture") or {}
+            rp = row.get("recovery_posture") or {}
+            if wp.get("client_id"):
+                ids.add(wp["client_id"])
+            if rp.get("client_id"):
+                ids.add(rp["client_id"])
+        elif intent == POSTURE_INTENT_VINYASA_LOOP:
+            for slot in row.get("cycle_postures") or []:
+                cid = slot.get("client_id")
+                if cid:
+                    ids.add(cid)
+        elif row.get("client_id"):
+            ids.add(row["client_id"])
+        return list(ids)
+
+    @staticmethod
     def _client_ids_from_stored_postures(postures: list) -> list[str]:
         """Collect client_ids from sequence postures (static, interval_set, vinyasa_loop)."""
         ids: set[str] = set()
         for p in postures:
-            intent = p.get("posture_intent")
-            if intent == POSTURE_INTENT_INTERVAL_SET:
-                wp = p.get("work_posture") or {}
-                rp = p.get("recovery_posture") or {}
-                if wp.get("client_id"):
-                    ids.add(wp["client_id"])
-                if rp.get("client_id"):
-                    ids.add(rp["client_id"])
-            elif intent == POSTURE_INTENT_VINYASA_LOOP:
-                for slot in p.get("cycle_postures") or []:
-                    cid = slot.get("client_id")
-                    if cid:
-                        ids.add(cid)
-            elif p.get("client_id"):
-                ids.add(p["client_id"])
+            ids.update(SessionService._client_ids_from_posture_row(p))
         return list(ids)
+
+    @staticmethod
+    def _transition_tts_instructions_for_target(target_row: dict, posture_docs: dict[str, dict]) -> str:
+        """
+        Choose energetic vs calm TTS steering for a transition into `target_row`, using posture intensity docs.
+        """
+        max_exertion = 0
+        max_balance = 0
+        for cid in SessionService._client_ids_from_posture_row(target_row):
+            doc = posture_docs.get(cid) or {}
+            profile = doc.get("intensity_profile") or {}
+            ex = profile.get("overall_exertion")
+            bal = profile.get("balance_requirement")
+            if isinstance(ex, (int, float)):
+                max_exertion = max(max_exertion, int(ex))
+            if isinstance(bal, (int, float)):
+                max_balance = max(max_balance, int(bal))
+        if max_exertion >= 4 or max_balance >= 4:
+            return ENERGETIC_YOGA_TTS_INSTRUCTIONS
+        return DEFAULT_YOGA_TTS_INSTRUCTIONS
 
     def _find_instruction(self, session: dict, message_id: str) -> dict:
         """
@@ -128,26 +159,42 @@ class SessionService:
             while chunk := f.read(chunk_size):
                 yield chunk
 
-    def _generate_audio_and_enqueue(self, text: str, file_path: Path, queue: asyncio.Queue, sentinel: object) -> None:
+    def _generate_audio_and_enqueue(
+        self,
+        text: str,
+        file_path: Path,
+        queue: asyncio.Queue,
+        sentinel: object,
+        instructions: str | None = None,
+    ) -> None:
         """
         Sync worker or Producer: generate audio from text, write to file, enqueue each chunk.
         Runs in a thread to avoid blocking the event loop.
         """
         with open(file_path, "wb") as audio_file:
-            for chunk in self.yoga_coordinator.generate_audio_from_text(text):
+            for chunk in self.yoga_coordinator.generate_audio_from_text(text, instructions=instructions):
                 audio_file.write(chunk)
                 queue.put_nowait(chunk)
 
         queue.put_nowait(sentinel)
 
-    async def _stream_generated_audio(self, session_id: str, message_id: str, text: str, file_path: Path):
+    async def _stream_generated_audio(
+        self,
+        session_id: str,
+        message_id: str,
+        text: str,
+        file_path: Path,
+        instructions: str | None = None,
+    ):
         """
         Async generator or Consumer: run TTS in a thread, yield chunks as they are produced,
         then update the session document with the saved path.
         """
         queue = asyncio.Queue()
         sentinel = object()
-        task = asyncio.create_task(asyncio.to_thread(self._generate_audio_and_enqueue, text, file_path, queue, sentinel))
+        task = asyncio.create_task(
+            asyncio.to_thread(self._generate_audio_and_enqueue, text, file_path, queue, sentinel, instructions)
+        )
 
         while True:
             chunk = await queue.get()
@@ -158,7 +205,35 @@ class SessionService:
         await task
         await self._persist_instruction_audio_path(session_id, message_id, file_path)
 
-    async def _stream_audio_when_missing(self, session_id: str, message_id: str, target: dict, audio_path: Path):
+    async def _on_demand_tts_instructions(
+        self, session_id: str, target: dict, session: dict | None = None
+    ) -> str | None:
+        """Resolve OpenAI Speech steering when regenerating a missing clip (intro energetic; instruction from row)."""
+        kind = target.get("kind")
+        if kind == "intro":
+            return ENERGETIC_YOGA_TTS_INSTRUCTIONS
+        if kind == "ending":
+            return None
+        if kind != "guidance_step":
+            return None
+        if target.get("guidance_clip") != "instruction":
+            return None
+        sess = session if session is not None else await self.get_session_by_id(session_id)
+        pi = target["posture_index"]
+        rows = (sess.get("sequence") or {}).get("postures") or []
+        if pi < 0 or pi >= len(rows):
+            return None
+        row = rows[pi]
+        client_ids = self._client_ids_from_posture_row(row)
+        posture_docs = {}
+        if client_ids:
+            async for doc in self.db["postures"].find({"client_id": {"$in": client_ids}}):
+                posture_docs[doc["client_id"]] = doc
+        return self._transition_tts_instructions_for_target(row, posture_docs)
+
+    async def _stream_audio_when_missing(
+        self, session_id: str, message_id: str, target: dict, audio_path: Path, session: dict | None = None
+    ):
         """
         Async generator for the case when the audio file does not exist yet.
         Validates target has text, creates directory, generates and streams audio.
@@ -169,7 +244,10 @@ class SessionService:
             raise RuntimeError("Instruction has no text to generate audio from")
 
         audio_path.parent.mkdir(parents=True, exist_ok=True)
-        async for chunk in self._stream_generated_audio(session_id, message_id, text, audio_path):
+        tts_instructions = await self._on_demand_tts_instructions(session_id, target, session)
+        async for chunk in self._stream_generated_audio(
+            session_id, message_id, text, audio_path, instructions=tts_instructions
+        ):
             yield chunk
 
     async def _persist_instruction_audio_path(self, session_id: str, message_id: str, file_path: Path) -> None:
@@ -221,7 +299,9 @@ class SessionService:
         session = await self.get_session_by_id(session_id)
         target = self._find_instruction(session, message_id)
 
-        async for chunk in self._stream_audio_when_missing(session_id, message_id, target, audio_path):
+        async for chunk in self._stream_audio_when_missing(
+            session_id, message_id, target, audio_path, session
+        ):
             yield chunk
 
     def _save_audio_to_file(self, session_id: str, message_id: str, audio_chunks) -> str:
@@ -242,7 +322,9 @@ class SessionService:
         response = await self.yoga_coordinator.generate_intro_or_ending(prompt=prompt, user_id=user_id)
         text = response["text"]
         message_id = response["message_id"]
-        audio_chunks = self.yoga_coordinator.generate_audio_from_text(text)
+        audio_chunks = self.yoga_coordinator.generate_audio_from_text(
+            text, instructions=ENERGETIC_YOGA_TTS_INSTRUCTIONS
+        )
         audio_path = self._save_audio_to_file(session_id, message_id, audio_chunks)
         doc = self._bookend_spoken_document(text, message_id, audio_path)
 
@@ -271,6 +353,8 @@ class SessionService:
             response = await self.yoga_coordinator.generate_transition_guidance(req, user_id=user_id)
             base_message_id = response["message_id"]
             raw_steps = response["steps"]
+            target_row = postures[idx]
+            transition_instructions = self._transition_tts_instructions_for_target(target_row, posture_docs)
 
             guidance_steps = []
             for i, step in enumerate(raw_steps):
@@ -284,7 +368,9 @@ class SessionService:
 
                 if inst_text:
                     iid = f"{base_message_id}_step{i}_instruction"
-                    ichunks = self.yoga_coordinator.generate_audio_from_text(inst_text)
+                    ichunks = self.yoga_coordinator.generate_audio_from_text(
+                        inst_text, instructions=transition_instructions
+                    )
                     row["instruction_message_id"] = iid
                     row["instruction_audio_path"] = self._save_audio_to_file(session_id, iid, ichunks)
                 else:
