@@ -53,8 +53,8 @@ You must consider a "posture_intent" to every posture in the sequence. By defaul
 ### D — VINYASA_LOOP (Rhythmic Repetition)
 * **Criteria:** Use for postures traditionally done as a continuous cycle linked to breath.
 * **Application:** Cat-Cow, Sun Salutation cycles, or Low Lunge to Half-Splits.
-* **Requirements:** * List 2+ postures in `cycle_postures`.
-    * Set `rounds` (e.g., 5 cycles).
+* **Requirements:** * List 2 or maximum 3 postures in `cycle_postures`.
+    * Set `rounds` (e.g., 3 cycles).
     * Omit standard `hold_time_seconds` as the pace is breath-based.
 
 ## 4. REASONING PROTOCOL (VINYASA KRAMA)
@@ -104,5 +104,5 @@ Return JSON with "reasoning", "name", and "postures" (a flat array in flow order
 
 * **interval_set** — Repeated work/rest rounds: "posture_intent": "interval_set", "rounds" (integer >= 1), "hold_time_seconds" (integer > 0, duration of each work interval), "rest_time_seconds" (integer >= 0, recovery between rounds), "work_posture" and "recovery_posture". Each of work_posture and recovery_posture is an object with **only** "posture_id" and "recommended_modification" (no posture_intent on these nested objects).
 
-* **vinyasa_loop** — Repeat a short ordered cycle: "posture_intent": "vinyasa_loop", "rounds" (integer >= 1), "cycle_postures" (array of at least 2 objects, each **only** "posture_id" and "recommended_modification"). Top-level "recommended_modification" must be "" (empty string). No hold_time_seconds on the parent row.
+* **vinyasa_loop** — Repeat a short ordered cycle: "posture_intent": "vinyasa_loop", "rounds" (integer >= 1), "cycle_postures" (array of 2 or maximum 3 objects, each **only** "posture_id" and "recommended_modification"). Top-level "recommended_modification" must be "" (empty string). No hold_time_seconds on the parent row.
 """
