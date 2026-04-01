@@ -1,6 +1,7 @@
 from datetime import datetime
 
 from bson import ObjectId
+from openai import RateLimitError
 from motor.motor_asyncio import AsyncIOMotorDatabase
 
 from app.agents.sequence_composer import SequenceComposer
@@ -13,6 +14,13 @@ from app.schemas.custom_sequence import (
 )
 
 DEFAULT_MANUAL_HOLD_SECONDS = 60
+
+
+def _norm_cid(raw: str | None) -> str:
+    """Normalize catalogue / DB client_id for consistent dict lookups."""
+    if raw is None:
+        return ""
+    return str(raw).strip()
 
 
 class SequenceService:
@@ -42,7 +50,7 @@ class SequenceService:
             raise ValueError(f"Sequence not found: {sequence_id}")
         return {"status": True, "result": sequence}
 
-    def canonical_posture_row(posture_doc: dict, *, posture_intent: str, recommended_modification: str) -> dict:
+    def canonical_posture_row(self, posture_doc: dict, *, posture_intent: str, recommended_modification: str) -> dict:
         """
         Map a posture document from the database to the uniform six-field shape.
 
@@ -69,16 +77,16 @@ class SequenceService:
         for item in output.postures:
             if item.posture_intent == POSTURE_INTENT_INTERVAL_SET:
                 assert item.work_posture is not None and item.recovery_posture is not None
-                ids.add(item.work_posture.posture_id)
-                ids.add(item.recovery_posture.posture_id)
+                ids.add(_norm_cid(item.work_posture.posture_id))
+                ids.add(_norm_cid(item.recovery_posture.posture_id))
             elif item.posture_intent == POSTURE_INTENT_VINYASA_LOOP:
                 assert item.cycle_postures is not None
                 for slot in item.cycle_postures:
-                    ids.add(slot.posture_id)
+                    ids.add(_norm_cid(slot.posture_id))
             else:
                 assert item.posture_id is not None
-                ids.add(item.posture_id)
-        return ids
+                ids.add(_norm_cid(item.posture_id))
+        return {i for i in ids if i}
 
     def _stored_posture_from_llm_item(
         self, item: SequencePostureItem, db_postures: dict[str, dict]
@@ -86,8 +94,8 @@ class SequenceService:
         """Build one stored sequence row from a validated LLM posture item."""
         if item.posture_intent == POSTURE_INTENT_INTERVAL_SET:
             assert item.work_posture is not None and item.recovery_posture is not None
-            wdoc = db_postures.get(item.work_posture.posture_id)
-            rdoc = db_postures.get(item.recovery_posture.posture_id)
+            wdoc = db_postures.get(_norm_cid(item.work_posture.posture_id))
+            rdoc = db_postures.get(_norm_cid(item.recovery_posture.posture_id))
             if not wdoc or not rdoc:
                 return None
             return {
@@ -111,7 +119,7 @@ class SequenceService:
             assert item.cycle_postures is not None and item.rounds is not None
             rows = []
             for slot in item.cycle_postures:
-                doc = db_postures.get(slot.posture_id)
+                doc = db_postures.get(_norm_cid(slot.posture_id))
                 if not doc:
                     return None
                 rows.append(
@@ -128,7 +136,7 @@ class SequenceService:
             }
 
         assert item.posture_id is not None
-        doc = db_postures.get(item.posture_id)
+        doc = db_postures.get(_norm_cid(item.posture_id))
         if not doc:
             return None
         row = self.canonical_posture_row(
@@ -160,19 +168,28 @@ class SequenceService:
         if not theme:
             raise ValueError(f"Theme not found: {practice_theme_id}")
 
-        output: CustomSequenceOutput = await self.sequence_composer.compose_sequence(
-            response_format=CustomSequenceOutput,
-            user_id=user_id,
-            duration_minutes=duration_minutes,
-            theme=theme,
-            user_notes=user_notes,
-        )
+        try:
+            output: CustomSequenceOutput = await self.sequence_composer.compose_sequence(
+                response_format=CustomSequenceOutput,
+                user_id=user_id,
+                duration_minutes=duration_minutes,
+                theme=theme,
+                user_notes=user_notes,
+            )
+        except RateLimitError as e:
+            raise RuntimeError(
+                "OpenAI rate limit or quota exceeded (check billing and plan at "
+                "https://platform.openai.com/account/billing). Sequence generation was not completed."
+            ) from e
 
         all_posture_ids = list(self._client_ids_from_llm_output(output))
 
         db_postures = {}
         async for doc in self.db["postures"].find({"client_id": {"$in": all_posture_ids}}):
-            db_postures[doc["client_id"]] = doc
+            cid = doc.get("client_id")
+            if cid is None:
+                continue
+            db_postures[_norm_cid(str(cid))] = doc
 
         postures = []
         for item in output.postures:

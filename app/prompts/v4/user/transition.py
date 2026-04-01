@@ -14,6 +14,16 @@ You are writing a **spoken audio script** for a yoga session. The practitioner w
 When **transitional hubs** are listed before `<target_block>`, you must script movement **through them in order** (transition one, two, …) and then arrive at the **final** posture or block described in `<target_block>`.
 """
 
+def _section_speech_cadence() -> str:
+    return """
+<VOICE_CADENCE_GUIDE>
+* **Micro-Pause (`...`):** Insert for 1-second breaths (e.g., "Inhale... reaching up...")
+* **Phase Break (`\n\n`):** Insert between movement and alignment (e.g., "Step forward. \n\n Keep the knee over the ankle.")
+* **Softeners:** Use "just," "gently," and "maybe" to reduce "command fatigue."
+* **Discourse Markers:** Use "alright," "now," and "there we go" to sound human.
+</VOICE_CADENCE_GUIDE>
+"""
+
 
 def _section_output_schema(expected_step_count: int) -> str:
     """Describe the exact JSON shape and step count."""
@@ -118,19 +128,43 @@ def _section_interval_resources(ctx: TransitionRequestContext) -> str:
 
 def _section_interval_objective(ctx: TransitionRequestContext) -> str:
     rounds = ctx.expected_step_count // 2 if ctx.expected_step_count else 0
-    hub_first = ""
+    
+    # Text for handling the Hub entry
+    hub_logic = ""
     if ctx.preceding_transitional_hub_names:
-        hub_first = """
-When transitional hubs are listed above, the **first** object in `steps` must do **both** in one `instruction`: (1) guide through every hub in order into `<target_block>`, and (2) immediately begin **round 1, WORK** as defined on the first line of `<TIMED_FLOW>` (same step — one audio beat). Its `sensory_cue` may be null or brief.
-
-The **remaining** `steps` follow `<TIMED_FLOW>` in order for the rest of the work/recovery pairs (step 2 onward in the timed flow corresponds to `steps[1]`, etc.). Do **not** repeat the hub travel after `steps[0]`.
+        hub_logic = """
+### HUB TRAVEL & ROUND 1 ENTRY
+When transitional hubs are listed above, the **first** object in `steps` must:
+1. **The Lead-in:** Guide the user through every hub in order (e.g., "From Child's Pose, ripple through Table Top...") into the `<target_block>`.
+2. **The Work Entry:** Immediately begin **Round 1, WORK** in the same audio beat.
+3. **The Script Style:** Follow the 'Foundation' style below (Anatomical Setup). 
+Do **not** repeat the hub travel after `steps[0]`.
 """
-    return f"""## OBJECTIVE (INTERVAL SET)
-There are {rounds} work/recovery round(s). The session expects **{ctx.expected_step_count}** objects in `steps`.{hub_first}
-If there are **no** transitional hubs, each step matches `<TIMED_FLOW>` in order: for each round, **WORK** then **RECOVERY**.
 
-Each object's `instruction` is the spoken script for that step (posture name and timing); `sensory_cue` may be null or a short awareness line when it helps (except as noted above for the first step when hubs are present)."""
+    return f"""
+## OBJECTIVE (INTERVAL SET EVOLUTION)
+There are {rounds} work/recovery round(s). The session expects **{ctx.expected_step_count}** objects in `steps`.
 
+{hub_logic}
+
+### INSTRUCTIONAL EVOLUTION RULES
+You must evolve the narrative depth across the steps. Do not repeat the same technical setup in every round.
+
+1. **ROUND 1 (The Foundation):** Use for `steps[0]`. Focus on **Alignment and Safety**. Use a 'Lead-in + Anatomical Setup' structure. Ensure the practitioner is stable in the shape.
+   * *Example:* "Alright... finding your Boat Pose... just lifting the chest and keeping the spine long... maybe shins are parallel to the floor."
+
+2. **ROUND 2 (The Sensory Engagement):** Focus on **Internal Effort**. Describe where they should feel the work and how to engage the breath to support the intensity.
+   * *Example:* "Round two... noticing that fire in the core now... \n\n Can you lift the heart just an inch higher... as you keep that steady breath flowing?"
+
+3. **ROUND 3+ (The Endurance & Focus):** Focus on **Psychological Staying Power**. Instructions should be sparse, using markers to help them stay present through the "burn."
+   * *Example:* "Final push here... staying with that heat... \n\n Just finding stillness in the effort... you've got this... three more breaths."
+
+4. **RECOVERY STEPS:** For every recovery step, use a soft discourse marker to signal the release (e.g., "And just... let that go," "Finding your rest here...").
+
+### FORMATTING REQUIREMENT
+* **Phonetic Pacing:** Use `...` for 1-second breaths and `\n\n` to separate movement from detail.
+* **Steps Alignment:** If no hubs exist, `steps` matches `<TIMED_FLOW>` in order (Work then Recovery). Each `instruction` is the spoken script; `sensory_cue` is for internal awareness."
+"""
 
 def _section_vinyasa_resources(ctx: TransitionRequestContext) -> str:
     parts = [_section_preceding_transitional_hubs(ctx)]
@@ -143,18 +177,39 @@ def _section_vinyasa_resources(ctx: TransitionRequestContext) -> str:
 
 
 def _section_vinyasa_objective(ctx: TransitionRequestContext) -> str:
-    hub_first = ""
+    # Logic for handling the movement from Hubs into the first pose of the loop
+    hub_logic = ""
     if ctx.preceding_transitional_hub_names:
-        hub_first = """
-When transitional hubs are listed above, the **first** object in `steps` must do **both** in one `instruction`: (1) guide through every hub in order into `<target_block>`, and (2) immediately perform the **first** posture named on line 1 of `<TIMED_FLOW>` (start of round 1 of the vinyasa cycle — one audio beat). Its `sensory_cue` may be null or brief.
-
-The **remaining** `steps` follow `<TIMED_FLOW>` in order (line 2 → `steps[1]`, etc.). Do **not** repeat the hub travel after `steps[0]`.
+        hub_logic = """
+### HUB TRAVEL & ROUND 1 ENTRY
+When transitional hubs are listed above, the **first** object in `steps` must:
+1. **The Lead-in:** Guide through every hub in order (e.g., "From Downward Dog, rippling through Plank...") into the `<target_block>`.
+2. **The Flow Entry:** Immediately perform the **first** posture named on Line 1 of `<TIMED_FLOW>` (this is the start of Round 1 — one audio beat).
+3. **The Script Style:** Use the 'Foundation' style below (Anatomical Detail). 
+Do **not** repeat the hub travel after `steps[0]`.
 """
-    return f"""## OBJECTIVE (VINYASA LOOP)
-Produce exactly **{ctx.expected_step_count}** objects in `steps`, aligned with `<TIMED_FLOW>` overall.{hub_first}
-If there are **no** transitional hubs, each step is one line of `<TIMED_FLOW>` in order.
 
-Each `instruction` covers movement and alignment for that step; `sensory_cue` is null or a brief cue when useful."""
+    return f"""
+## OBJECTIVE (VINYASA LOOP EVOLUTION)
+Produce exactly **{ctx.expected_step_count}** objects in `steps`, aligned with `<TIMED_FLOW>` overall.
+
+{hub_logic}
+
+### INSTRUCTIONAL EVOLUTION RULES
+You must differentiate the "Instructional Depth" between the initial setup and the repetitive flow.
+
+1. **ROUND 1 (The Foundation):** Provide full anatomical guidance for every pose in this first cycle. Use a 'Lead-in + Action + Alignment Detail' structure. Focus on where the limbs go and how to stabilize the joints.
+   * *Example:* "Alright... as you inhale... reaching the arms up for a High Lunge... just making sure that front knee stays right over the ankle."
+
+2. **SUBSEQUENT ROUNDS (The Rhythm):** Once the first cycle is complete, transition to **'Breath-First' coaching**. Strip away the alignment details. Focus purely on the sync between the movement and the inhale/exhale. Keep these punchy and rhythmic.
+   * *Example:* "Inhale... reaching up. \n\n Exhale... sinking deep."
+
+3. **THE LOOP RULE (Phonetic Pacing):** Every cycle—even the short rhythmic ones—must still use `...` for 1-second breaths and `\n\n` for phase breaks to maintain the human texture.
+
+### FORMATTING REQUIREMENT
+If there are **no** transitional hubs, each step matches `<TIMED_FLOW>` in order. Each `instruction` is the spoken script; `sensory_cue` may be null or a brief awareness line during the 'Foundation' round.
+"""
+
 
 
 def get_transition_prompt(ctx: TransitionRequestContext) -> str:
@@ -179,5 +234,6 @@ def get_transition_prompt(ctx: TransitionRequestContext) -> str:
         parts.append(_section_static_resources(ctx))
         parts.append(_section_static_objective_transition(ctx))
 
+    parts.append(_section_speech_cadence())
     parts.append(_section_output_schema(ctx.expected_step_count))
     return "\n\n".join(parts)
