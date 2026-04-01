@@ -119,7 +119,42 @@ def _format_vinyasa_outline(p: dict) -> str:
     return "\n".join(lines) if lines else ""
 
 
+def _interval_modifications_hint(p: dict) -> str:
+    """One or two subtle sentences from work/recovery nested recommended_modification fields."""
+    w = p.get("work_posture") or {}
+    r = p.get("recovery_posture") or {}
+    wm = (w.get("recommended_modification") or "").strip()
+    rm = (r.get("recommended_modification") or "").strip()
+    if not wm and not rm:
+        return ""
+    wn = w.get("name", "work")
+    rn = r.get("name", "recovery")
+    if wm and rm:
+        return (
+            f"Work ({wn}) often leans on: {wm}. Recovery ({rn}) can gently reference: {rm} "
+            "when it helps ease—keep both light."
+        )
+    if wm:
+        return f"Work ({wn}) may need: {wm}. Touch it briefly during work beats when alignment calls for it."
+    return f"Recovery ({rn}) may suit: {rm}. A short nod on recovery steps is enough."
 
+
+def _vinyasa_modifications_hint(p: dict) -> str:
+    """Brief note summarizing per-slot recommended_modification on the cycle."""
+    fragments: list[str] = []
+    for slot in p.get("cycle_postures") or []:
+        m = (slot.get("recommended_modification") or "").strip()
+        if m:
+            fragments.append(f"{slot.get('name', '?')}: {m}")
+    if not fragments:
+        return ""
+    core = "; ".join(fragments[:4])
+    if len(fragments) > 4:
+        core += f"; … (+{len(fragments) - 4} more)"
+    return (
+        f"This loop includes optional shape-specific cues ({core}). "
+        "Weave them in naturally across rounds; no need to repeat every tweak each cycle."
+    )
 
 
 @dataclass
@@ -137,6 +172,7 @@ class TransitionRequestContext:
     sensory_cues_formatted: str
     timed_flow_outline: str
     expected_step_count: int
+    modifications_hint: str = ""
 
 
 def build_transition_request(
@@ -166,17 +202,20 @@ def build_transition_request(
     timed_flow_outline = ""
     expected_step_count = 0
 
+    modifications_hint = ""
     if intent == POSTURE_INTENT_STATIC_HOLD:
         expected_step_count = 1
     elif intent == POSTURE_INTENT_INTERVAL_SET:
         timed_flow_outline = _format_interval_outline(to_posture)
         r = int(to_posture.get("rounds") or 0)
         expected_step_count = 2 * r
+        modifications_hint = _interval_modifications_hint(to_posture)
     elif intent == POSTURE_INTENT_VINYASA_LOOP:
         timed_flow_outline = _format_vinyasa_outline(to_posture)
         r = int(to_posture.get("rounds") or 0)
         cyc = to_posture.get("cycle_postures") or []
         expected_step_count = r * len(cyc)
+        modifications_hint = _vinyasa_modifications_hint(to_posture)
 
     to_posture_name = _row_display_name(to_posture) or to_posture.get("name", "?")
     recommended_modification = to_posture.get("recommended_modification") or "None"
@@ -199,4 +238,5 @@ def build_transition_request(
         sensory_cues_formatted=sensory_cues_formatted,
         timed_flow_outline=timed_flow_outline,
         expected_step_count=expected_step_count,
+        modifications_hint=modifications_hint,
     )

@@ -70,6 +70,18 @@ def _section_session_state(ctx: TransitionRequestContext) -> str:
 </SESSION_STATE>"""
 
 
+def _optional_recommended_modifications_tag(ctx: TransitionRequestContext) -> str | None:
+    """Subtle prompt tag when interval/vinyasa rows carry nested recommended_modification values."""
+    hint = (ctx.modifications_hint or "").strip()
+    if not hint:
+        return None
+    return (
+        "<RECOMMENDED_MODIFICATIONS_HINT>\n"
+        f"{hint}\n"
+        "</RECOMMENDED_MODIFICATIONS_HINT>"
+    )
+
+
 def _section_preceding_transitional_hubs(ctx: TransitionRequestContext) -> str | None:
     names = ctx.preceding_transitional_hub_names
     if not names:
@@ -117,7 +129,7 @@ From the posture in `<current_posture>` (or the opening phase if not applicable)
 
 
 def _section_interval_resources(ctx: TransitionRequestContext) -> str:
-    parts = [_section_preceding_transitional_hubs(ctx)]
+    parts = [_section_preceding_transitional_hubs(ctx), _optional_recommended_modifications_tag(ctx)]
     parts.append(
         f"""<TIMED_FLOW>
 {ctx.timed_flow_outline}
@@ -150,7 +162,7 @@ There are {rounds} work/recovery round(s). The session expects **{ctx.expected_s
 ### INSTRUCTIONAL EVOLUTION RULES
 You must evolve the narrative depth across the steps. Do not repeat the same technical setup in every round.
 
-1. **ROUND 1 (The Foundation):** Use for `steps[0]`. Focus on **Alignment and Safety**. Use a 'Lead-in + Anatomical Setup' structure. Ensure the practitioner is stable in the shape.
+1. **ROUND 1 (The Foundation):** Use for `steps[0]`. Focus on **Alignment and Safety**. Use a 'Lead-in + Anatomical Setup' structure. Ensure the practitioner is stable in the shape. Weave `<recommended_modifications>` into the instruction.
    * *Example:* "Alright... finding your Boat Pose... just lifting the chest and keeping the spine long... maybe shins are parallel to the floor."
 
 2. **ROUND 2 (The Sensory Engagement):** Focus on **Internal Effort**. Describe where they should feel the work and how to engage the breath to support the intensity.
@@ -167,7 +179,7 @@ You must evolve the narrative depth across the steps. Do not repeat the same tec
 """
 
 def _section_vinyasa_resources(ctx: TransitionRequestContext) -> str:
-    parts = [_section_preceding_transitional_hubs(ctx)]
+    parts = [_section_preceding_transitional_hubs(ctx), _optional_recommended_modifications_tag(ctx)]
     parts.append(
         f"""<TIMED_FLOW>
 {ctx.timed_flow_outline}
@@ -198,7 +210,7 @@ Produce exactly **{ctx.expected_step_count}** objects in `steps`, aligned with `
 ### INSTRUCTIONAL EVOLUTION RULES
 You must differentiate the "Instructional Depth" between the initial setup and the repetitive flow.
 
-1. **ROUND 1 (The Foundation):** Provide full anatomical guidance for every pose in this first cycle. Use a 'Lead-in + Action + Alignment Detail' structure. Focus on where the limbs go and how to stabilize the joints.
+1. **ROUND 1 (The Foundation):** Provide full anatomical guidance for every pose in this first cycle. Use a 'Lead-in + Action + Alignment Detail' structure. Focus on where the limbs go and how to stabilize the joints. Weave `<recommended_modifications>` into alignment.
    * *Example:* "Alright... as you inhale... reaching the arms up for a High Lunge... just making sure that front knee stays right over the ankle."
 
 2. **SUBSEQUENT ROUNDS (The Rhythm):** Once the first cycle is complete, transition to **'Breath-First' coaching**. Strip away the alignment details. Focus purely on the sync between the movement and the inhale/exhale. Keep these punchy and rhythmic.
