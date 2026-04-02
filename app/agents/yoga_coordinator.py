@@ -14,7 +14,8 @@ from app.prompts.active import (
     get_transition_prompt,
     get_yoga_coordinator_developer_prompt,
 )
-from app.schemas.transition_guidance import TransitionGuidanceOutput
+from app.schemas.custom_sequence import POSTURE_INTENT_VINYASA_LOOP
+from app.schemas.transition_guidance import TransitionGuidanceOutput, VinyasaTransitionGuidanceOutput
 from app.session.transition_request import TransitionRequestContext
 
 class YogaCoordinator:
@@ -51,16 +52,21 @@ class YogaCoordinator:
         user_id: Optional[str] = None,
     ) -> Dict[str, Any]:
         """
-        Build v4 transition prompts, call the LLM with TransitionGuidanceOutput, validate step count,
-        and return serialized steps (no flattening to legacy instruction rows).
+        Build v4 transition prompts, call the LLM with a schema keyed by target intent, validate step count,
+        and return serialized steps (no flattening to legacy instruction rows). vinyasa_loop uses instruction-only steps.
         """
         prompt = get_transition_prompt(ctx)
         dp = await self._get_developer_prompt(user_id)
+        response_format = (
+            VinyasaTransitionGuidanceOutput
+            if ctx.target_posture_intent == POSTURE_INTENT_VINYASA_LOOP
+            else TransitionGuidanceOutput
+        )
         parsed, message_id = await asyncio.to_thread(
             self.llm_client.generate_with_schema_meta,
             prompt=prompt,
             developer_prompt=dp,
-            response_format=TransitionGuidanceOutput,
+            response_format=response_format,
             model=self.model,
             temperature=0.7,
         )

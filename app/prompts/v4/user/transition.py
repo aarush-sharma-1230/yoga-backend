@@ -12,6 +12,7 @@ def _section_core_task() -> str:
     return """## YOUR TASK
 You are writing a **spoken audio script** for a yoga session. The practitioner will hear your words as continuous guidance—clear, calm, and natural, as in a live class.
 When **transitional hubs** are listed before `<target_block>`, you must script movement **through them in order** (transition one, two, …) and then arrive at the **final** posture or block described in `<target_block>`.
+The **OUTPUT** section below defines the JSON shape: **static_hold** and **interval_set** use `instruction` plus `sensory_cue` per step where applicable; **vinyasa_loop** uses **`instruction` only** (one clip per step, no `sensory_cue` key).
 """
 
 def _section_speech_cadence() -> str:
@@ -42,6 +43,24 @@ Return **only** a valid JSON object of this form (no markdown fences, no text be
 * `steps` is an **array** of objects. Each object has **exactly** these two keys: `instruction`, `sensory_cue`.
 * **`instruction` and `sensory_cue` (when not null) should be brief** but still complete the necessary guidance needed. Make it sound natural and human and imperfect using natural discourse markers sometimes ("alright", "from here", "gently", "slowly", "come on").
 * You **MUST** include exactly **{expected_step_count}** element(s) in `steps`, in playback order. Each step’s `instruction` and `sensory_cue` are **separate** spoken clips: keep each one self-contained and easy to hear in sequence."""
+
+
+def _section_output_schema_vinyasa(expected_step_count: int) -> str:
+    """JSON shape for vinyasa_loop: instruction-only steps."""
+    return f"""## OUTPUT (JSON ONLY — ARRAY OF STEPS)
+Return **only** a valid JSON object of this form (no markdown fences, no text before or after):
+
+{{
+  "steps": [
+    {{
+      "instruction": "string — single spoken clip for this beat (see VINYASA OBJECTIVE for round 1 vs round 2+ depth)"
+    }}
+  ]
+}}
+
+* `steps` is an **array** of objects. Each object has **exactly one** key: `instruction`.
+* **One clip per step:** put breath or brief awareness **inside** `instruction` when useful;
+* You **MUST** include exactly **{expected_step_count}** element(s) in `steps`, in the same order as `<TIMED_FLOW>`."""
 
 
 def _section_session_state(ctx: TransitionRequestContext) -> str:
@@ -213,13 +232,13 @@ You must differentiate the "Instructional Depth" between the initial setup and t
 1. **ROUND 1 (The Foundation):** Provide full anatomical guidance for every pose in this first cycle. Use a 'Lead-in + Action + Alignment Detail' structure. Focus on where the limbs go and how to stabilize the joints. Weave `<recommended_modifications>` into alignment.
    * *Example:* "Alright... as you inhale... reaching the arms up for a High Lunge... just making sure that front knee stays right over the ankle."
 
-2. **SUBSEQUENT ROUNDS (The Rhythm):** Once the first cycle is complete, transition to **'Breath-First' coaching**. Strip away the alignment details. Focus purely on the sync between the movement and the inhale/exhale. Keep these punchy and rhythmic.
-   * *Example:* "Inhale... reaching up. \n\n Exhale... sinking deep."
+2. **SUBSEQUENT ROUNDS (round ≥ 2 on `<TIMED_FLOW>`):** For every step whose `<TIMED_FLOW>` line shows **round 2 of R** or higher, write a **short** `instruction` only: a breath-led cue (inhale/exhale) **plus** asking them to find or settle into the **pose named on that line**.
+   * *Example:* "Inhale... lifting halfway. \n\n Exhale... soften into your Forward Fold."
 
-3. **THE LOOP RULE (Phonetic Pacing):** Every cycle—even the short rhythmic ones—must still use `...` for 1-second breaths and `\n\n` for phase breaks to maintain the human texture.
+3. **THE LOOP RULE (Phonetic Pacing):** Even minimal round 2+ lines may use `...` and `\n\n` where it helps pacing; keep copy short.
 
 ### FORMATTING REQUIREMENT
-If there are **no** transitional hubs, each step matches `<TIMED_FLOW>` in order. Each `instruction` is the spoken script; `sensory_cue` may be null or a brief awareness line during the 'Foundation' round.
+Each step matches `<TIMED_FLOW>` in order. **Vinyasa uses only `instruction`** per step—see OUTPUT section.
 """
 
 
@@ -247,5 +266,8 @@ def get_transition_prompt(ctx: TransitionRequestContext) -> str:
         parts.append(_section_static_objective_transition(ctx))
 
     parts.append(_section_speech_cadence())
-    parts.append(_section_output_schema(ctx.expected_step_count))
+    if intent == POSTURE_INTENT_VINYASA_LOOP:
+        parts.append(_section_output_schema_vinyasa(ctx.expected_step_count))
+    else:
+        parts.append(_section_output_schema(ctx.expected_step_count))
     return "\n\n".join(parts)
