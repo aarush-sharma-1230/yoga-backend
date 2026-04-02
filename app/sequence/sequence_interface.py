@@ -2,6 +2,8 @@ from typing import Optional
 
 from pydantic import BaseModel
 
+from app.schemas.request_review import ReviewQuestionAnswered
+
 
 class SequenceData(BaseModel):
     sequence_id: str
@@ -13,6 +15,7 @@ class GenerateSequenceData(BaseModel):
     practice_theme_id: str
     duration_minutes: int
     user_notes: Optional[str] = None
+    questions: Optional[list[ReviewQuestionAnswered]] = None
 
 
 class CreateManualSequenceData(BaseModel):

@@ -1,5 +1,6 @@
 from fastapi import Depends
 
+from app.agents.request_reviewer import RequestReviewer
 from app.agents.sequence_composer import SequenceComposer
 from app.agents.summary_agent import SummaryAgent
 from app.agents.yoga_coordinator import YogaCoordinator
@@ -36,6 +37,9 @@ class DependencyInjector:
     def get_sequence_composer(openai_client=Depends(get_openai_client), auth_service=Depends(get_auth_service)):
         return SequenceComposer(llm_client=openai_client, auth_service=auth_service)
 
+    def get_request_reviewer(openai_client=Depends(get_openai_client), auth_service=Depends(get_auth_service)):
+        return RequestReviewer(llm_client=openai_client, auth_service=auth_service)
+
     def get_session_service(db=Depends(get_database), yoga_coordinator=Depends(get_yoga_coordinator)):
         return SessionService(db, yoga_coordinator=yoga_coordinator)
 
@@ -49,8 +53,9 @@ class DependencyInjector:
     def get_sequence_service(
         db=Depends(get_database),
         sequence_composer=Depends(get_sequence_composer),
+        request_reviewer=Depends(get_request_reviewer),
     ):
-        return SequenceService(db, sequence_composer=sequence_composer)
+        return SequenceService(db, sequence_composer=sequence_composer, request_reviewer=request_reviewer)
 
     def get_websocket_connection_manager():
         return ConnectionManager()

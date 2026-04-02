@@ -57,8 +57,11 @@ async def generate_sequence(
 ):
     """
     Generate a personalized yoga sequence for the user.
-    Uses the user profile (medical conditions, goals) and posture catalogue
-    via LLM to create a custom sequence.
+
+    On the first call (no review_answers), the RequestReviewer agent checks
+    for conflicts. If questions are returned, the response has status=false
+    with questions and a summary. On the second call (with review_answers),
+    the reviewer is skipped and the answers are threaded into the composer.
     """
     try:
         response = await service.generate_sequence(
@@ -66,6 +69,7 @@ async def generate_sequence(
             practice_theme_id=data.practice_theme_id,
             duration_minutes=data.duration_minutes,
             user_notes=data.user_notes,
+            questions=data.questions,
         )
         return response
     except ValueError as e:

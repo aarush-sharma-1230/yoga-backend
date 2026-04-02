@@ -18,10 +18,14 @@ def get_sequence_user_prompt(
     posture_range_hi: int,
     theme: dict,
     user_notes: str | None,
+    review_qa_context: str | None = None,
 ) -> str:
     """
     Build the user prompt for sequence generation. Contains only session-specific
     information: user profile, theme, and what the user intends.
+
+    When review_qa_context is provided (pass 2 of the generate flow), it is
+    appended after the practitioner profile as additional clarification.
 
     Receives pre-computed values. No function calls inside.
     """
@@ -38,6 +42,12 @@ def get_sequence_user_prompt(
         if ctx.laws_context:
             sections.append("")
             # sections.append(ctx.laws_context)
+        sections.append("")
+
+    if review_qa_context:
+        sections.append("PRIORITY REVIEW CLARIFICATIONS (from practitioner intake)")
+        sections.append("")
+        sections.append(review_qa_context)
         sections.append("")
 
     # Session parameters

@@ -40,6 +40,7 @@ class SequenceComposer:
         duration_minutes: int,
         theme: dict,
         user_notes: str | None = None,
+        review_qa_context: str | None = None,
     ) -> T:
         """
         Generate a structured sequence (e.g. CustomSequenceOutput) from the LLM.
@@ -58,6 +59,7 @@ class SequenceComposer:
             posture_range_hi=posture_range_hi,
             theme=theme,
             user_notes=user_notes,
+            review_qa_context=review_qa_context,
         )
 
         return await asyncio.to_thread(
