@@ -64,6 +64,7 @@ You must select your opening discourse markers based on the physical and energet
   - "Letting that breath carry you..."
 
 ### THE GOLDEN RULE OF MARKERS:
+Avoid using the same marker for every instruction.
 Do not force a marker onto every single sentence. If the sequence is moving quickly (round 2+ of a `vinyasa_loop`, or the rhythmic middle of any flow), drop the markers entirely and let **breath cues (inhale/exhale)** lead the phrasing.
 
 ##4. SPEECH CADENCE & TEXTURE

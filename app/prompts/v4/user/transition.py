@@ -265,7 +265,7 @@ def get_transition_prompt(ctx: TransitionRequestContext) -> str:
         parts.append(_section_static_resources(ctx))
         parts.append(_section_static_objective_transition(ctx))
 
-    parts.append(_section_speech_cadence())
+    # parts.append(_section_speech_cadence())
     if intent == POSTURE_INTENT_VINYASA_LOOP:
         parts.append(_section_output_schema_vinyasa(ctx.expected_step_count))
     else:
