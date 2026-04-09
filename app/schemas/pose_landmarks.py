@@ -1,6 +1,8 @@
 """Request and LLM output models for pose landmark correction."""
 
-from typing import Annotated, Literal, Union
+from __future__ import annotations
+
+from typing import Annotated, Literal, Optional, Union
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -68,11 +70,12 @@ class PoseLandmarksRequest(BaseModel):
 
 
 class PostureCorrectionInstructionOutput(BaseModel):
-    """Structured LLM output: one combined correction line for all checks."""
+    """Structured LLM output: optional short combined cue; the model decides when feedback is warranted."""
 
-    instruction: str = Field(
+    instruction: Optional[str] = Field(
+        default=None,
         description=(
-            "A single combined spoken-style instruction that addresses every check: "
-            "what to adjust, how, and in what order if needed. No bullet lists."
-        )
+            "Short combined spoken-style cue for issues that matter for this practitioner, or null/empty when "
+            "the posture is acceptable and no verbal feedback is needed. No bullet lists."
+        ),
     )

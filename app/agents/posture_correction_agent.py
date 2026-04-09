@@ -1,8 +1,8 @@
 """
-Posture correction agent: combines landmark checks into one personalized instruction.
+Posture correction agent: maps `checks` to practitioner profile and goals, then queries the LLM.
 
-Loads session, user profile, optional theme and posture catalogue, then calls the LLM.
-The prompt is fully inlined—no tool calls from inside the model.
+The model returns an optional short combined instruction (or null/empty when posture is acceptable).
+All context is inlined in the prompt—no tool calls from inside the model.
 """
 
 from __future__ import annotations
@@ -91,9 +91,9 @@ class PostureCorrectionAgent:
         payload: PoseLandmarksRequest,
     ) -> dict[str, Any]:
         """
-        Build the user prompt from fetched data and return structured instruction plus message_id.
+        Return optional `instruction` and API `message_id` from the LLM.
 
-        Raises RuntimeError if the session is missing or invalid.
+        Empty or whitespace-only instructions are normalized to None. Raises RuntimeError if the session is missing.
         """
         session = await self.db["session"].find_one({"_id": ObjectId(session_id)})
         if not session:
@@ -139,7 +139,9 @@ class PostureCorrectionAgent:
         if parsed is None:
             raise RuntimeError("LLM returned no posture correction output")
 
+        text = (parsed.instruction or "").strip() or None
+
         return {
-            "instruction": parsed.instruction,
+            "instruction": text,
             "message_id": message_id,
         }

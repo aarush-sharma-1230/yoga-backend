@@ -1,5 +1,6 @@
 import asyncio
 import os
+import uuid
 from pathlib import Path
 from motor.motor_asyncio import AsyncIOMotorDatabase
 from bson import ObjectId
@@ -44,15 +45,40 @@ class SessionService:
 
         return session
 
+    async def _register_pose_correction_clip(
+        self, session_id: str, message_id: str, text: str, audio_path: str
+    ) -> None:
+        """Persist pose-correction clip metadata so GET /session/{id}/audio/{message_id} can resolve it."""
+        await self.db["session"].update_one(
+            {"_id": ObjectId(session_id)},
+            {"$set": {f"pose_correction_clips.{message_id}": {"text": text, "audio_path": audio_path}}},
+        )
+
     async def submit_pose_landmarks(self, session_id: str, body: PoseLandmarksRequest) -> dict:
         """
-        Run posture correction: personalized combined instruction from landmark checks and session context.
+        LLM returns optional instruction (null/empty when posture is acceptable). When non-empty, TTS is saved
+        under audio_files/{session_id}/{message_id}.mp3 and registered on the session document.
         """
         result = await self.posture_correction_agent.generate_combined_instruction(
             session_id=session_id,
             payload=body,
         )
-        return {"status": True, "result": result}
+        instruction = result.get("instruction")
+        if not instruction:
+            return {"status": True, "result": {"instruction": None, "message_id": None, "audio_path": None}}
+
+        message_id = result.get("message_id") or f"pose_corr_{uuid.uuid4().hex}"
+        audio_chunks = self.yoga_coordinator.generate_audio_from_text(
+            instruction,
+            instructions=DEFAULT_YOGA_TTS_INSTRUCTIONS,
+        )
+        audio_path = self._save_audio_to_file(session_id, message_id, audio_chunks)
+        await self._register_pose_correction_clip(session_id, message_id, instruction, audio_path)
+
+        return {
+            "status": True,
+            "result": {**result, "message_id": message_id, "audio_path": audio_path},
+        }
 
     def _build_audio_path(self, session_id: str, message_id: str) -> Path:
         """Build the canonical file path for an instruction's audio."""
@@ -138,6 +164,12 @@ class SessionService:
         ending = session.get("ending")
         if isinstance(ending, dict) and ending.get("message_id") == message_id:
             return {"kind": "ending", **ending}
+
+        clips = session.get("pose_correction_clips") or {}
+        if isinstance(clips, dict) and message_id in clips:
+            clip = clips[message_id] or {}
+            text = (clip.get("text") or "").strip()
+            return {"kind": "pose_correction", "text": text, "message_id": message_id}
 
         for pi, p in enumerate((session.get("sequence") or {}).get("postures") or []):
             for si, step in enumerate(p.get("guidance_steps") or []):
@@ -226,6 +258,8 @@ class SessionService:
             return ENERGETIC_YOGA_TTS_INSTRUCTIONS
         if kind == "ending":
             return None
+        if kind == "pose_correction":
+            return DEFAULT_YOGA_TTS_INSTRUCTIONS
         if kind != "guidance_step":
             return None
         if target.get("guidance_clip") != "instruction":
@@ -291,6 +325,15 @@ class SessionService:
             await self.db["session"].update_one(
                 {"_id": ObjectId(session_id)},
                 {"$set": {"ending.audio_path": str(file_path)}},
+            )
+            return
+        if payload.get("kind") == "pose_correction":
+            mid = payload.get("message_id")
+            if not mid:
+                raise RuntimeError("pose_correction payload missing message_id for audio path update")
+            await self.db["session"].update_one(
+                {"_id": ObjectId(session_id)},
+                {"$set": {f"pose_correction_clips.{mid}.audio_path": str(file_path)}},
             )
             return
         raise RuntimeError("Unknown instruction payload kind for audio path update")

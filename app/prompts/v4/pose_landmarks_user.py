@@ -40,8 +40,10 @@ def get_posture_correction_user_prompt(
     checks_json = json.dumps(checks, indent=2)
 
     return f"""## TASK
-You will produce a single JSON object with exactly one key: `instruction` (string).
-The instruction is combined real-time alignment feedback for **all** checks below, tailored to this practitioner and session.
+Produce a single JSON object with one key: `instruction` (string or null).
+* Compare the `checks` array to this practitioner's profile, goals, safety, and medical notes.
+* Keep any spoken feedback **as short as possible** while covering what is **not** being performed correctly.
+* Give **high-priority** feedback only when the posture is **meaningfully** off; if alignment is acceptable for this person, return **null** (or empty string) for `instruction`.
 
 ## SESSION CONTEXT
 - **Sequence name:** {sequence_name or "(unknown)"}
@@ -64,12 +66,12 @@ Client ID: `{posture_client_id}`
 ## LANDMARKS (world space, client order)
 {landmarks_json}
 
-## CHECKS TO ADDRESS (all in one instruction)
+## CHECKS (full array; you judge which issues merit feedback)
 {checks_json}
 
 ## REQUIRED OUTPUT SHAPE
 Return **only** valid JSON:
 {{
-  "instruction": "<one combined spoken-style correction addressing every check>"
+  "instruction": "<short combined cue, or null if no feedback is needed>"
 }}
 """
