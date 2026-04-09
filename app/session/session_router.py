@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import StreamingResponse
 from app.session.session_service import SessionService
+from app.schemas.pose_landmarks import PoseLandmarksRequest
 from app.session.session_interfaces import SeriesData
 from app.dependency_injector import DependencyInjector
 from app.globals.errors import CustomException
@@ -28,6 +29,26 @@ async def start_user_session(series_data: SeriesData, service: SessionService = 
     except RuntimeError as e:
         raise CustomException(str(e))
 
+    except Exception as e:
+        raise CustomException(str(e))
+
+
+@router.post("/session/{session_id}/pose_landmarks")
+async def submit_pose_landmarks(
+    session_id: str,
+    body: PoseLandmarksRequest,
+    service: SessionService = Depends(DependencyInjector.get_session_service),
+):
+    """
+    Submit world landmarks and geometric checks; returns a single combined alignment instruction
+    tailored to the session and user profile.
+    """
+    try:
+        return await service.submit_pose_landmarks(session_id, body)
+    except RuntimeError as e:
+        if "not found" in str(e).lower():
+            raise HTTPException(status_code=404, detail=str(e))
+        raise CustomException(str(e))
     except Exception as e:
         raise CustomException(str(e))
 

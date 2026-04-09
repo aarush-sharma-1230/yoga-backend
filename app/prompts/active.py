@@ -18,6 +18,7 @@ extract_profile_context = _dev.extract_profile_context
 get_sequence_composer_developer_prompt = _dev.get_sequence_composer_developer_prompt
 get_summary_developer_prompt = _dev.get_summary_developer_prompt
 get_yoga_coordinator_developer_prompt = _dev.get_yoga_coordinator_developer_prompt
+get_posture_correction_developer_prompt = _dev.get_posture_correction_developer_prompt
 get_request_reviewer_developer_prompt = _dev.get_request_reviewer_developer_prompt
 
 # User
@@ -40,6 +41,7 @@ __all__ = [
     "get_sequence_composer_developer_prompt",
     "get_summary_developer_prompt",
     "get_yoga_coordinator_developer_prompt",
+    "get_posture_correction_developer_prompt",
     "get_request_reviewer_developer_prompt",
     "get_introduction_prompt",
     "get_transition_prompt",

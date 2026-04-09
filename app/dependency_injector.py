@@ -3,6 +3,7 @@ from fastapi import Depends
 from app.agents.request_reviewer import RequestReviewer
 from app.agents.sequence_composer import SequenceComposer
 from app.agents.summary_agent import SummaryAgent
+from app.agents.posture_correction_agent import PostureCorrectionAgent
 from app.agents.yoga_coordinator import YogaCoordinator
 from app.auth.auth_service import AuthService
 from app.database.mongo import MongoDB
@@ -34,14 +35,25 @@ class DependencyInjector:
     def get_yoga_coordinator(openai_client=Depends(get_openai_client), auth_service=Depends(get_auth_service)):
         return YogaCoordinator(llm_client=openai_client, auth_service=auth_service)
 
+    def get_posture_correction_agent(
+        openai_client=Depends(get_openai_client),
+        auth_service=Depends(get_auth_service),
+        db=Depends(get_database),
+    ):
+        return PostureCorrectionAgent(llm_client=openai_client, auth_service=auth_service, db=db)
+
     def get_sequence_composer(openai_client=Depends(get_openai_client), auth_service=Depends(get_auth_service)):
         return SequenceComposer(llm_client=openai_client, auth_service=auth_service)
 
     def get_request_reviewer(openai_client=Depends(get_openai_client), auth_service=Depends(get_auth_service)):
         return RequestReviewer(llm_client=openai_client, auth_service=auth_service)
 
-    def get_session_service(db=Depends(get_database), yoga_coordinator=Depends(get_yoga_coordinator)):
-        return SessionService(db, yoga_coordinator=yoga_coordinator)
+    def get_session_service(
+        db=Depends(get_database),
+        yoga_coordinator=Depends(get_yoga_coordinator),
+        posture_correction_agent=Depends(get_posture_correction_agent),
+    ):
+        return SessionService(db, yoga_coordinator=yoga_coordinator, posture_correction_agent=posture_correction_agent)
 
     def get_query_service(
         db=Depends(get_database),

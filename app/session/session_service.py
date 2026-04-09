@@ -18,13 +18,15 @@ from app.schemas.custom_sequence import (
     POSTURE_INTENT_VINYASA_LOOP,
 )
 from app.session.session_trace_logger import trace
+from app.schemas.pose_landmarks import PoseLandmarksRequest
 from app.session.transition_request import build_transition_request
 
 
 class SessionService:
-    def __init__(self, db: AsyncIOMotorDatabase, yoga_coordinator):
+    def __init__(self, db: AsyncIOMotorDatabase, yoga_coordinator, posture_correction_agent):
         self.db = db
         self.yoga_coordinator = yoga_coordinator
+        self.posture_correction_agent = posture_correction_agent
 
     async def get_sequence_by_id(self, sequence_id: str):
         sequence = await self.db["sequences"].find_one({"_id": ObjectId(sequence_id)})
@@ -41,6 +43,16 @@ class SessionService:
             raise RuntimeError("The given session was not found")
 
         return session
+
+    async def submit_pose_landmarks(self, session_id: str, body: PoseLandmarksRequest) -> dict:
+        """
+        Run posture correction: personalized combined instruction from landmark checks and session context.
+        """
+        result = await self.posture_correction_agent.generate_combined_instruction(
+            session_id=session_id,
+            payload=body,
+        )
+        return {"status": True, "result": result}
 
     def _build_audio_path(self, session_id: str, message_id: str) -> Path:
         """Build the canonical file path for an instruction's audio."""
