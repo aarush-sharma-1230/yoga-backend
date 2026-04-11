@@ -45,6 +45,8 @@ async def submit_pose_landmarks(
     """
     try:
         return await service.submit_pose_landmarks(session_id, body)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
     except RuntimeError as e:
         if "not found" in str(e).lower():
             raise HTTPException(status_code=404, detail=str(e))

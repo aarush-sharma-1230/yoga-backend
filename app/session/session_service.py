@@ -45,20 +45,36 @@ class SessionService:
 
         return session
 
-    async def _register_pose_correction_clip(
-        self, session_id: str, message_id: str, text: str, audio_path: str
+    async def _set_sequence_posture_correction(
+        self, session_id: str, posture_index: int, text: str, audio_path: str
     ) -> None:
-        """Persist pose-correction clip metadata so GET /session/{id}/audio/{message_id} can resolve it."""
+        """Persist pose correction under sequence.postures[i].posture_correction for GET .../audio/{message_id}."""
         await self.db["session"].update_one(
             {"_id": ObjectId(session_id)},
-            {"$set": {f"pose_correction_clips.{message_id}": {"text": text, "audio_path": audio_path}}},
+            {
+                "$set": {
+                    f"sequence.postures.{posture_index}.posture_correction": {
+                        "text": text,
+                        "audio_path": audio_path,
+                    }
+                }
+            },
         )
 
     async def submit_pose_landmarks(self, session_id: str, body: PoseLandmarksRequest) -> dict:
         """
         LLM returns optional instruction (null/empty when posture is acceptable). When non-empty, TTS is saved
-        under audio_files/{session_id}/{message_id}.mp3 and registered on the session document.
+        under audio_files/{session_id}/{message_id}.mp3 and stored on sequence.postures[i].posture_correction
+        for the row whose client_id(s) include body.posture_client_id.
         """
+        session = await self.get_session_by_id(session_id)
+        postures = (session.get("sequence") or {}).get("postures") or []
+        posture_index = SessionService._posture_index_for_client_id(postures, body.posture_client_id)
+        if posture_index is None:
+            raise ValueError(
+                f"No posture in this session's sequence matches posture_client_id={body.posture_client_id!r}."
+            )
+
         result = await self.posture_correction_agent.generate_combined_instruction(
             session_id=session_id,
             payload=body,
@@ -73,7 +89,7 @@ class SessionService:
             instructions=DEFAULT_YOGA_TTS_INSTRUCTIONS,
         )
         audio_path = self._save_audio_to_file(session_id, message_id, audio_chunks)
-        await self._register_pose_correction_clip(session_id, message_id, instruction, audio_path)
+        await self._set_sequence_posture_correction(session_id, posture_index, instruction, audio_path)
 
         return {
             "status": True,
@@ -89,6 +105,7 @@ class SessionService:
         Return the session document. `sequence.postures[i].guidance_steps` entries hold `instruction` /
         `sensory_cue` plus optional `instruction_message_id` / `instruction_audio_path` and
         `sensory_message_id` / `sensory_audio_path` when each clip exists.
+        Optional `sequence.postures[i].posture_correction` holds `text` and `audio_path` for live pose feedback.
         Intro and ending are top-level `{text, message_id, audio_path}` each.
         Legacy `instructions` is omitted if present.
         """
@@ -134,6 +151,17 @@ class SessionService:
         return list(ids)
 
     @staticmethod
+    def _posture_index_for_client_id(postures: list, client_id: str) -> int | None:
+        """Index of the first sequence posture row that includes this catalogue client_id."""
+        cid = (client_id or "").strip()
+        if not cid:
+            return None
+        for i, row in enumerate(postures or []):
+            if cid in SessionService._client_ids_from_posture_row(row):
+                return i
+        return None
+
+    @staticmethod
     def _transition_tts_instructions_for_target(target_row: dict, posture_docs: dict[str, dict]) -> str:
         """
         Choose energetic vs calm TTS steering for a transition into `target_row`, using posture intensity docs.
@@ -165,13 +193,18 @@ class SessionService:
         if isinstance(ending, dict) and ending.get("message_id") == message_id:
             return {"kind": "ending", **ending}
 
-        clips = session.get("pose_correction_clips") or {}
-        if isinstance(clips, dict) and message_id in clips:
-            clip = clips[message_id] or {}
-            text = (clip.get("text") or "").strip()
-            return {"kind": "pose_correction", "text": text, "message_id": message_id}
-
         for pi, p in enumerate((session.get("sequence") or {}).get("postures") or []):
+            pc = p.get("posture_correction")
+            if isinstance(pc, dict):
+                ap = (pc.get("audio_path") or "").strip()
+                if ap and Path(ap).stem == message_id:
+                    text = (pc.get("text") or "").strip()
+                    return {
+                        "kind": "pose_correction",
+                        "text": text,
+                        "message_id": message_id,
+                        "posture_index": pi,
+                    }
             for si, step in enumerate(p.get("guidance_steps") or []):
                 if step.get("instruction_message_id") == message_id:
                     text = (step.get("instruction") or "").strip()
@@ -328,12 +361,12 @@ class SessionService:
             )
             return
         if payload.get("kind") == "pose_correction":
-            mid = payload.get("message_id")
-            if not mid:
-                raise RuntimeError("pose_correction payload missing message_id for audio path update")
+            pi = payload.get("posture_index")
+            if pi is None:
+                raise RuntimeError("pose_correction payload missing posture_index for audio path update")
             await self.db["session"].update_one(
                 {"_id": ObjectId(session_id)},
-                {"$set": {f"pose_correction_clips.{mid}.audio_path": str(file_path)}},
+                {"$set": {f"sequence.postures.{pi}.posture_correction.audio_path": str(file_path)}},
             )
             return
         raise RuntimeError("Unknown instruction payload kind for audio path update")
