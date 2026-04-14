@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import StreamingResponse
 from app.session.session_service import SessionService
 from app.schemas.pose_landmarks import PoseLandmarksRequest
+from app.schemas.session_state import CurrentSessionStateRequest
 from app.session.session_interfaces import SeriesData
 from app.dependency_injector import DependencyInjector
 from app.globals.errors import CustomException
@@ -47,6 +48,23 @@ async def submit_pose_landmarks(
         return await service.submit_pose_landmarks(session_id, body)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
+    except RuntimeError as e:
+        if "not found" in str(e).lower():
+            raise HTTPException(status_code=404, detail=str(e))
+        raise CustomException(str(e))
+    except Exception as e:
+        raise CustomException(str(e))
+
+
+@router.post("/session/{session_id}/current_session_state")
+async def update_current_session_state(
+    session_id: str,
+    body: CurrentSessionStateRequest,
+    service: SessionService = Depends(DependencyInjector.get_session_service),
+):
+    """Update `session_status` (session_play_status and current_position) on the session document."""
+    try:
+        return await service.update_current_session_state(session_id, body)
     except RuntimeError as e:
         if "not found" in str(e).lower():
             raise HTTPException(status_code=404, detail=str(e))

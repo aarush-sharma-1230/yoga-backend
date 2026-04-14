@@ -20,6 +20,7 @@ from app.schemas.custom_sequence import (
 )
 from app.session.session_trace_logger import trace
 from app.schemas.pose_landmarks import PoseLandmarksRequest
+from app.schemas.session_state import CurrentSessionStateRequest
 from app.session.transition_request import build_transition_request
 
 
@@ -99,6 +100,25 @@ class SessionService:
     def _build_audio_path(self, session_id: str, message_id: str) -> Path:
         """Build the canonical file path for an instruction's audio."""
         return Path("audio_files") / session_id / f"{message_id}.mp3"
+
+    async def update_current_session_state(self, session_id: str, body: CurrentSessionStateRequest) -> dict:
+        """
+        Update `session_status` on the session document: overall play state and optional segment position
+        (intro vs posture with sequence_posture_id).
+        """
+        await self.get_session_by_id(session_id)
+        current_position = None
+        if body.current_position is not None:
+            current_position = body.current_position.model_dump()
+        session_status = {
+            "session_play_status": body.session_play_status,
+            "current_position": current_position,
+        }
+        await self.db["session"].update_one(
+            {"_id": ObjectId(session_id)},
+            {"$set": {"session_status": session_status}},
+        )
+        return {"status": True, "result": {"session_status": session_status}}
 
     async def get_session_info(self, session_id: str) -> dict:
         """
@@ -516,6 +536,10 @@ class SessionService:
             "current_posture": None,
             "total_number_of_postures": len(postures),
             "generation_status": "in_progress",
+            "session_status": {
+                "session_play_status": "not_started",
+                "current_position": None,
+            },
         }
 
     async def start_user_session(self, user_id: str, sequence_id: str, user_name: str):
