@@ -73,6 +73,17 @@ async def update_current_session_state(
         raise CustomException(str(e))
 
 
+@router.get("/session/latest_incomplete")
+async def get_latest_incomplete_session(service: SessionService = Depends(DependencyInjector.get_session_service)):
+    """
+    Return the latest session for the user when it is ``not_started`` or ``in_progress``; if the latest
+    session is ``completed`` or the user has no sessions, ``session`` is null.
+    """
+    user_id = ObjectId("67d5632a3a9bdddef290e127")  # TODO: Get from authentication
+    session = await service.get_latest_incomplete_session_for_user(user_id)
+    return {"session": session}
+
+
 @router.get("/session/{session_id}")
 async def get_session(session_id: str, service: SessionService = Depends(DependencyInjector.get_session_service)):
     """Return session info by session_id. Omits legacy `instructions` if present; intro/ending are top-level on the document."""

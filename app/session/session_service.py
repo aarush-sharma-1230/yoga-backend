@@ -133,6 +133,24 @@ class SessionService:
        
         return {"status": True, "result": session}
 
+    async def get_latest_incomplete_session_for_user(self, user_id: ObjectId | str) -> dict | None:
+        """
+        Return ``{_id, name}`` for the user's most recently created session when its play status is not
+        ``completed``; return ``None`` when there is no session or the latest one is completed.
+        """
+        uid = user_id if isinstance(user_id, ObjectId) else ObjectId(user_id)
+        doc = await self.db["session"].find_one({"user_id": uid}, sort=[("created_on", -1)])
+        if doc is None:
+            return None
+        play_status = (doc.get("session_status") or {}).get("session_play_status")
+        if play_status == "completed":
+            return None
+        sequence = doc.get("sequence") or {}
+        sequence_name = sequence.get("name") or ""
+        session_status = doc.get("session_status") or {}
+        
+        return {"_id": str(doc["_id"]), "name": sequence_name, "sequence": sequence, "session_status": session_status}
+
     @staticmethod
     def _bookend_spoken_document(text: str, message_id: str, audio_path: str) -> dict:
         """
