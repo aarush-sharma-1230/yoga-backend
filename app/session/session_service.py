@@ -120,6 +120,33 @@ class SessionService:
         )
         return {"status": True, "result": {"session_status": session_status}}
 
+    async def start_over_session(self, session_id: str) -> dict:
+        """
+        Reset playback to the initial state (same as a newly scripted session) and strip
+        `posture_correction` from each row in `sequence.postures` so restarted practice does not reuse old clips.
+        """
+        session = await self.get_session_by_id(session_id)
+        postures = (session.get("sequence") or {}).get("postures") or []
+        postures_cleaned = [
+            {k: v for k, v in p.items() if k != "posture_correction"} if isinstance(p, dict) else p
+            for p in postures
+        ]
+        session_status = {
+            "session_play_status": "not_started",
+            "current_position": None,
+        }
+        await self.db["session"].update_one(
+            {"_id": ObjectId(session_id)},
+            {
+                "$set": {
+                    "session_status": session_status,
+                    "current_posture": None,
+                    "sequence.postures": postures_cleaned,
+                }
+            },
+        )
+        return {"status": True, "result": {"session_status": session_status}}
+
     async def get_session_info(self, session_id: str) -> dict:
         """
         Return the session document. `sequence.postures[i].guidance_steps` entries hold `instruction` /

@@ -73,6 +73,25 @@ async def update_current_session_state(
         raise CustomException(str(e))
 
 
+@router.post("/session/{session_id}/start_over")
+async def start_over_session(
+    session_id: str,
+    service: SessionService = Depends(DependencyInjector.get_session_service),
+):
+    """
+    Reset `session_status` to not started (no current segment) and clear `posture_correction` on each
+    sequence posture so the user can restart from the chart.
+    """
+    try:
+        return await service.start_over_session(session_id)
+    except RuntimeError as e:
+        if "not found" in str(e).lower():
+            raise HTTPException(status_code=404, detail=str(e))
+        raise CustomException(str(e))
+    except Exception as e:
+        raise CustomException(str(e))
+
+
 @router.get("/session/latest_incomplete")
 async def get_latest_incomplete_session(service: SessionService = Depends(DependencyInjector.get_session_service)):
     """
