@@ -140,7 +140,6 @@ class SessionService:
             {
                 "$set": {
                     "session_status": session_status,
-                    "current_posture": None,
                     "sequence.postures": postures_cleaned,
                 }
             },
@@ -578,7 +577,6 @@ class SessionService:
             "user_id": user_id,
             "sequence": sequence,
             "created_on": current_timestamp,
-            "current_posture": None,
             "total_number_of_postures": len(postures),
             "generation_status": "in_progress",
             "session_status": {
