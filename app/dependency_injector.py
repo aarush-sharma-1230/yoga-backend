@@ -8,6 +8,8 @@ from app.agents.yoga_coordinator import YogaCoordinator
 from app.auth.auth_service import AuthService
 from app.database.mongo import MongoDB
 from app.llms.openai_client import OpenAIClient
+from app.orchestration.graph import build_sequence_graph
+from app.orchestration.nodes import build_node_functions
 from app.query.query_service import QueryService
 from app.session.session_service import SessionService
 from app.sequence.sequence_service import SequenceService
@@ -42,11 +44,11 @@ class DependencyInjector:
     ):
         return PostureCorrectionAgent(llm_client=openai_client, auth_service=auth_service, db=db)
 
-    def get_sequence_composer(openai_client=Depends(get_openai_client), auth_service=Depends(get_auth_service)):
-        return SequenceComposer(llm_client=openai_client, auth_service=auth_service)
+    def get_sequence_composer(openai_client=Depends(get_openai_client)):
+        return SequenceComposer(llm_client=openai_client)
 
-    def get_request_reviewer(openai_client=Depends(get_openai_client), auth_service=Depends(get_auth_service)):
-        return RequestReviewer(llm_client=openai_client, auth_service=auth_service)
+    def get_request_reviewer(openai_client=Depends(get_openai_client)):
+        return RequestReviewer(llm_client=openai_client)
 
     def get_session_service(
         db=Depends(get_database),
@@ -64,10 +66,26 @@ class DependencyInjector:
 
     def get_sequence_service(
         db=Depends(get_database),
+        auth_service=Depends(get_auth_service),
+        summary_agent=Depends(get_summary_agent),
         sequence_composer=Depends(get_sequence_composer),
         request_reviewer=Depends(get_request_reviewer),
     ):
-        return SequenceService(db, sequence_composer=sequence_composer, request_reviewer=request_reviewer)
+        """Build the orchestration graph and inject it into SequenceService."""
+        sequence_service = SequenceService(db)
+
+        node_fns = build_node_functions(
+            db=db,
+            auth_service=auth_service,
+            summary_agent=summary_agent,
+            request_reviewer=request_reviewer,
+            sequence_composer=sequence_composer,
+            sequence_service=sequence_service,
+        )
+        compiled_graph = build_sequence_graph(node_fns)
+        sequence_service.compiled_graph = compiled_graph
+
+        return sequence_service
 
     def get_websocket_connection_manager():
         return ConnectionManager()

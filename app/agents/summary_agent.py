@@ -9,8 +9,10 @@ import asyncio
 from typing import Any, Dict, Literal
 
 from app.prompts.active import (
+    ProfileContext,
     get_hard_priority_summary_prompt,
     get_medium_priority_summary_prompt,
+    get_session_briefing_prompt,
     get_summary_developer_prompt,
 )
 
@@ -39,6 +41,35 @@ class SummaryAgent:
         )
         text = self._extract_text(response)
         return {"text": text, "message_id": response.get("output", [{}])[0].get("id")}
+
+    async def generate_session_briefing(
+        self,
+        ctx: ProfileContext,
+        hard_strategy: dict,
+        medium_strategy: dict,
+        theme: dict,
+        user_notes: str | None,
+    ) -> str:
+        """
+        Distil the practitioner profile, session theme, and user notes into a
+        single focused paragraph that downstream agents (reviewer, composer) use
+        as their sole source of practitioner context.
+        """
+        user_prompt = get_session_briefing_prompt(
+            ctx=ctx,
+            hard_strategy=hard_strategy,
+            medium_strategy=medium_strategy,
+            theme=theme,
+            user_notes=user_notes,
+        )
+        developer_prompt = get_summary_developer_prompt()
+        response = await asyncio.to_thread(
+            self.llm_client.generate_text,
+            prompt=user_prompt,
+            model=self.model,
+            developer_prompt=developer_prompt,
+        )
+        return self._extract_text(response)
 
     def _extract_text(self, response: Dict[str, Any]) -> str:
         output = response.get("output", [])

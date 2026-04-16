@@ -28,6 +28,7 @@ get_ending_prompt = _user.get_ending_prompt
 get_sequence_user_prompt = _user.get_sequence_user_prompt
 get_hard_priority_summary_prompt = _user.get_hard_priority_summary_prompt
 get_medium_priority_summary_prompt = _user.get_medium_priority_summary_prompt
+get_session_briefing_prompt = _user.get_session_briefing_prompt
 get_request_review_prompt = _user.get_request_review_prompt
 
 # Helpers
@@ -49,6 +50,7 @@ __all__ = [
     "get_sequence_user_prompt",
     "get_hard_priority_summary_prompt",
     "get_medium_priority_summary_prompt",
+    "get_session_briefing_prompt",
     "get_request_review_prompt",
     "duration_to_posture_range",
     "format_posture_catalogue",

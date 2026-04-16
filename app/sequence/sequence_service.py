@@ -1,11 +1,8 @@
 from datetime import datetime
 
 from bson import ObjectId
-from openai import RateLimitError
 from motor.motor_asyncio import AsyncIOMotorDatabase
 
-from app.agents.request_reviewer import RequestReviewer
-from app.agents.sequence_composer import SequenceComposer
 from app.schemas.custom_sequence import (
     POSTURE_INTENT_INTERVAL_SET,
     POSTURE_INTENT_STATIC_HOLD,
@@ -14,6 +11,7 @@ from app.schemas.custom_sequence import (
     SequencePostureItem,
 )
 from app.schemas.request_review import ReviewQuestionAnswered
+from app.orchestration.runner import run_sequence_generation
 
 DEFAULT_MANUAL_HOLD_SECONDS = 60
 
@@ -29,12 +27,10 @@ class SequenceService:
     def __init__(
         self,
         db: AsyncIOMotorDatabase,
-        sequence_composer: SequenceComposer | None = None,
-        request_reviewer: RequestReviewer | None = None,
+        compiled_graph=None,
     ):
         self.db = db
-        self.sequence_composer = sequence_composer
-        self.request_reviewer = request_reviewer
+        self.compiled_graph = compiled_graph
 
     async def get_sequences(self, user_id: str):
         pipeline = [{"$match": {"user_id": ObjectId(user_id)}}, {"$sort": {"created_at": -1}}, {"$project": {"_id": 1, "name": 1, "postures": 1, "type": 1, "user_id": 1, "duration_minutes": 1, "practice_theme_id": 1, "user_notes": 1, "created_at": 1}}]
@@ -156,90 +152,6 @@ class SequenceService:
             row["hold_time_seconds"] = item.hold_time_seconds
         return row
 
-    @staticmethod
-    def _format_review_qa_context(questions: list[ReviewQuestionAnswered]) -> str:
-        """Render answered review questions into plain text for the composer prompt."""
-        lines: list[str] = []
-        for ra in questions:
-            lines.append(f"Q: {ra.question}")
-            lines.append(f"A: {', '.join(ra.answer)}")
-            lines.append("")
-        return "\n".join(lines).strip()
-
-    async def _fetch_theme(self, practice_theme_id: str) -> dict:
-        """Load a theme document by ObjectId string, raising on invalid/missing."""
-        try:
-            theme = await self.db["themes"].find_one({"_id": ObjectId(practice_theme_id)})
-        except Exception:
-            raise ValueError(f"Invalid theme ID: {practice_theme_id}")
-        if not theme:
-            raise ValueError(f"Theme not found: {practice_theme_id}")
-        return theme
-
-    async def _compose_and_persist_sequence(
-        self,
-        user_id: str,
-        practice_theme_id: str,
-        duration_minutes: int,
-        theme: dict,
-        user_notes: str | None,
-        review_qa_context: str | None = None,
-    ) -> dict:
-        """Run SequenceComposer, resolve postures from DB, persist, and return the result."""
-        try:
-            output: CustomSequenceOutput = await self.sequence_composer.compose_sequence(
-                response_format=CustomSequenceOutput,
-                user_id=user_id,
-                duration_minutes=duration_minutes,
-                theme=theme,
-                user_notes=user_notes,
-                review_qa_context=review_qa_context,
-            )
-        except RateLimitError as e:
-            raise RuntimeError(
-                "OpenAI rate limit or quota exceeded (check billing and plan at "
-                "https://platform.openai.com/account/billing). Sequence generation was not completed."
-            ) from e
-
-        all_posture_ids = list(self._client_ids_from_llm_output(output))
-
-        db_postures = {}
-        async for doc in self.db["postures"].find({"client_id": {"$in": all_posture_ids}}):
-            cid = doc.get("client_id")
-            if cid is None:
-                continue
-            db_postures[_norm_cid(str(cid))] = doc
-
-        postures = []
-        for item in output.postures:
-            row = self._stored_posture_from_llm_item(item, db_postures)
-            if row:
-                postures.append(row)
-
-        if not postures:
-            raise RuntimeError("No valid postures selected; sequence generation failed")
-
-        sequence_doc = {
-            "name": output.name,
-            "postures": postures,
-            "type": "generated",
-            "duration_minutes": duration_minutes,
-            "user_id": ObjectId(user_id),
-            "practice_theme_id": ObjectId(practice_theme_id),
-            "user_notes": user_notes,
-            "created_at": datetime.utcnow(),
-        }
-        result = await self.db["sequences"].insert_one(sequence_doc)
-        sequence_doc["_id"] = result.inserted_id
-
-        return {
-            "status": True,
-            "result": {
-                **sequence_doc,
-                "reasoning": output.reasoning,
-            },
-        }
-
     async def generate_sequence(
         self,
         user_id: str,
@@ -249,48 +161,22 @@ class SequenceService:
         questions: list[ReviewQuestionAnswered] | None = None,
     ) -> dict:
         """
-        Generate a sequence with an optional review gate.
+        Generate a sequence via the LangGraph orchestration graph.
 
-        Pass 1 (questions is None): run RequestReviewer first. If it returns
-        questions, return them immediately without composing a sequence.
-        Pass 2 (questions provided): skip the reviewer, format Q&A as context
-        for the SequenceComposer.
+        Pass 1 (questions is None): full graph including reviewer.
+        Pass 2 (questions provided): reviewer is skipped, answers are
+        injected as context for the composer.
         """
-        if not self.sequence_composer:
-            raise RuntimeError("SequenceComposer is required for sequence generation")
+        if not self.compiled_graph:
+            raise RuntimeError("Sequence generation graph is not configured")
 
-        theme = await self._fetch_theme(practice_theme_id)
-
-        if questions is not None:
-            review_qa_context = self._format_review_qa_context(questions)
-            return await self._compose_and_persist_sequence(
-                user_id=user_id,
-                practice_theme_id=practice_theme_id,
-                duration_minutes=duration_minutes,
-                theme=theme,
-                user_notes=user_notes,
-                review_qa_context=review_qa_context,
-            )
-
-        if self.request_reviewer:
-            review_output = await self.request_reviewer.review_request(
-                user_id=user_id,
-                duration_minutes=duration_minutes,
-                theme=theme,
-                user_notes=user_notes,
-            )
-            if not review_output.status:
-                return {
-                    "status": False,
-                    "questions": [q.model_dump() for q in review_output.questions],
-                }
-
-        return await self._compose_and_persist_sequence(
+        return await run_sequence_generation(
+            compiled_graph=self.compiled_graph,
             user_id=user_id,
             practice_theme_id=practice_theme_id,
             duration_minutes=duration_minutes,
-            theme=theme,
             user_notes=user_notes,
+            questions=questions,
         )
 
     async def create_manual_sequence(

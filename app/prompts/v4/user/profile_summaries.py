@@ -1,8 +1,69 @@
-"""User prompts: profile strategy summarization."""
+"""User prompts: profile strategy summarization and session briefings."""
+
+from __future__ import annotations
 
 import json
+from typing import TYPE_CHECKING
 
 from langchain_core.prompts import PromptTemplate
+
+if TYPE_CHECKING:
+    from app.prompts.v4.developer.profile_context import ProfileContext
+
+
+def get_session_briefing_prompt(
+    ctx: ProfileContext,
+    hard_strategy: dict,
+    medium_strategy: dict,
+    theme: dict,
+    user_notes: str | None,
+) -> str:
+    """
+    Build a prompt that distils the practitioner profile, session theme, and
+    user notes into a single focused briefing paragraph.
+
+    The output is consumed by the reviewer and composer agents as their sole
+    source of practitioner context.
+    """
+    sections: list[str] = []
+
+    sections.append("Your task is to write a concise session briefing that merges a yoga practitioner's profile with their current session request.")
+    sections.append("")
+    sections.append("## PRACTITIONER PROFILE")
+    if ctx.hard_priority_summary:
+        sections.append(f"Medical & safety summary: {ctx.hard_priority_summary}")
+    if ctx.medium_priority_summary:
+        sections.append(f"Goals & experience summary: {ctx.medium_priority_summary}")
+    if ctx.laws_context:
+        sections.append(f"\n{ctx.laws_context}")
+
+    sections.append("")
+    sections.append(f"Raw medical data:\n{json.dumps(hard_strategy, indent=2)}")
+    sections.append("")
+    sections.append(f"Raw goals data:\n{json.dumps(medium_strategy, indent=2)}")
+
+    sections.append("")
+    sections.append("## SESSION REQUEST")
+    display_name = theme.get("display_name") or ""
+    functional_category = theme.get("functional_category") or ""
+    description = theme.get("description") or ""
+    sections.append(f"Theme: {display_name} ({functional_category}). {description}")
+    if user_notes:
+        sections.append(f"User notes: {user_notes}")
+
+    sections.append("")
+    sections.append(
+        "## OUTPUT REQUIREMENTS\n"
+        "Write a single paragraph of 80–120 words that:\n"
+        "- Highlights medical constraints specifically relevant to THIS theme (omit irrelevant ones)\n"
+        "- Notes any tension between the practitioner's goals and the chosen theme\n"
+        "- Distils user notes into actionable intent\n"
+        "- States the practitioner's experience level\n"
+        "- Is written in third person (e.g. 'Practitioner has…')\n"
+        "- Contains no filler, no bullet points, no headings — just a single plain-text paragraph"
+    )
+
+    return "\n".join(sections)
 
 
 def get_hard_priority_summary_prompt(hard_priority_strategy: dict) -> str:

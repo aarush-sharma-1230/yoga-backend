@@ -1,7 +1,7 @@
 """
 Sequence Composer: designs custom yoga sequences for practitioners.
 
-Agent responsibility: fetch data, call helpers, process information, build prompts.
+Agent responsibility: receive pre-digested session briefing, call helpers, build prompts.
 Prompt functions receive pre-computed values only; no function calls inside prompts.
 """
 
@@ -13,7 +13,6 @@ from pydantic import BaseModel
 from app.posture_docs.all_postures import ALL_POSTURES
 from app.prompts.active import (
     duration_to_posture_range,
-    extract_profile_context,
     format_posture_catalogue,
     get_sequence_composer_developer_prompt,
     get_sequence_user_prompt,
@@ -23,42 +22,33 @@ T = TypeVar("T", bound=BaseModel)
 
 
 class SequenceComposer:
-    def __init__(self, llm_client, auth_service):
+    def __init__(self, llm_client):
         self.llm_client = llm_client
-        self.auth_service = auth_service
         self.model = "gpt-5.1"
-
-    async def _get_profile_context(self, user_id: str):
-        """Fetch profile and extract context."""
-        user = await self.auth_service.get_profile(str(user_id))
-        return extract_profile_context(user)
 
     async def compose_sequence(
         self,
         response_format: Type[T],
-        user_id: str,
+        session_briefing: str,
         duration_minutes: int,
         theme: dict,
-        user_notes: str | None = None,
         review_qa_context: str | None = None,
     ) -> T:
         """
         Generate a structured sequence (e.g. CustomSequenceOutput) from the LLM.
 
-        Agent fetches posture count from duration, computes all prompt inputs,
-        and passes pre-computed values to prompt builders.
+        Receives a pre-digested session briefing (produced by the briefing node)
+        instead of raw profile data.
         """
         posture_range_lo, posture_range_hi = duration_to_posture_range(duration_minutes)
         catalogue = format_posture_catalogue(ALL_POSTURES)
-        ctx = await self._get_profile_context(user_id)
 
         developer_prompt = get_sequence_composer_developer_prompt(catalogue)
         user_prompt = get_sequence_user_prompt(
-            ctx=ctx,
+            session_briefing=session_briefing,
             posture_range_lo=posture_range_lo,
             posture_range_hi=posture_range_hi,
             theme=theme,
-            user_notes=user_notes,
             review_qa_context=review_qa_context,
         )
 
