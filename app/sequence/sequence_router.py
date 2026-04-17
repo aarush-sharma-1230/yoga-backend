@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends
 
 from app.dependency_injector import DependencyInjector
 from app.globals.errors import CustomException
-from app.sequence.sequence_interface import (
+from app.schemas.sequence_requests import (
     CreateManualSequenceData,
     GenerateSequenceData,
     SequenceData,
@@ -14,45 +14,39 @@ router = APIRouter()
 
 USER_ID_TEMP = "67d5632a3a9bdddef290e127"
 
+
 @router.post("/sequence/get_sequences")
 async def get_sequences(service: SequenceService = Depends(DependencyInjector.get_sequence_service)):
     try:
-        response = await service.get_sequences(user_id=USER_ID_TEMP)
-        return response
-
+        return await service.get_sequences(user_id=USER_ID_TEMP)
     except Exception as e:
-        raise CustomException(e)
+        raise CustomException(str(e))
 
 
 @router.get("/sequence/get_postures")
 async def get_postures(service: SequenceService = Depends(DependencyInjector.get_sequence_service)):
     """Get all postures from the postures collection."""
     try:
-        response = await service.get_postures()
-        return response
+        return await service.get_postures()
     except Exception as e:
-        raise CustomException(e)
+        raise CustomException(str(e))
 
 
 @router.get("/sequence/get_themes")
 async def get_themes(service: SequenceService = Depends(DependencyInjector.get_sequence_service)):
     """Get all themes from the themes collection."""
     try:
-        response = await service.get_themes()
-        return response
+        return await service.get_themes()
     except Exception as e:
-        raise CustomException(e)
+        raise CustomException(str(e))
 
 
 @router.post("/sequence/get_sequence")
 async def get_sequence(sequence_data: SequenceData, service: SequenceService = Depends(DependencyInjector.get_sequence_service)):
     try:
-        sequence_id = sequence_data.sequence_id
-        response = await service.get_sequence(sequence_id)
-        return response
-
+        return await service.get_sequence(sequence_data.sequence_id)
     except Exception as e:
-        raise CustomException(e)
+        raise CustomException(str(e))
 
 
 @router.post("/sequence/generate")
@@ -63,26 +57,21 @@ async def generate_sequence(
     """
     Generate a personalized yoga sequence for the user.
 
-    On the first call (no review_answers), the RequestReviewer agent checks
+    On the first call (no review_answers), the requirement reviewer checks
     for conflicts. If questions are returned, the response has status=false
-    with questions and a summary. On the second call (with review_answers),
-    the reviewer is skipped and the answers are threaded into the composer.
+    with questions and a summary.     On the second call (with review_answers), the requirement reviewer is skipped
+    and answers are threaded into the composer; automated sequence review still runs.
     """
     try:
-        response = await service.generate_sequence(
+        return await service.generate_sequence(
             user_id=USER_ID_TEMP,
             practice_theme_id=data.practice_theme_id,
             duration_minutes=data.duration_minutes,
             user_notes=data.user_notes,
             questions=data.questions,
         )
-        return response
-    except ValueError as e:
-        raise CustomException(str(e))
-    except RuntimeError as e:
-        raise CustomException(str(e))
     except Exception as e:
-        raise CustomException(e)
+        raise CustomException(str(e))
 
 
 @router.post("/sequence/create_manual_sequence")
@@ -92,16 +81,13 @@ async def create_manual_sequence(
 ):
     """Create a manual sequence from user-selected posture client_ids."""
     try:
-        response = await service.create_manual_sequence(
+        return await service.create_manual_sequence(
             name=data.name,
             posture_client_ids=data.posture_client_ids,
             user_id=USER_ID_TEMP,
         )
-        return response
-    except ValueError as e:
-        raise CustomException(str(e))
     except Exception as e:
-        raise CustomException(e)
+        raise CustomException(str(e))
 
 
 @router.post("/sequence/update")
@@ -111,14 +97,11 @@ async def update_sequence(
 ):
     """Update a sequence's name and ordered postures (same shape as stored in DB)."""
     try:
-        response = await service.update_sequence(
+        return await service.update_sequence(
             sequence_id=data.sequence_id,
             name=data.name,
             postures=data.postures,
             user_id=USER_ID_TEMP,
         )
-        return response
-    except ValueError as e:
-        raise CustomException(str(e))
     except Exception as e:
-        raise CustomException(e)
+        raise CustomException(str(e))

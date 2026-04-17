@@ -1,6 +1,6 @@
 from fastapi import Depends
 
-from app.agents.request_reviewer import RequestReviewer
+from app.agents.reviewer_agent import ReviewerAgent
 from app.agents.sequence_composer import SequenceComposer
 from app.agents.summary_agent import SummaryAgent
 from app.agents.posture_correction_agent import PostureCorrectionAgent
@@ -47,8 +47,8 @@ class DependencyInjector:
     def get_sequence_composer(openai_client=Depends(get_openai_client)):
         return SequenceComposer(llm_client=openai_client)
 
-    def get_request_reviewer(openai_client=Depends(get_openai_client)):
-        return RequestReviewer(llm_client=openai_client)
+    def get_reviewer_agent(openai_client=Depends(get_openai_client)):
+        return ReviewerAgent(llm_client=openai_client)
 
     def get_session_service(
         db=Depends(get_database),
@@ -69,7 +69,7 @@ class DependencyInjector:
         auth_service=Depends(get_auth_service),
         summary_agent=Depends(get_summary_agent),
         sequence_composer=Depends(get_sequence_composer),
-        request_reviewer=Depends(get_request_reviewer),
+        reviewer_agent=Depends(get_reviewer_agent),
     ):
         """Build the orchestration graph and inject it into SequenceService."""
         sequence_service = SequenceService(db)
@@ -78,7 +78,7 @@ class DependencyInjector:
             db=db,
             auth_service=auth_service,
             summary_agent=summary_agent,
-            request_reviewer=request_reviewer,
+            reviewer_agent=reviewer_agent,
             sequence_composer=sequence_composer,
             sequence_service=sequence_service,
         )

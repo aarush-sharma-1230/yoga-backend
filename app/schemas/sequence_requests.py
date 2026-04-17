@@ -1,3 +1,5 @@
+"""Sequence API request body models."""
+
 from typing import Optional
 
 from pydantic import BaseModel

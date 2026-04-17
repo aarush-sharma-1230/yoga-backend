@@ -11,6 +11,7 @@ def get_sequence_user_prompt(
     posture_range_hi: int,
     theme: dict,
     review_qa_context: str | None = None,
+    sequence_review_feedback: str | None = None,
 ) -> str:
     """
     Build the user prompt for sequence generation.
@@ -30,6 +31,12 @@ def get_sequence_user_prompt(
         sections.append("PRIORITY REVIEW CLARIFICATIONS (from practitioner intake)")
         sections.append("")
         sections.append(review_qa_context)
+        sections.append("")
+
+    if sequence_review_feedback:
+        sections.append("SEQUENCE REVISION FEEDBACK (from automated safety/alignment review)")
+        sections.append("")
+        sections.append(sequence_review_feedback)
         sections.append("")
 
     sections.append("SESSION PARAMETERS")

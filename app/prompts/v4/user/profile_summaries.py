@@ -13,8 +13,6 @@ if TYPE_CHECKING:
 
 def get_session_briefing_prompt(
     ctx: ProfileContext,
-    hard_strategy: dict,
-    medium_strategy: dict,
     theme: dict,
     user_notes: str | None,
 ) -> str:
@@ -36,11 +34,6 @@ def get_session_briefing_prompt(
         sections.append(f"Goals & experience summary: {ctx.medium_priority_summary}")
     if ctx.laws_context:
         sections.append(f"\n{ctx.laws_context}")
-
-    sections.append("")
-    sections.append(f"Raw medical data:\n{json.dumps(hard_strategy, indent=2)}")
-    sections.append("")
-    sections.append(f"Raw goals data:\n{json.dumps(medium_strategy, indent=2)}")
 
     sections.append("")
     sections.append("## SESSION REQUEST")

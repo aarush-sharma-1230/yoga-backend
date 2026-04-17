@@ -1,7 +1,7 @@
 from fastapi import APIRouter, BackgroundTasks, Depends
 
 from app.auth.auth_service import AuthService
-from app.auth.auth_interfaces import CreateUser, GetUserData, HardPriorityStrategy, MediumPriorityStrategy
+from app.schemas.auth import CreateUser, GetUserData, HardPriorityStrategy, MediumPriorityStrategy
 from app.dependency_injector import DependencyInjector
 from app.globals.errors import CustomException
 
@@ -77,9 +77,5 @@ async def get_profile(service: AuthService = Depends(DependencyInjector.get_auth
     """Fetch user profile. Returns MongoDB document structure."""
     try:
         return await service.get_profile(user_id=USER_ID_TEMP)
-    except RuntimeError as e:
-        if "not found" in str(e).lower():
-            raise CustomException(str(e))
-        raise CustomException(str(e))
     except Exception as e:
         raise CustomException(str(e))

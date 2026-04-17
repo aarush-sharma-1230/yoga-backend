@@ -17,10 +17,11 @@ from typing import Any
 from bson import ObjectId
 from openai import RateLimitError
 
-from app.orchestration.profile_helpers import build_profiler_profile_bundle
+from app.orchestration.graph import MAX_SEQUENCE_REVIEW_ROUNDS
+from app.orchestration.profile import ProfileContext, build_profiler_profile_bundle
 from app.orchestration.state import SequenceGraphState
-from app.profile_extraction import ProfileContext
 from app.schemas.custom_sequence import CustomSequenceOutput
+from app.schemas.request_review import sequence_review_passes
 
 
 def _theme_embed_for_sequence(theme: dict[str, Any]) -> dict[str, Any]:
@@ -39,7 +40,7 @@ def build_node_functions(
     db,
     auth_service,
     summary_agent,
-    request_reviewer,
+    reviewer_agent,
     sequence_composer,
     sequence_service,
 ) -> dict[str, Any]:
@@ -69,16 +70,14 @@ def build_node_functions(
 
         briefing = await summary_agent.generate_session_briefing(
             ctx=ctx,
-            hard_strategy=state["hard_strategy"],
-            medium_strategy=state["medium_strategy"],
             theme=state["theme"],
             user_notes=state.get("user_notes"),
         )
         return {"session_briefing": briefing}
 
-    async def reviewer_node(state: SequenceGraphState) -> dict:
-        """Run the RequestReviewer; may surface clarification questions."""
-        output = await request_reviewer.review_request(
+    async def requirement_reviewer_node(state: SequenceGraphState) -> dict:
+        """Run requirement intake review; may surface clarification questions."""
+        output = await reviewer_agent.review_requirements(
             session_briefing=state["session_briefing"],
             duration_minutes=state["duration_minutes"],
             theme=state["theme"],
@@ -97,6 +96,7 @@ def build_node_functions(
                 duration_minutes=state["duration_minutes"],
                 theme=state["theme"],
                 review_qa_context=state.get("review_qa_context"),
+                sequence_review_feedback=state.get("sequence_review_feedback"),
             )
         except RateLimitError as exc:
             return {
@@ -110,6 +110,47 @@ def build_node_functions(
 
         return {
             "composer_output": output.model_dump(),
+            "error": None,
+        }
+
+    async def sequence_reviewer_node(state: SequenceGraphState) -> dict:
+        """Review generated sequence for safety and alignment before hydration."""
+        raw = state.get("composer_output")
+        if not raw:
+            return {"error": "No composer output to review", "sequence_review_passed": False}
+
+        out = await reviewer_agent.review_sequence(
+            session_briefing=state["session_briefing"],
+            duration_minutes=state["duration_minutes"],
+            theme=state["theme"],
+            composer_output=raw,
+        )
+        passed = sequence_review_passes(out)
+        failures = state.get("sequence_review_failures") or 0
+
+        if passed:
+            return {
+                "sequence_review_passed": True,
+                "sequence_review_feedback": None,
+                "sequence_review_failures": failures,
+                "error": None,
+            }
+
+        failures += 1
+        if failures >= MAX_SEQUENCE_REVIEW_ROUNDS:
+            return {
+                "sequence_review_passed": False,
+                "sequence_review_failures": failures,
+                "error": (
+                    f"Sequence could not be validated after {MAX_SEQUENCE_REVIEW_ROUNDS} attempts. "
+                    f"Last feedback: {out.feedback_for_composer}"
+                ),
+            }
+
+        return {
+            "sequence_review_passed": False,
+            "sequence_review_feedback": out.feedback_for_composer or "Revise the sequence for safety and alignment.",
+            "sequence_review_failures": failures,
             "error": None,
         }
 
@@ -179,8 +220,9 @@ def build_node_functions(
     return {
         "profiler": profiler_node,
         "briefing": briefing_node,
-        "reviewer": reviewer_node,
+        "requirement_reviewer": requirement_reviewer_node,
         "composer": composer_node,
+        "sequence_reviewer": sequence_reviewer_node,
         "hydrate": hydrate_node,
         "persist": persist_node,
     }

@@ -44,6 +44,7 @@ async def run_sequence_generation(
         "duration_minutes": duration_minutes,
         "user_notes": user_notes,
         "composer_retries": 0,
+        "sequence_review_failures": 0,
     }
 
     if questions is not None:

@@ -1,3 +1,5 @@
+"""Session API request body models."""
+
 from pydantic import BaseModel
 
 

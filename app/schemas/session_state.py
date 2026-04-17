@@ -9,7 +9,7 @@ from bson.errors import InvalidId
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
-SessionPlayStatus = Literal["not_started", "in_progress", "completed"]
+SessionPlayStatus = Literal["not_started", "in_progress", "completed", "abandoned"]
 
 
 class CurrentPositionIntro(BaseModel):

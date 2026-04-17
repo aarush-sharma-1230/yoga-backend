@@ -1,6 +1,6 @@
 from motor.motor_asyncio import AsyncIOMotorDatabase
 
-from app.auth.auth_interfaces import (
+from app.schemas.auth import (
     CreateUser,
     GetUserData,
     HardPriorityStrategy,

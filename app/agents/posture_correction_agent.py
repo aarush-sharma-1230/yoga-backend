@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+from contextlib import suppress
 from typing import Any, Optional
 
 from bson import ObjectId
@@ -16,7 +17,7 @@ from motor.motor_asyncio import AsyncIOMotorDatabase
 
 from app.prompts.v4.developer.posture_correction import get_posture_correction_developer_prompt
 from app.prompts.v4.developer.profile_context import extract_profile_context
-from app.prompts.v4.pose_landmarks_user import get_posture_correction_user_prompt
+from app.prompts.v4.user.pose_landmarks import get_posture_correction_user_prompt
 from app.schemas.pose_landmarks import PoseLandmarksRequest, PostureCorrectionInstructionOutput
 
 
@@ -33,10 +34,8 @@ class PostureCorrectionAgent:
         """Fetch profile, extract context, build developer prompt."""
         user = None
         if user_id:
-            try:
+            with suppress(RuntimeError):
                 user = await self.auth_service.get_profile(str(user_id))
-            except RuntimeError:
-                pass
         ctx = extract_profile_context(user)
         return get_posture_correction_developer_prompt(ctx)
 

@@ -181,9 +181,10 @@ class SequenceService:
         """
         Generate a sequence via the LangGraph orchestration graph.
 
-        Pass 1 (questions is None): full graph including reviewer.
-        Pass 2 (questions provided): reviewer is skipped, answers are
-        injected as context for the composer.
+        Pass 1 (questions is None): requirement reviewer, then composer and
+        sequence review (with retries), then hydration.
+        Pass 2 (questions provided): requirement reviewer is skipped; answers
+        are injected for the composer; sequence review still runs.
         """
         if not self.compiled_graph:
             raise RuntimeError("Sequence generation graph is not configured")

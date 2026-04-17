@@ -1,4 +1,4 @@
-"""User prompt for pose landmark correction (v4). Kept outside v4/user/ to avoid heavy package imports."""
+"""User prompt for pose landmark correction (v4). Import this submodule directly; it is not re-exported from ``v4.user``."""
 
 from __future__ import annotations
 

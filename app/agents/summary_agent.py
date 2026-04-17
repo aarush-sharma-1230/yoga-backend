@@ -45,8 +45,6 @@ class SummaryAgent:
     async def generate_session_briefing(
         self,
         ctx: ProfileContext,
-        hard_strategy: dict,
-        medium_strategy: dict,
         theme: dict,
         user_notes: str | None,
     ) -> str:
@@ -57,8 +55,6 @@ class SummaryAgent:
         """
         user_prompt = get_session_briefing_prompt(
             ctx=ctx,
-            hard_strategy=hard_strategy,
-            medium_strategy=medium_strategy,
             theme=theme,
             user_notes=user_notes,
         )

@@ -3,12 +3,21 @@ from fastapi.responses import StreamingResponse
 from app.session.session_service import SessionService
 from app.schemas.pose_landmarks import PoseLandmarksRequest
 from app.schemas.session_state import CurrentSessionStateRequest
-from app.session.session_interfaces import SeriesData
+from app.schemas.session_requests import SeriesData
 from app.dependency_injector import DependencyInjector
 from app.globals.errors import CustomException
 from bson import ObjectId
 
 router = APIRouter()
+
+
+def _map_session_dependency_error(exc: Exception) -> None:
+    """Translate service errors into HTTP status codes or CustomException."""
+    if isinstance(exc, ValueError):
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    if isinstance(exc, RuntimeError) and "not found" in str(exc).lower():
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    raise CustomException(str(exc)) from exc
 
 
 @router.post("/session/start")
@@ -21,15 +30,7 @@ async def start_user_session(series_data: SeriesData, service: SessionService = 
         sequence_id = series_data.sequence_id
         user_name = "Aarush"
         user_id = ObjectId("67d5632a3a9bdddef290e127")  # TODO: Get from authentication
-        response = await service.start_user_session(user_id=user_id, sequence_id=sequence_id, user_name=user_name)
-        return response
-
-    except ValueError as e:
-        raise CustomException(str(e))
-
-    except RuntimeError as e:
-        raise CustomException(str(e))
-
+        return await service.start_user_session(user_id=user_id, sequence_id=sequence_id, user_name=user_name)
     except Exception as e:
         raise CustomException(str(e))
 
@@ -46,14 +47,8 @@ async def submit_pose_landmarks(
     """
     try:
         return await service.submit_pose_landmarks(session_id, body)
-    except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
-    except RuntimeError as e:
-        if "not found" in str(e).lower():
-            raise HTTPException(status_code=404, detail=str(e))
-        raise CustomException(str(e))
     except Exception as e:
-        raise CustomException(str(e))
+        _map_session_dependency_error(e)
 
 
 @router.post("/session/{session_id}/current_session_state")
@@ -62,15 +57,15 @@ async def update_current_session_state(
     body: CurrentSessionStateRequest,
     service: SessionService = Depends(DependencyInjector.get_session_service),
 ):
-    """Update `session_status` (session_play_status and current_position) on the session document."""
+    """
+    Update `session_status` (`session_play_status` and `current_position`) on the session document.
+
+    Use `session_play_status` `"abandoned"` when the user leaves the session without completing it.
+    """
     try:
         return await service.update_current_session_state(session_id, body)
-    except RuntimeError as e:
-        if "not found" in str(e).lower():
-            raise HTTPException(status_code=404, detail=str(e))
-        raise CustomException(str(e))
     except Exception as e:
-        raise CustomException(str(e))
+        _map_session_dependency_error(e)
 
 
 @router.post("/session/{session_id}/start_over")
@@ -84,19 +79,15 @@ async def start_over_session(
     """
     try:
         return await service.start_over_session(session_id)
-    except RuntimeError as e:
-        if "not found" in str(e).lower():
-            raise HTTPException(status_code=404, detail=str(e))
-        raise CustomException(str(e))
     except Exception as e:
-        raise CustomException(str(e))
+        _map_session_dependency_error(e)
 
 
 @router.get("/session/latest_incomplete")
 async def get_latest_incomplete_session(service: SessionService = Depends(DependencyInjector.get_session_service)):
     """
     Return the latest session for the user when it is ``not_started`` or ``in_progress``; if the latest
-    session is ``completed`` or the user has no sessions, ``session`` is null.
+    session is ``completed``, ``abandoned``, or the user has no sessions, ``session`` is null.
     """
     user_id = ObjectId("67d5632a3a9bdddef290e127")  # TODO: Get from authentication
     session = await service.get_latest_incomplete_session_for_user(user_id)
@@ -107,14 +98,9 @@ async def get_latest_incomplete_session(service: SessionService = Depends(Depend
 async def get_session(session_id: str, service: SessionService = Depends(DependencyInjector.get_session_service)):
     """Return session info by session_id. Omits legacy `instructions` if present; intro/ending are top-level on the document."""
     try:
-        response = await service.get_session_info(session_id)
-        return response
-    except RuntimeError as e:
-        if "not found" in str(e).lower():
-            raise HTTPException(status_code=404, detail=str(e))
-        raise CustomException(str(e))
+        return await service.get_session_info(session_id)
     except Exception as e:
-        raise CustomException(str(e))
+        _map_session_dependency_error(e)
 
 
 @router.get("/session/{session_id}/audio/{message_id}")
@@ -130,9 +116,5 @@ async def get_audio(
     try:
         chunk_stream = service.get_audio_chunks(session_id=session_id, message_id=message_id)
         return StreamingResponse(chunk_stream, media_type="audio/mpeg")
-    except RuntimeError as e:
-        if "not found" in str(e).lower():
-            raise HTTPException(status_code=404, detail=str(e))
-        raise CustomException(str(e))
     except Exception as e:
-        raise CustomException(str(e))
+        _map_session_dependency_error(e)

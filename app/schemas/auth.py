@@ -1,3 +1,5 @@
+"""Auth-related request/response Pydantic models."""
+
 from typing import Literal, Optional
 
 from pydantic import BaseModel, EmailStr
