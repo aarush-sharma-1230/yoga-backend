@@ -21,11 +21,19 @@ def get_session_briefing_prompt(
     user notes into a single focused briefing paragraph.
 
     The output is consumed by the reviewer and composer agents as their sole
-    source of practitioner context.
+    source of practitioner context. When user notes are present, they outrank
+    theme and general profile emphasis for session intent, except non-negotiable
+    medical/safety constraints.
     """
     sections: list[str] = []
 
-    sections.append("Your task is to write a concise session briefing that merges a yoga practitioner's profile with their current session request.")
+    sections.append(
+        "Your task is to write a concise session briefing that merges a yoga practitioner's profile "
+        "with their current session request. When the practitioner has provided user notes for this "
+        "session, those notes are the strongest signal for what they want—prioritize them over the "
+        "theme wording and over general goals/experience summaries from the stored profile, except "
+        "where mandatory medical or safety constraints from the profile must still apply."
+    )
     sections.append("")
     sections.append("## PRACTITIONER PROFILE")
     if ctx.hard_priority_summary:
@@ -42,15 +50,18 @@ def get_session_briefing_prompt(
     description = theme.get("description") or ""
     sections.append(f"Theme: {display_name} ({functional_category}). {description}")
     if user_notes:
-        sections.append(f"User notes: {user_notes}")
+        sections.append(f"User notes (highest priority for this session's intent): {user_notes}")
 
     sections.append("")
     sections.append(
         "## OUTPUT REQUIREMENTS\n"
         "Write a single paragraph of 80–120 words that:\n"
+        "- If user notes are present, foreground them: the briefing must reflect what the practitioner "
+        "asked for in those notes ahead of theme emphasis or generic profile goals, while still "
+        "respecting non-negotiable medical/safety constraints from the profile\n"
         "- Highlights medical constraints specifically relevant to THIS theme (omit irrelevant ones)\n"
         "- Notes any tension between the practitioner's goals and the chosen theme\n"
-        "- Distils user notes into actionable intent\n"
+        "- Distils user notes into actionable intent (when provided, this is the primary lens)\n"
         "- States the practitioner's experience level\n"
         "- Is written in third person (e.g. 'Practitioner has…')\n"
         "- Contains no filler, no bullet points, no headings — just a single plain-text paragraph"
