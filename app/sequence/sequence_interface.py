@@ -3,6 +3,7 @@ from typing import Optional
 from pydantic import BaseModel
 
 from app.schemas.request_review import ReviewQuestionAnswered
+from app.schemas.stored_sequence_posture import StoredSequencePosture
 
 
 class SequenceData(BaseModel):
@@ -23,3 +24,11 @@ class CreateManualSequenceData(BaseModel):
 
     name: str
     posture_client_ids: list[str]
+
+
+class UpdateSequenceData(BaseModel):
+    """Request body for updating an existing sequence's name and posture list."""
+
+    sequence_id: str
+    name: str
+    postures: list[StoredSequencePosture]

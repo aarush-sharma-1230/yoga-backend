@@ -10,6 +10,7 @@ from app.schemas.custom_sequence import (
     CustomSequenceOutput,
     SequencePostureItem,
 )
+from app.schemas.stored_sequence_posture import StoredSequencePostureItem
 from app.schemas.request_review import ReviewQuestionAnswered
 from app.orchestration.runner import run_sequence_generation
 
@@ -33,7 +34,24 @@ class SequenceService:
         self.compiled_graph = compiled_graph
 
     async def get_sequences(self, user_id: str):
-        pipeline = [{"$match": {"user_id": ObjectId(user_id)}}, {"$sort": {"created_at": -1}}, {"$project": {"_id": 1, "name": 1, "postures": 1, "type": 1, "user_id": 1, "duration_minutes": 1, "practice_theme_id": 1, "user_notes": 1, "created_at": 1}}]
+        pipeline = [
+            {"$match": {"user_id": ObjectId(user_id)}},
+            {"$sort": {"created_at": -1}},
+            {
+                "$project": {
+                    "_id": 1,
+                    "name": 1,
+                    "postures": 1,
+                    "type": 1,
+                    "user_id": 1,
+                    "duration_minutes": 1,
+                    "theme": 1,
+                    "practice_theme_id": 1,
+                    "user_notes": 1,
+                    "created_at": 1,
+                }
+            },
+        ]
         sequences = await self.db["sequences"].aggregate(pipeline).to_list(length=None)
         return {"status": True, "result": sequences}
 
@@ -179,12 +197,16 @@ class SequenceService:
             questions=questions,
         )
 
-    async def create_manual_sequence(
-        self, name: str, posture_client_ids: list[str], user_id: str
-    ) -> dict:
+    def _sequence_owned_by_user(self, sequence_doc: dict, user_id: str) -> bool:
+        """Return True if the sequence document belongs to the given user id string."""
+        stored = sequence_doc.get("user_id")
+        if stored is None:
+            return False
+        return str(stored) == user_id
+
+    async def _build_manual_posture_rows(self, posture_client_ids: list[str]) -> list:
         """
-        Create a manual sequence from user-provided posture client_ids.
-        Resolves postures from DB, preserving order. Each row is a static_hold with default hold time.
+        Resolve catalogue postures by client_id in order; each row is static_hold with default hold time.
         """
         if not posture_client_ids:
             raise ValueError("posture_client_ids cannot be empty")
@@ -206,6 +228,16 @@ class SequenceService:
             )
             row["hold_time_seconds"] = DEFAULT_MANUAL_HOLD_SECONDS
             postures.append(row)
+        return postures
+
+    async def create_manual_sequence(
+        self, name: str, posture_client_ids: list[str], user_id: str
+    ) -> dict:
+        """
+        Create a manual sequence from user-provided posture client_ids.
+        Resolves postures from DB, preserving order. Each row is a static_hold with default hold time.
+        """
+        postures = await self._build_manual_posture_rows(posture_client_ids)
 
         sequence_doc = {
             "name": name,
@@ -218,3 +250,33 @@ class SequenceService:
         sequence_doc["_id"] = result.inserted_id
 
         return {"status": True, "result": sequence_doc}
+
+    async def update_sequence(
+        self,
+        sequence_id: str,
+        name: str,
+        postures: list[StoredSequencePostureItem],
+        user_id: str,
+    ) -> dict:
+        """
+        Update a sequence's display name and ordered postures.
+
+        Each posture entry matches the document shape stored on the sequence
+        (static_hold, transitional_hub, interval_set, or vinyasa_loop).
+        """
+        if not postures:
+            raise ValueError("postures cannot be empty")
+
+        existing = await self.db["sequences"].find_one({"_id": ObjectId(sequence_id)})
+        if not existing:
+            raise ValueError(f"Sequence not found: {sequence_id}")
+        if not self._sequence_owned_by_user(existing, user_id):
+            raise ValueError("Sequence not found or access denied")
+
+        stored = [row.model_dump(by_alias=True, exclude_none=True) for row in postures]
+        await self.db["sequences"].update_one(
+            {"_id": ObjectId(sequence_id)},
+            {"$set": {"name": name, "postures": stored}},
+        )
+        updated = await self.db["sequences"].find_one({"_id": ObjectId(sequence_id)})
+        return {"status": True, "result": updated}

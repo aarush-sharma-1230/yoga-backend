@@ -40,8 +40,18 @@ class PostureCorrectionAgent:
         ctx = extract_profile_context(user)
         return get_posture_correction_developer_prompt(ctx)
 
+    def _theme_summary_from_embedded_theme(self, sequence: dict) -> str | None:
+        """Build theme summary text from sequence.theme when present (persisted snapshot)."""
+        theme = sequence.get("theme")
+        if not isinstance(theme, dict):
+            return None
+        display = (theme.get("display_name") or theme.get("name") or "").strip()
+        desc = (theme.get("description") or theme.get("summary") or "").strip()
+        parts = [p for p in (display, desc) if p]
+        return "\n".join(parts) if parts else None
+
     async def _fetch_theme_summary(self, practice_theme_id: Any) -> str | None:
-        """Return a short human-readable theme line for the prompt, or None."""
+        """Return a short human-readable theme line for the prompt, or None (legacy sequences)."""
         if practice_theme_id is None:
             return None
         try:
@@ -51,7 +61,7 @@ class PostureCorrectionAgent:
         theme = await self.db["themes"].find_one({"_id": oid})
         if not theme:
             return None
-        name = theme.get("name") or ""
+        name = theme.get("display_name") or theme.get("name") or ""
         desc = theme.get("description") or theme.get("summary") or ""
         parts = [p for p in (name, desc) if p]
         return "\n".join(parts) if parts else None
@@ -105,10 +115,11 @@ class PostureCorrectionAgent:
         sequence = session.get("sequence") or {}
         sequence_name = sequence.get("name")
         user_notes = sequence.get("user_notes")
-        practice_theme_id = sequence.get("practice_theme_id")
         review_qa_context = self._review_qa_from_sequence(sequence)
 
-        theme_summary = await self._fetch_theme_summary(practice_theme_id)
+        theme_summary = self._theme_summary_from_embedded_theme(sequence)
+        if theme_summary is None:
+            theme_summary = await self._fetch_theme_summary(sequence.get("practice_theme_id"))
         posture_doc = await self._fetch_posture_doc(payload.posture_client_id)
 
         landmarks = [lm.model_dump() for lm in payload.world_landmarks]

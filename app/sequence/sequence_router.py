@@ -2,7 +2,12 @@ from fastapi import APIRouter, Depends
 
 from app.dependency_injector import DependencyInjector
 from app.globals.errors import CustomException
-from app.sequence.sequence_interface import CreateManualSequenceData, GenerateSequenceData, SequenceData
+from app.sequence.sequence_interface import (
+    CreateManualSequenceData,
+    GenerateSequenceData,
+    SequenceData,
+    UpdateSequenceData,
+)
 from app.sequence.sequence_service import SequenceService
 
 router = APIRouter()
@@ -90,6 +95,26 @@ async def create_manual_sequence(
         response = await service.create_manual_sequence(
             name=data.name,
             posture_client_ids=data.posture_client_ids,
+            user_id=USER_ID_TEMP,
+        )
+        return response
+    except ValueError as e:
+        raise CustomException(str(e))
+    except Exception as e:
+        raise CustomException(e)
+
+
+@router.post("/sequence/update")
+async def update_sequence(
+    data: UpdateSequenceData,
+    service: SequenceService = Depends(DependencyInjector.get_sequence_service),
+):
+    """Update a sequence's name and ordered postures (same shape as stored in DB)."""
+    try:
+        response = await service.update_sequence(
+            sequence_id=data.sequence_id,
+            name=data.name,
+            postures=data.postures,
             user_id=USER_ID_TEMP,
         )
         return response

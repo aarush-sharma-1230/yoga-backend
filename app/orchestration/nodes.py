@@ -23,6 +23,17 @@ from app.profile_extraction import ProfileContext
 from app.schemas.custom_sequence import CustomSequenceOutput
 
 
+def _theme_embed_for_sequence(theme: dict[str, Any]) -> dict[str, Any]:
+    """Build the persisted ``theme`` subdocument from a themes collection document."""
+    oid = theme.get("_id")
+    return {
+        "theme_id": str(oid) if oid is not None else "",
+        "functional_category": theme.get("functional_category") or "",
+        "display_name": theme.get("display_name") or theme.get("name") or "",
+        "description": theme.get("description") or "",
+    }
+
+
 def build_node_functions(
     *,
     db,
@@ -143,13 +154,14 @@ def build_node_functions(
             return {"error": "Cannot persist: no hydrated postures"}
 
         raw = state.get("composer_output") or {}
+        theme_src = state.get("theme") or {}
         sequence_doc = {
             "name": raw.get("name", "Untitled Sequence"),
             "postures": postures,
             "type": "generated",
             "duration_minutes": state["duration_minutes"],
             "user_id": ObjectId(state["user_id"]),
-            "practice_theme_id": ObjectId(state["practice_theme_id"]),
+            "theme": _theme_embed_for_sequence(theme_src),
             "user_notes": state.get("user_notes"),
             "created_at": datetime.utcnow(),
         }
