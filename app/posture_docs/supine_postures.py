@@ -101,8 +101,8 @@ SUPINE_POSTURES = [
             {"area": "legs", "cue": "Feel your shins pulling slightly backward toward your shoulders to engage your " "hamstrings."},
             {"area": "chest", "cue": "Notice the spaciousness expanding across your collarbones."},
         ],
-        "typical_entries": ["p_corpse_pose", "p_knees_to_chest"],
-        "typical_exits": ["p_corpse_pose", "p_happy_baby", "p_knees_to_chest"],
+        "typical_entries": ["p_corpse_pose", "p_knees_to_chest", "p_boat_pose"],
+        "typical_exits": ["p_corpse_pose", "p_happy_baby", "p_knees_to_chest", "p_wheel_pose"],
     },
     {
         "anatomical_signature": {"is_inverted": False, "spinal_shape": "mild_flexion", "weight_bearing_points": ["entire_back", "sacrum", "back_of_head"], "laterality": {"type": "symmetrical", "active_side": "neutral"}, "requires_counter_pose": False, "recommended_counter_poses": []},
@@ -224,8 +224,8 @@ SUPINE_POSTURES = [
             {"area": "breath", "cue": "Let your breath become natural, soft, and completely effortless."},
             {"area": "face", "cue": "Notice the space between your eyebrows softening and widening."},
         ],
-        "typical_entries": ["p_happy_baby", "p_halasana", "p_fish_pose", "p_knees_to_chest"],
-        "typical_exits": ["p_easy_pose", "p_knees_to_chest"],
+        "typical_entries": ["p_happy_baby", "p_halasana", "p_fish_pose", "p_knees_to_chest", "p_wheel_pose"],
+        "typical_exits": ["p_easy_pose", "p_knees_to_chest", "p_half_fish_pose"],
     },
     {
         "anatomical_signature": {"is_inverted": False, "spinal_shape": "extension", "weight_bearing_points": ["crown_of_head", "buttocks", "forearms"], "laterality": {"type": "symmetrical", "active_side": "neutral"}, "requires_counter_pose": True, "recommended_counter_poses": ["p_corpse_pose"]},
@@ -263,6 +263,122 @@ SUPINE_POSTURES = [
             {"area": "throat", "cue": "Notice the gentle stretch along the front of your neck."},
         ],
         "typical_entries": ["p_shoulder_stand"],
-        "typical_exits": ["p_corpse_pose"],
+        "typical_exits": ["p_corpse_pose", "p_half_fish_pose"],
+    },
+    {
+        "anatomical_signature": {
+            "is_inverted": False,
+            "spinal_shape": "mild_extension",
+            "weight_bearing_points": ["upper_back", "back_of_head", "sit_bones"],
+            "laterality": {"type": "symmetrical", "active_side": "neutral"},
+            "requires_counter_pose": False,
+            "recommended_counter_poses": [],
+        },
+        "intensity_profile": {
+            "overall_exertion": 1,
+            "balance_requirement": 1,
+            "muscular_load": {"core": 1, "upper_body": 1, "lower_body": 1},
+            "mobility_load": {"posterior_chain": 1, "hips_and_pelvis": 1, "spine": 2, "shoulders_and_chest": 2},
+        },
+        "chronic_pain": [
+            {"action": "modify", "condition": "neck_pain", "reason": "Even mild extension can load sensitive cervical segments.", "recommended_modification": "blanket_support"}
+        ],
+        "client_id": "p_half_fish_pose",
+        "category": "supine",
+        "common_mistakes": ["Forcing the crown down toward the floor", "Lifting the hips off the mat"],
+        "contraindications": [
+            {"action": "modify", "condition": "neck_injury", "reason": "Any cervical extension may be provocative.", "recommended_modification": "corpse_pose"}
+        ],
+        "drishti": {"alternatives": ["closed_eyes"], "primary": "straight_up"},
+        "modifications": [
+            {
+                "instruction": "Place a low bolster or folded blanket under the thoracic spine to " "reduce neck extension.",
+                "name": "Blanket Support",
+                "target_area": "neck",
+            },
+        ],
+        "name": "Half Fish Pose",
+        "sanskrit_name": "Ardha Matsyasana",
+        "aliases": ["Half Fish", "Supported Heart Opener"],
+        "pose_intent": ["Gently open the upper chest and shoulders", "Prepare the neck for full Fish", "Encourage diaphragmatic breathing"],
+        "progression": {
+            "advanced": "Interlace the fingers behind the head with elbows wide.",
+            "beginner": "Minimal arch with weight mostly on the elbows and upper back.",
+            "intermediate": "Crown lightly brushing the mat with legs extended.",
+        },
+        "sensory_cues": [
+            {"area": "heart", "cue": "Feel the collarbones broadening without crunching the neck."},
+            {"area": "breath", "cue": "Let each inhale expand the front ribs."},
+        ],
+        "typical_entries": ["p_corpse_pose", "p_knees_to_chest", "p_fish_pose"],
+        "typical_exits": ["p_corpse_pose", "p_bridge", "p_fish_pose"],
+    },
+    {
+        "anatomical_signature": {
+            "is_inverted": False,
+            "spinal_shape": "extension",
+            "weight_bearing_points": ["feet", "hands", "shoulders"],
+            "laterality": {"type": "symmetrical", "active_side": "neutral"},
+            "requires_counter_pose": True,
+            "recommended_counter_poses": ["p_knees_to_chest", "p_childs_pose"],
+        },
+        "intensity_profile": {
+            "overall_exertion": 5,
+            "balance_requirement": 2,
+            "muscular_load": {"core": 4, "upper_body": 5, "lower_body": 4},
+            "mobility_load": {"posterior_chain": 3, "hips_and_pelvis": 3, "spine": 5, "shoulders_and_chest": 5},
+        },
+        "chronic_pain": [
+            {
+                "action": "avoid",
+                "condition": "wrist_pain",
+                "reason": "Full body weight loads the wrists in deep extension.",
+                "recommended_modification": "bridge_pose",
+            }
+        ],
+        "client_id": "p_wheel_pose",
+        "category": "supine",
+        "common_mistakes": [
+            "Feet and knees splaying wider than hip-width",
+            "Dumping compression into the lower back",
+            "Letting the elbows flare outward",
+        ],
+        "contraindications": [
+            {"action": "avoid", "condition": "herniated_disc", "reason": "Deep spinal extension under load.", "recommended_modification": "bridge_pose"},
+            {
+                "action": "avoid",
+                "condition": "shoulder_injury",
+                "reason": "Significant load on the rotator cuff and labrum.",
+                "recommended_modification": "bridge_pose",
+            },
+        ],
+        "drishti": {"alternatives": ["between_hands"], "primary": "straight_ahead"},
+        "modifications": [
+            {
+                "instruction": "Practice lifting onto the crown of the head first with blocks under " "the hands.",
+                "name": "Head on Mat",
+                "target_area": "neck",
+            },
+            {
+                "instruction": "Loop a strap around the arms just above the elbows to keep them " "parallel.",
+                "name": "Strap on Upper Arms",
+                "target_area": "shoulders",
+            },
+        ],
+        "name": "Wheel Pose",
+        "sanskrit_name": "Urdhva Dhanurasana",
+        "aliases": ["Upward Bow", "Full Wheel"],
+        "pose_intent": ["Deeply extend the whole spine and hip flexors", "Strengthen wrists, arms, and legs", "Energize the nervous system"],
+        "progression": {
+            "advanced": "Walking the hands toward the feet and straightening the arms fully.",
+            "beginner": "Bridge pose with blocks under the hands for reference.",
+            "intermediate": "Pressing up from supine with feet parallel and knees tracking forward.",
+        },
+        "sensory_cues": [
+            {"area": "thighs", "cue": "Internally rotate the thighs so the knees point straight ahead."},
+            {"area": "chest", "cue": "Send the sternum toward the wall behind you."},
+        ],
+        "typical_entries": ["p_bridge", "p_corpse_pose"],
+        "typical_exits": ["p_corpse_pose", "p_knees_to_chest", "p_fish_pose"],
     },
 ]

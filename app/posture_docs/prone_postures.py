@@ -35,7 +35,16 @@ PRONE_POSTURES = [
             {"area": "hands", "cue": "Spread your fingers wide and press evenly through the palms."},
         ],
         "typical_entries": ["p_childs_pose", "p_easy_pose", "p_downward_dog", "p_cat", "p_cow"],
-        "typical_exits": ["p_cat", "p_cow", "p_childs_pose", "p_downward_dog", "p_plank", "p_pigeon_left", "p_pigeon_right"],
+        "typical_exits": [
+            "p_cat",
+            "p_cow",
+            "p_childs_pose",
+            "p_downward_dog",
+            "p_plank",
+            "p_pigeon_left",
+            "p_pigeon_right",
+            "p_camel_pose",
+        ],
     },
     {
         "anatomical_signature": {"is_inverted": False, "spinal_shape": "flexion", "weight_bearing_points": ["palms", "knees", "shins"], "laterality": {"type": "symmetrical", "active_side": "neutral"}, "requires_counter_pose": True, "recommended_counter_poses": ["p_cow"]},
@@ -166,7 +175,7 @@ PRONE_POSTURES = [
             {"area": "head", "cue": "Notice the solid support of the earth beneath your forehead."},
         ],
         "typical_entries": ["p_table_top", "p_downward_dog"],
-        "typical_exits": ["p_table_top", "p_downward_dog", "p_cobra"],
+        "typical_exits": ["p_table_top", "p_downward_dog", "p_cobra", "p_camel_pose"],
     },
     {
         "anatomical_signature": {"is_inverted": False, "spinal_shape": "neutral", "weight_bearing_points": ["palms", "toes"], "laterality": {"type": "symmetrical", "active_side": "neutral"}, "requires_counter_pose": False, "recommended_counter_poses": []},
@@ -224,7 +233,14 @@ PRONE_POSTURES = [
             {"area": "upper_back", "cue": "Imagine pushing the floor away to fill the space between your shoulder " "blades."},
         ],
         "typical_entries": ["p_downward_dog", "p_forward_fold", "p_table_top"],
-        "typical_exits": ["p_chaturanga", "p_downward_dog", "p_childs_pose"],
+        "typical_exits": [
+            "p_chaturanga",
+            "p_downward_dog",
+            "p_childs_pose",
+            "p_side_plank_left",
+            "p_side_plank_right",
+            "p_dolphin_pose",
+        ],
     },
     {
         "anatomical_signature": {"is_inverted": False, "spinal_shape": "neutral", "weight_bearing_points": ["palms", "tops_of_feet"], "laterality": {"type": "symmetrical", "active_side": "neutral"}, "requires_counter_pose": False, "recommended_counter_poses": []},
@@ -315,7 +331,7 @@ PRONE_POSTURES = [
             {"area": "shoulders", "cue": "Imagine your shoulder blades sliding down toward your back pockets."},
         ],
         "typical_entries": ["p_chaturanga"],
-        "typical_exits": ["p_downward_dog", "p_childs_pose"],
+        "typical_exits": ["p_downward_dog", "p_childs_pose", "p_bow_pose"],
     },
     {
         "anatomical_signature": {"is_inverted": False, "spinal_shape": "mild_extension", "weight_bearing_points": ["forearms", "pelvis", "tops_of_feet"], "laterality": {"type": "symmetrical", "active_side": "neutral"}, "requires_counter_pose": True, "recommended_counter_poses": ["p_childs_pose"]},
@@ -359,7 +375,7 @@ PRONE_POSTURES = [
             {"area": "chest", "cue": "Notice the quiet, steady opening across your collarbones."},
         ],
         "typical_entries": ["p_cobra"],
-        "typical_exits": ["p_childs_pose"],
+        "typical_exits": ["p_childs_pose", "p_bow_pose"],
     },
     {
         "anatomical_signature": {"is_inverted": False, "spinal_shape": "extension", "weight_bearing_points": ["palms", "tops_of_feet"], "laterality": {"type": "symmetrical", "active_side": "neutral"}, "requires_counter_pose": False, "recommended_counter_poses": []},
@@ -403,5 +419,207 @@ PRONE_POSTURES = [
         ],
         "typical_entries": ["p_chaturanga"],
         "typical_exits": ["p_downward_dog", "p_childs_pose"],
+    },
+    {
+        "anatomical_signature": {
+            "is_inverted": False,
+            "spinal_shape": "extension",
+            "weight_bearing_points": ["abdomen", "pelvis", "tops_of_feet", "hands"],
+            "laterality": {"type": "symmetrical", "active_side": "neutral"},
+            "requires_counter_pose": True,
+            "recommended_counter_poses": ["p_childs_pose"],
+        },
+        "intensity_profile": {
+            "overall_exertion": 4,
+            "balance_requirement": 1,
+            "muscular_load": {"core": 3, "upper_body": 2, "lower_body": 3},
+            "mobility_load": {"posterior_chain": 3, "hips_and_pelvis": 3, "spine": 5, "shoulders_and_chest": 4},
+        },
+        "chronic_pain": [
+            {
+                "action": "modify",
+                "condition": "lower_back_pain",
+                "reason": "Compression in the lumbar spine if the legs overpower the back body.",
+                "recommended_modification": "sphinx_pose",
+            }
+        ],
+        "client_id": "p_bow_pose",
+        "category": "prone",
+        "common_mistakes": [
+            "Breathing shallowly into the chest only",
+            "Splaying the knees wider than the hips",
+            "Yanking on the ankles without engaging the hamstrings",
+        ],
+        "contraindications": [
+            {"action": "avoid", "condition": "pregnancy", "reason": "Deep compression of the abdomen.", "recommended_modification": "sphinx_pose"},
+            {
+                "action": "avoid",
+                "condition": "herniated_disc",
+                "reason": "Intense spinal extension under traction.",
+                "recommended_modification": "sphinx_pose",
+            },
+        ],
+        "drishti": {"alternatives": ["straight_ahead"], "primary": "forward"},
+        "modifications": [
+            {
+                "instruction": "Hold a strap looped around the ankles if reaching the feet is " "difficult.",
+                "name": "Strap Around Ankles",
+                "target_area": "shoulders",
+            },
+            {
+                "instruction": "Practice one side at a time with the opposite cheek on the mat " "(half bow).",
+                "name": "Half Bow",
+                "target_area": "lower_back",
+            },
+        ],
+        "name": "Bow Pose",
+        "sanskrit_name": "Dhanurasana",
+        "aliases": ["Bow Pulling Pose"],
+        "pose_intent": ["Strengthen the entire posterior chain", "Massage the abdominal organs", "Open the chest and hip flexors"],
+        "progression": {
+            "advanced": "Rocking gently forward and back while holding the bind.",
+            "beginner": "Reach back with one hand at a time or use a strap.",
+            "intermediate": "Heels lifting toward the ceiling with knees hip-width apart.",
+        },
+        "sensory_cues": [
+            {"area": "shoulders", "cue": "Roll the shoulder blades down the back before kicking into the feet."},
+            {"area": "legs", "cue": "Feel the inner thighs spiraling toward the ceiling."},
+        ],
+        "typical_entries": ["p_sphinx", "p_cobra"],
+        "typical_exits": ["p_childs_pose", "p_downward_dog", "p_sphinx"],
+    },
+    {
+        "anatomical_signature": {
+            "is_inverted": False,
+            "spinal_shape": "lateral_flexion",
+            "weight_bearing_points": ["bottom_hand", "outer_edge_of_foot"],
+            "laterality": {"type": "asymmetrical", "active_side": "left", "paired_pose": "p_side_plank_right"},
+            "requires_counter_pose": False,
+            "recommended_counter_poses": [],
+        },
+        "intensity_profile": {
+            "overall_exertion": 4,
+            "balance_requirement": 4,
+            "muscular_load": {"core": 4, "upper_body": 4, "lower_body": 3},
+            "mobility_load": {"posterior_chain": 2, "hips_and_pelvis": 2, "spine": 2, "shoulders_and_chest": 3},
+        },
+        "chronic_pain": [
+            {
+                "action": "modify",
+                "condition": "wrist_pain",
+                "reason": "Full weight through one wrist in extension.",
+                "recommended_modification": "forearm_side_plank",
+            }
+        ],
+        "client_id": "p_side_plank_left",
+        "category": "prone",
+        "common_mistakes": [
+            "Sagging the hips toward the floor",
+            "Shrugging the supporting shoulder toward the ear",
+            "Collapsing the chest forward",
+        ],
+        "contraindications": [
+            {
+                "action": "modify",
+                "condition": "shoulder_injury",
+                "reason": "Unilateral loading of the rotator cuff.",
+                "recommended_modification": "knees_down_side_plank",
+            }
+        ],
+        "drishti": {"alternatives": ["straight_ahead"], "primary": "top_hand"},
+        "modifications": [
+            {
+                "instruction": "Lower your bottom knee to the mat directly under the hip.",
+                "name": "Knees Down Side Plank",
+                "target_area": "core",
+            },
+            {
+                "instruction": "Rest on your forearm instead of an extended wrist.",
+                "name": "Forearm Side Plank",
+                "target_area": "wrists",
+            },
+        ],
+        "name": "Side Plank Pose (Left Arm Supporting)",
+        "sanskrit_name": "Vasisthasana",
+        "aliases": ["Side Plank Left"],
+        "pose_intent": ["Strengthen the obliques and lateral hip stabilizers", "Build wrist and shoulder endurance", "Link breath with side-body awareness"],
+        "progression": {
+            "advanced": "Lift the top leg into a star shape or tree variation.",
+            "beginner": "Short lever with bottom knee and elbow down.",
+            "intermediate": "Stack feet with top arm reaching vertically.",
+        },
+        "sensory_cues": [
+            {"area": "ribs", "cue": "Lift the underside waist away from the floor like a hammock."},
+            {"area": "hand", "cue": "Spread the fingers and press the floor away evenly."},
+        ],
+        "typical_entries": ["p_plank", "p_downward_dog", "p_half_moon_left"],
+        "typical_exits": ["p_plank", "p_downward_dog", "p_side_plank_right"],
+    },
+    {
+        "anatomical_signature": {
+            "is_inverted": False,
+            "spinal_shape": "lateral_flexion",
+            "weight_bearing_points": ["bottom_hand", "outer_edge_of_foot"],
+            "laterality": {"type": "asymmetrical", "active_side": "right", "paired_pose": "p_side_plank_left"},
+            "requires_counter_pose": False,
+            "recommended_counter_poses": [],
+        },
+        "intensity_profile": {
+            "overall_exertion": 4,
+            "balance_requirement": 4,
+            "muscular_load": {"core": 4, "upper_body": 4, "lower_body": 3},
+            "mobility_load": {"posterior_chain": 2, "hips_and_pelvis": 2, "spine": 2, "shoulders_and_chest": 3},
+        },
+        "chronic_pain": [
+            {
+                "action": "modify",
+                "condition": "wrist_pain",
+                "reason": "Full weight through one wrist in extension.",
+                "recommended_modification": "forearm_side_plank",
+            }
+        ],
+        "client_id": "p_side_plank_right",
+        "category": "prone",
+        "common_mistakes": [
+            "Sagging the hips toward the floor",
+            "Shrugging the supporting shoulder toward the ear",
+            "Collapsing the chest forward",
+        ],
+        "contraindications": [
+            {
+                "action": "modify",
+                "condition": "shoulder_injury",
+                "reason": "Unilateral loading of the rotator cuff.",
+                "recommended_modification": "knees_down_side_plank",
+            }
+        ],
+        "drishti": {"alternatives": ["straight_ahead"], "primary": "top_hand"},
+        "modifications": [
+            {
+                "instruction": "Lower your bottom knee to the mat directly under the hip.",
+                "name": "Knees Down Side Plank",
+                "target_area": "core",
+            },
+            {
+                "instruction": "Rest on your forearm instead of an extended wrist.",
+                "name": "Forearm Side Plank",
+                "target_area": "wrists",
+            },
+        ],
+        "name": "Side Plank Pose (Right Arm Supporting)",
+        "sanskrit_name": "Vasisthasana",
+        "aliases": ["Side Plank Right"],
+        "pose_intent": ["Strengthen the obliques and lateral hip stabilizers", "Build wrist and shoulder endurance", "Link breath with side-body awareness"],
+        "progression": {
+            "advanced": "Lift the top leg into a star shape or tree variation.",
+            "beginner": "Short lever with bottom knee and elbow down.",
+            "intermediate": "Stack feet with top arm reaching vertically.",
+        },
+        "sensory_cues": [
+            {"area": "ribs", "cue": "Lift the underside waist away from the floor like a hammock."},
+            {"area": "hand", "cue": "Spread the fingers and press the floor away evenly."},
+        ],
+        "typical_entries": ["p_plank", "p_downward_dog", "p_half_moon_right"],
+        "typical_exits": ["p_plank", "p_downward_dog", "p_side_plank_left"],
     },
 ]

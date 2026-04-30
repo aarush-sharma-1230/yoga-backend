@@ -37,7 +37,7 @@ STANDING_POSTURES = [
             {"area": "spine", "cue": "Imagine a string pulling the crown of your head directly up."},
         ],
         "typical_entries": ["p_forward_fold", "p_chair"],
-        "typical_exits": ["p_upward_salute", "p_chair", "p_forward_fold", "p_tree_left", "p_tree_right"],
+        "typical_exits": ["p_upward_salute", "p_chair", "p_forward_fold", "p_tree_left", "p_tree_right", "p_garland_pose"],
     },
     {
         "anatomical_signature": {"is_inverted": False, "spinal_shape": "mild_extension", "weight_bearing_points": ["feet"], "laterality": {"type": "symmetrical", "active_side": "neutral"}, "requires_counter_pose": False, "recommended_counter_poses": []},
@@ -191,7 +191,7 @@ STANDING_POSTURES = [
             {"area": "hamstrings", "cue": "Feel the stretch wrapping around the back of your legs."},
         ],
         "typical_entries": ["p_mountain", "p_upward_salute", "p_halfway_lift", "p_chair"],
-        "typical_exits": ["p_halfway_lift", "p_plank", "p_mountain"],
+        "typical_exits": ["p_halfway_lift", "p_plank", "p_mountain", "p_garland_pose", "p_low_lunge_left", "p_low_lunge_right"],
     },
     {
         "anatomical_signature": {"is_inverted": False, "spinal_shape": "neutral", "weight_bearing_points": ["feet"], "laterality": {"type": "symmetrical", "active_side": "neutral"}, "requires_counter_pose": False, "recommended_counter_poses": []},
@@ -280,7 +280,7 @@ STANDING_POSTURES = [
         },
         "sensory_cues": [{"area": "feet", "cue": "Feel your back heel anchoring you down."}, {"area": "hips", "cue": "Notice the stretch across the front of your back hip."}],
         "typical_entries": ["p_downward_dog", "p_mountain"],
-        "typical_exits": ["p_warrior_2_left", "p_plank", "p_mountain"],
+        "typical_exits": ["p_warrior_2_left", "p_plank", "p_mountain", "p_low_lunge_left"],
     },
     {
         "anatomical_signature": {"is_inverted": False, "spinal_shape": "mild_extension", "weight_bearing_points": ["feet"], "laterality": {"type": "asymmetrical", "active_side": "right", "paired_pose": "p_warrior_1_left"}, "requires_counter_pose": False, "recommended_counter_poses": []},
@@ -326,7 +326,7 @@ STANDING_POSTURES = [
         },
         "sensory_cues": [{"area": "feet", "cue": "Feel your back heel anchoring you down."}, {"area": "hips", "cue": "Notice the stretch across the front of your back hip."}],
         "typical_entries": ["p_downward_dog", "p_mountain"],
-        "typical_exits": ["p_warrior_2_right", "p_plank", "p_mountain"],
+        "typical_exits": ["p_warrior_2_right", "p_plank", "p_mountain", "p_low_lunge_right"],
     },
     {
         "anatomical_signature": {"is_inverted": False, "spinal_shape": "neutral", "weight_bearing_points": ["feet"], "laterality": {"type": "asymmetrical", "active_side": "left", "paired_pose": "p_warrior_2_right"}, "requires_counter_pose": False, "recommended_counter_poses": []},
@@ -380,7 +380,13 @@ STANDING_POSTURES = [
             {"area": "legs", "cue": "Feel the power and stability in your legs."},
         ],
         "typical_entries": ["p_warrior_1_left", "p_downward_dog", "p_mountain"],
-        "typical_exits": ["p_triangle_left", "p_plank"],
+        "typical_exits": [
+            "p_triangle_left",
+            "p_extended_side_angle_left",
+            "p_reverse_warrior_left",
+            "p_plank",
+            "p_warrior_2_right",
+        ],
     },
     {
         "anatomical_signature": {"is_inverted": False, "spinal_shape": "neutral", "weight_bearing_points": ["feet"], "laterality": {"type": "asymmetrical", "active_side": "right", "paired_pose": "p_warrior_2_left"}, "requires_counter_pose": False, "recommended_counter_poses": []},
@@ -434,7 +440,13 @@ STANDING_POSTURES = [
             {"area": "legs", "cue": "Feel the power and stability in your legs."},
         ],
         "typical_entries": ["p_warrior_1_right", "p_downward_dog", "p_mountain"],
-        "typical_exits": ["p_triangle_right", "p_plank"],
+        "typical_exits": [
+            "p_triangle_right",
+            "p_extended_side_angle_right",
+            "p_reverse_warrior_right",
+            "p_plank",
+            "p_warrior_2_left",
+        ],
     },
     {
         "anatomical_signature": {"is_inverted": False, "spinal_shape": "neutral", "weight_bearing_points": ["feet"], "laterality": {"type": "asymmetrical", "active_side": "left", "paired_pose": "p_warrior_3_right"}, "requires_counter_pose": False, "recommended_counter_poses": []},
@@ -477,7 +489,7 @@ STANDING_POSTURES = [
             {"area": "full_body", "cue": "Imagine a straight line of energy from your back heel through the crown of " "your head."},
             {"area": "feet", "cue": "Feel your standing foot gripping the mat for stability."},
         ],
-        "typical_entries": ["p_warrior_1_left", "p_tree_left"],
+        "typical_entries": ["p_warrior_1_left", "p_tree_left", "p_low_lunge_left"],
         "typical_exits": ["p_mountain"],
     },
     {
@@ -521,7 +533,7 @@ STANDING_POSTURES = [
             {"area": "full_body", "cue": "Imagine a straight line of energy from your back heel through the crown of " "your head."},
             {"area": "feet", "cue": "Feel your standing foot gripping the mat for stability."},
         ],
-        "typical_entries": ["p_warrior_1_right", "p_tree_right"],
+        "typical_entries": ["p_warrior_1_right", "p_tree_right", "p_low_lunge_right"],
         "typical_exits": ["p_mountain"],
     },
     {
@@ -565,8 +577,13 @@ STANDING_POSTURES = [
             {"area": "ribs", "cue": "Feel the deep stretch along the side of your body."},
             {"area": "spine", "cue": "Imagine leaning back against an invisible wall."},
         ],
-        "typical_entries": ["p_warrior_2_left"],
-        "typical_exits": ["p_warrior_2_left"],
+        "typical_entries": ["p_warrior_2_left", "p_extended_side_angle_left"],
+        "typical_exits": [
+            "p_warrior_2_left",
+            "p_half_moon_left",
+            "p_extended_side_angle_left",
+            "p_triangle_right",
+        ],
     },
     {
         "anatomical_signature": {"is_inverted": False, "spinal_shape": "lateral_flexion", "weight_bearing_points": ["feet", "bottom_hand_optional"], "laterality": {"type": "asymmetrical", "active_side": "right", "paired_pose": "p_triangle_left"}, "requires_counter_pose": False, "recommended_counter_poses": []},
@@ -609,8 +626,13 @@ STANDING_POSTURES = [
             {"area": "ribs", "cue": "Feel the deep stretch along the side of your body."},
             {"area": "spine", "cue": "Imagine leaning back against an invisible wall."},
         ],
-        "typical_entries": ["p_warrior_2_right"],
-        "typical_exits": ["p_warrior_2_right"],
+        "typical_entries": ["p_warrior_2_right", "p_extended_side_angle_right"],
+        "typical_exits": [
+            "p_warrior_2_right",
+            "p_half_moon_right",
+            "p_extended_side_angle_right",
+            "p_triangle_left",
+        ],
     },
     {
         "anatomical_signature": {"is_inverted": False, "spinal_shape": "neutral", "weight_bearing_points": ["feet"], "laterality": {"type": "asymmetrical", "active_side": "left", "paired_pose": "p_tree_right"}, "requires_counter_pose": False, "recommended_counter_poses": []},
@@ -697,5 +719,678 @@ STANDING_POSTURES = [
         ],
         "typical_entries": ["p_mountain"],
         "typical_exits": ["p_mountain", "p_warrior_3_right"],
+    },
+    {
+        "anatomical_signature": {
+            "is_inverted": False,
+            "spinal_shape": "flexion",
+            "weight_bearing_points": ["feet", "heels"],
+            "laterality": {"type": "symmetrical", "active_side": "neutral"},
+            "requires_counter_pose": False,
+            "recommended_counter_poses": [],
+        },
+        "intensity_profile": {
+            "overall_exertion": 3,
+            "balance_requirement": 2,
+            "muscular_load": {"core": 3, "upper_body": 1, "lower_body": 4},
+            "mobility_load": {"posterior_chain": 2, "hips_and_pelvis": 4, "spine": 2, "shoulders_and_chest": 2},
+        },
+        "chronic_pain": [
+            {
+                "action": "adjust",
+                "condition": "knee_pain",
+                "reason": "Deep flexion and ankle dorsiflexion load the patellar tendon.",
+                "recommended_modification": "heels_on_blanket",
+            },
+            {
+                "action": "modify",
+                "condition": "lower_back_pain",
+                "reason": "Rounding in the squat can strain the lumbar spine.",
+                "recommended_modification": "torso_on_thighs",
+            },
+        ],
+        "client_id": "p_garland_pose",
+        "category": "standing",
+        "common_mistakes": [
+            "Collapsing the chest forward",
+            "Lifting the heels when the ankles are tight",
+            "Knees buckling inward",
+        ],
+        "contraindications": [
+            {
+                "action": "modify",
+                "condition": "knee_injury",
+                "reason": "Deep knee flexion under load can aggravate meniscus issues.",
+                "recommended_modification": "supported_squat",
+            }
+        ],
+        "drishti": {"alternatives": ["closed_eyes"], "primary": "straight_ahead"},
+        "modifications": [
+            {
+                "instruction": "Slide a rolled blanket under your heels if they do not reach the " "floor.",
+                "name": "Heels on Blanket",
+                "target_area": "ankles",
+            },
+            {
+                "instruction": "Sit on a block between your feet to reduce depth in the knees and " "hips.",
+                "name": "Supported Squat",
+                "target_area": "knees",
+            },
+        ],
+        "name": "Garland Pose",
+        "sanskrit_name": "Malasana",
+        "aliases": ["Yogi Squat"],
+        "pose_intent": ["Open the hips, groin, and ankles", "Strengthen the legs and pelvic floor", "Prepare the body for forward folds"],
+        "progression": {
+            "advanced": "Hands in prayer at the heart with elbows pressing the thighs open.",
+            "beginner": "Heels lifted, sitting on a block.",
+            "intermediate": "Heels grounded, spine long, arms inside the knees.",
+        },
+        "sensory_cues": [
+            {"area": "feet", "cue": "Spread your toes and root evenly through the soles."},
+            {"area": "spine", "cue": "Grow tall through the crown even as you sink the hips."},
+        ],
+        "typical_entries": ["p_mountain", "p_forward_fold", "p_chair"],
+        "typical_exits": ["p_mountain", "p_forward_fold", "p_downward_dog"],
+    },
+    {
+        "anatomical_signature": {
+            "is_inverted": False,
+            "spinal_shape": "mild_extension",
+            "weight_bearing_points": ["feet", "back_knee"],
+            "laterality": {"type": "asymmetrical", "active_side": "left", "paired_pose": "p_low_lunge_right"},
+            "requires_counter_pose": False,
+            "recommended_counter_poses": [],
+        },
+        "intensity_profile": {
+            "overall_exertion": 3,
+            "balance_requirement": 2,
+            "muscular_load": {"core": 2, "upper_body": 2, "lower_body": 3},
+            "mobility_load": {"posterior_chain": 2, "hips_and_pelvis": 4, "spine": 2, "shoulders_and_chest": 2},
+        },
+        "chronic_pain": [
+            {
+                "action": "adjust",
+                "condition": "knee_pain",
+                "reason": "Shear force on the back kneecap against the floor.",
+                "recommended_modification": "pad_back_knee",
+            }
+        ],
+        "client_id": "p_low_lunge_left",
+        "category": "standing",
+        "common_mistakes": [
+            "Collapsing weight into the front knee",
+            "Sinking the lower back",
+            "Front knee drifting inward past the ankle",
+        ],
+        "contraindications": [
+            {
+                "action": "modify",
+                "condition": "ankle_stiffness",
+                "reason": "Limited dorsiflexion strains the front knee.",
+                "recommended_modification": "block_under_front_foot",
+            }
+        ],
+        "drishti": {"alternatives": ["straight_ahead"], "primary": "forward_horizon"},
+        "modifications": [
+            {
+                "instruction": "Fold a blanket and place it under your back knee for cushioning.",
+                "name": "Pad Back Knee",
+                "target_area": "knees",
+            },
+            {
+                "instruction": "Place your front foot on a folded blanket to lift the heel.",
+                "name": "Block Under Front Foot",
+                "target_area": "ankles",
+            },
+        ],
+        "name": "Low Lunge (Left Leg Forward)",
+        "sanskrit_name": "Anjaneyasana",
+        "aliases": ["Crescent Lunge (Knee Down)", "Runner's Lunge"],
+        "pose_intent": ["Stretch the hip flexors of the back leg", "Open the chest and shoulders", "Prepare for Warrior 1 or high lunge"],
+        "progression": {
+            "advanced": "Sink the hips square while lifting the torso vertical with arms overhead.",
+            "beginner": "Hands on blocks framing the front foot.",
+            "intermediate": "Hands on the front thigh or reaching overhead.",
+        },
+        "sensory_cues": [
+            {"area": "hips", "cue": "Draw the front hip back and the back hip forward to square the pelvis."},
+            {"area": "ribs", "cue": "Lift the ribcage away from the waist to lengthen the spine."},
+        ],
+        "typical_entries": ["p_downward_dog", "p_forward_fold"],
+        "typical_exits": ["p_warrior_1_left", "p_downward_dog", "p_low_lunge_right"],
+    },
+    {
+        "anatomical_signature": {
+            "is_inverted": False,
+            "spinal_shape": "mild_extension",
+            "weight_bearing_points": ["feet", "back_knee"],
+            "laterality": {"type": "asymmetrical", "active_side": "right", "paired_pose": "p_low_lunge_left"},
+            "requires_counter_pose": False,
+            "recommended_counter_poses": [],
+        },
+        "intensity_profile": {
+            "overall_exertion": 3,
+            "balance_requirement": 2,
+            "muscular_load": {"core": 2, "upper_body": 2, "lower_body": 3},
+            "mobility_load": {"posterior_chain": 2, "hips_and_pelvis": 4, "spine": 2, "shoulders_and_chest": 2},
+        },
+        "chronic_pain": [
+            {
+                "action": "adjust",
+                "condition": "knee_pain",
+                "reason": "Shear force on the back kneecap against the floor.",
+                "recommended_modification": "pad_back_knee",
+            }
+        ],
+        "client_id": "p_low_lunge_right",
+        "category": "standing",
+        "common_mistakes": [
+            "Collapsing weight into the front knee",
+            "Sinking the lower back",
+            "Front knee drifting inward past the ankle",
+        ],
+        "contraindications": [
+            {
+                "action": "modify",
+                "condition": "ankle_stiffness",
+                "reason": "Limited dorsiflexion strains the front knee.",
+                "recommended_modification": "block_under_front_foot",
+            }
+        ],
+        "drishti": {"alternatives": ["straight_ahead"], "primary": "forward_horizon"},
+        "modifications": [
+            {
+                "instruction": "Fold a blanket and place it under your back knee for cushioning.",
+                "name": "Pad Back Knee",
+                "target_area": "knees",
+            },
+            {
+                "instruction": "Place your front foot on a folded blanket to lift the heel.",
+                "name": "Block Under Front Foot",
+                "target_area": "ankles",
+            },
+        ],
+        "name": "Low Lunge (Right Leg Forward)",
+        "sanskrit_name": "Anjaneyasana",
+        "aliases": ["Crescent Lunge (Knee Down)", "Runner's Lunge"],
+        "pose_intent": ["Stretch the hip flexors of the back leg", "Open the chest and shoulders", "Prepare for Warrior 1 or high lunge"],
+        "progression": {
+            "advanced": "Sink the hips square while lifting the torso vertical with arms overhead.",
+            "beginner": "Hands on blocks framing the front foot.",
+            "intermediate": "Hands on the front thigh or reaching overhead.",
+        },
+        "sensory_cues": [
+            {"area": "hips", "cue": "Draw the front hip back and the back hip forward to square the pelvis."},
+            {"area": "ribs", "cue": "Lift the ribcage away from the waist to lengthen the spine."},
+        ],
+        "typical_entries": ["p_downward_dog", "p_forward_fold"],
+        "typical_exits": ["p_warrior_1_right", "p_downward_dog", "p_low_lunge_left"],
+    },
+    {
+        "anatomical_signature": {
+            "is_inverted": False,
+            "spinal_shape": "lateral_flexion",
+            "weight_bearing_points": ["feet", "bottom_arm_optional"],
+            "laterality": {"type": "asymmetrical", "active_side": "left", "paired_pose": "p_extended_side_angle_right"},
+            "requires_counter_pose": False,
+            "recommended_counter_poses": [],
+        },
+        "intensity_profile": {
+            "overall_exertion": 4,
+            "balance_requirement": 2,
+            "muscular_load": {"core": 3, "upper_body": 3, "lower_body": 4},
+            "mobility_load": {"posterior_chain": 3, "hips_and_pelvis": 4, "spine": 3, "shoulders_and_chest": 3},
+        },
+        "chronic_pain": [
+            {
+                "action": "adjust",
+                "condition": "tight_hamstrings",
+                "reason": "Short stance forces rounding and side-bend into the lower back.",
+                "recommended_modification": "forearm_on_thigh",
+            }
+        ],
+        "client_id": "p_extended_side_angle_left",
+        "category": "standing",
+        "common_mistakes": [
+            "Collapsing the chest toward the floor",
+            "Front knee caving inward",
+            "Resting all weight into the bottom hand",
+        ],
+        "contraindications": [
+            {
+                "action": "modify",
+                "condition": "neck_injury",
+                "reason": "Looking up under the arm strains rotation.",
+                "recommended_modification": "gaze_down",
+            }
+        ],
+        "drishti": {"alternatives": ["side_wall"], "primary": "under_arm"},
+        "modifications": [
+            {
+                "instruction": "Rest your forearm on your front thigh instead of placing the hand on " "the floor.",
+                "name": "Forearm on Thigh",
+                "target_area": "lower_back",
+            },
+            {"instruction": "Keep your gaze toward the floor to keep the neck neutral.", "name": "Gaze Down", "target_area": "neck"},
+        ],
+        "name": "Extended Side Angle Pose (Left Leg Forward)",
+        "sanskrit_name": "Utthita Parsvakonasana",
+        "aliases": ["Side Angle Pose Left"],
+        "pose_intent": ["Strengthen the legs and side waist", "Open the chest and groin", "Build stamina in standing poses"],
+        "progression": {
+            "advanced": "Bind the hands behind the back or under the front thigh.",
+            "beginner": "Shorten the stance and use a block under the bottom hand.",
+            "intermediate": "Top arm extended by the ear in one long line from heel to fingertips.",
+        },
+        "sensory_cues": [
+            {"area": "ribs", "cue": "Rotate the underside ribs up toward the ceiling."},
+            {"area": "legs", "cue": "Press the outer edge of the back foot firmly down."},
+        ],
+        "typical_entries": ["p_warrior_2_left", "p_low_lunge_left"],
+        "typical_exits": [
+            "p_warrior_2_left",
+            "p_reverse_warrior_left",
+            "p_triangle_left",
+            "p_half_moon_left",
+            "p_extended_side_angle_right",
+        ],
+    },
+    {
+        "anatomical_signature": {
+            "is_inverted": False,
+            "spinal_shape": "lateral_flexion",
+            "weight_bearing_points": ["feet", "bottom_arm_optional"],
+            "laterality": {"type": "asymmetrical", "active_side": "right", "paired_pose": "p_extended_side_angle_left"},
+            "requires_counter_pose": False,
+            "recommended_counter_poses": [],
+        },
+        "intensity_profile": {
+            "overall_exertion": 4,
+            "balance_requirement": 2,
+            "muscular_load": {"core": 3, "upper_body": 3, "lower_body": 4},
+            "mobility_load": {"posterior_chain": 3, "hips_and_pelvis": 4, "spine": 3, "shoulders_and_chest": 3},
+        },
+        "chronic_pain": [
+            {
+                "action": "adjust",
+                "condition": "tight_hamstrings",
+                "reason": "Short stance forces rounding and side-bend into the lower back.",
+                "recommended_modification": "forearm_on_thigh",
+            }
+        ],
+        "client_id": "p_extended_side_angle_right",
+        "category": "standing",
+        "common_mistakes": [
+            "Collapsing the chest toward the floor",
+            "Front knee caving inward",
+            "Resting all weight into the bottom hand",
+        ],
+        "contraindications": [
+            {
+                "action": "modify",
+                "condition": "neck_injury",
+                "reason": "Looking up under the arm strains rotation.",
+                "recommended_modification": "gaze_down",
+            }
+        ],
+        "drishti": {"alternatives": ["side_wall"], "primary": "under_arm"},
+        "modifications": [
+            {
+                "instruction": "Rest your forearm on your front thigh instead of placing the hand on " "the floor.",
+                "name": "Forearm on Thigh",
+                "target_area": "lower_back",
+            },
+            {"instruction": "Keep your gaze toward the floor to keep the neck neutral.", "name": "Gaze Down", "target_area": "neck"},
+        ],
+        "name": "Extended Side Angle Pose (Right Leg Forward)",
+        "sanskrit_name": "Utthita Parsvakonasana",
+        "aliases": ["Side Angle Pose Right"],
+        "pose_intent": ["Strengthen the legs and side waist", "Open the chest and groin", "Build stamina in standing poses"],
+        "progression": {
+            "advanced": "Bind the hands behind the back or under the front thigh.",
+            "beginner": "Shorten the stance and use a block under the bottom hand.",
+            "intermediate": "Top arm extended by the ear in one long line from heel to fingertips.",
+        },
+        "sensory_cues": [
+            {"area": "ribs", "cue": "Rotate the underside ribs up toward the ceiling."},
+            {"area": "legs", "cue": "Press the outer edge of the back foot firmly down."},
+        ],
+        "typical_entries": ["p_warrior_2_right", "p_low_lunge_right"],
+        "typical_exits": [
+            "p_warrior_2_right",
+            "p_reverse_warrior_right",
+            "p_triangle_right",
+            "p_half_moon_right",
+            "p_extended_side_angle_left",
+        ],
+    },
+    {
+        "anatomical_signature": {
+            "is_inverted": False,
+            "spinal_shape": "lateral_flexion",
+            "weight_bearing_points": ["feet"],
+            "laterality": {"type": "asymmetrical", "active_side": "left", "paired_pose": "p_reverse_warrior_right"},
+            "requires_counter_pose": False,
+            "recommended_counter_poses": [],
+        },
+        "intensity_profile": {
+            "overall_exertion": 3,
+            "balance_requirement": 2,
+            "muscular_load": {"core": 2, "upper_body": 2, "lower_body": 3},
+            "mobility_load": {"posterior_chain": 2, "hips_and_pelvis": 3, "spine": 2, "shoulders_and_chest": 3},
+        },
+        "chronic_pain": [
+            {
+                "action": "adjust",
+                "condition": "shoulder_pain",
+                "reason": "The long side reach can irritate the rotator cuff.",
+                "recommended_modification": "hand_on_hip",
+            }
+        ],
+        "client_id": "p_reverse_warrior_left",
+        "category": "standing",
+        "common_mistakes": [
+            "Leaning the torso backward instead of laterally",
+            "Bending the front knee past 90 degrees",
+            "Compressing the side of the neck",
+        ],
+        "contraindications": [
+            {
+                "action": "caution",
+                "condition": "vertigo",
+                "reason": "Side bending with the gaze up can disturb balance.",
+                "recommended_modification": "eyes_forward",
+            }
+        ],
+        "drishti": {"alternatives": ["side_wall"], "primary": "top_hand"},
+        "modifications": [
+            {"instruction": "Rest your top hand on your hip to shorten the lever of the side bend.", "name": "Hand on Hip", "target_area": "shoulders"},
+        ],
+        "name": "Reverse Warrior Pose (Left Leg Forward)",
+        "sanskrit_name": "Viparita Virabhadrasana",
+        "aliases": ["Peaceful Warrior Left"],
+        "pose_intent": ["Lengthen the side waist", "Open the chest and intercostals", "Link breath with lateral movement"],
+        "progression": {
+            "advanced": "Deep side bend while keeping the front thigh parallel to the floor.",
+            "beginner": "Shallow side bend with a shorter stance.",
+            "intermediate": "Smooth transition from Warrior 2 into Reverse Warrior on the exhale.",
+        },
+        "sensory_cues": [
+            {"area": "ribs", "cue": "Feel length from the outer hip to the fingertips."},
+            {"area": "legs", "cue": "Anchor through the outer edge of the back foot."},
+        ],
+        "typical_entries": ["p_warrior_2_left", "p_extended_side_angle_left"],
+        "typical_exits": ["p_warrior_2_left", "p_extended_side_angle_left", "p_triangle_left"],
+    },
+    {
+        "anatomical_signature": {
+            "is_inverted": False,
+            "spinal_shape": "lateral_flexion",
+            "weight_bearing_points": ["feet"],
+            "laterality": {"type": "asymmetrical", "active_side": "right", "paired_pose": "p_reverse_warrior_left"},
+            "requires_counter_pose": False,
+            "recommended_counter_poses": [],
+        },
+        "intensity_profile": {
+            "overall_exertion": 3,
+            "balance_requirement": 2,
+            "muscular_load": {"core": 2, "upper_body": 2, "lower_body": 3},
+            "mobility_load": {"posterior_chain": 2, "hips_and_pelvis": 3, "spine": 2, "shoulders_and_chest": 3},
+        },
+        "chronic_pain": [
+            {
+                "action": "adjust",
+                "condition": "shoulder_pain",
+                "reason": "The long side reach can irritate the rotator cuff.",
+                "recommended_modification": "hand_on_hip",
+            }
+        ],
+        "client_id": "p_reverse_warrior_right",
+        "category": "standing",
+        "common_mistakes": [
+            "Leaning the torso backward instead of laterally",
+            "Bending the front knee past 90 degrees",
+            "Compressing the side of the neck",
+        ],
+        "contraindications": [
+            {
+                "action": "caution",
+                "condition": "vertigo",
+                "reason": "Side bending with the gaze up can disturb balance.",
+                "recommended_modification": "eyes_forward",
+            }
+        ],
+        "drishti": {"alternatives": ["side_wall"], "primary": "top_hand"},
+        "modifications": [
+            {"instruction": "Rest your top hand on your hip to shorten the lever of the side bend.", "name": "Hand on Hip", "target_area": "shoulders"},
+        ],
+        "name": "Reverse Warrior Pose (Right Leg Forward)",
+        "sanskrit_name": "Viparita Virabhadrasana",
+        "aliases": ["Peaceful Warrior Right"],
+        "pose_intent": ["Lengthen the side waist", "Open the chest and intercostals", "Link breath with lateral movement"],
+        "progression": {
+            "advanced": "Deep side bend while keeping the front thigh parallel to the floor.",
+            "beginner": "Shallow side bend with a shorter stance.",
+            "intermediate": "Smooth transition from Warrior 2 into Reverse Warrior on the exhale.",
+        },
+        "sensory_cues": [
+            {"area": "ribs", "cue": "Feel length from the outer hip to the fingertips."},
+            {"area": "legs", "cue": "Anchor through the outer edge of the back foot."},
+        ],
+        "typical_entries": ["p_warrior_2_right", "p_extended_side_angle_right"],
+        "typical_exits": ["p_warrior_2_right", "p_extended_side_angle_right", "p_triangle_right"],
+    },
+    {
+        "anatomical_signature": {
+            "is_inverted": False,
+            "spinal_shape": "neutral",
+            "weight_bearing_points": ["standing_foot", "bottom_hand_optional"],
+            "laterality": {"type": "asymmetrical", "active_side": "left", "paired_pose": "p_half_moon_right"},
+            "requires_counter_pose": False,
+            "recommended_counter_poses": [],
+        },
+        "intensity_profile": {
+            "overall_exertion": 4,
+            "balance_requirement": 5,
+            "muscular_load": {"core": 4, "upper_body": 3, "lower_body": 3},
+            "mobility_load": {"posterior_chain": 3, "hips_and_pelvis": 3, "spine": 2, "shoulders_and_chest": 3},
+        },
+        "chronic_pain": [
+            {
+                "action": "adjust",
+                "condition": "lower_back_pain",
+                "reason": "Rotating the open hip upward can torque the lumbar spine.",
+                "recommended_modification": "hand_on_block",
+            }
+        ],
+        "client_id": "p_half_moon_left",
+        "category": "standing",
+        "common_mistakes": [
+            "Dropping the chest toward the floor",
+            "Hyperextending the standing knee",
+            "Turning the lifted hip too far open",
+        ],
+        "contraindications": [
+            {
+                "action": "modify",
+                "condition": "vertigo",
+                "reason": "Single-leg balance with head rotation challenges equilibrium.",
+                "recommended_modification": "wall_support",
+            }
+        ],
+        "drishti": {"alternatives": ["straight_ahead"], "primary": "top_hand"},
+        "modifications": [
+            {
+                "instruction": "Place your bottom hand on a block under the shoulder to lift the " "torso.",
+                "name": "Hand on Block",
+                "target_area": "lower_back",
+            },
+            {
+                "instruction": "Stand with your back foot against a wall for balance support.",
+                "name": "Wall Support",
+                "target_area": "balance",
+            },
+        ],
+        "name": "Half Moon Pose (Left Leg Standing)",
+        "sanskrit_name": "Ardha Chandrasana",
+        "aliases": ["Half Moon Left"],
+        "pose_intent": ["Improve balance and proprioception", "Strengthen the standing leg and gluteus medius", "Open the hips and chest in rotation"],
+        "progression": {
+            "advanced": "Gaze upward toward the top hand with the arms in one vertical line.",
+            "beginner": "Use a wall or chair for the lifted leg and hand.",
+            "intermediate": "Float the top leg parallel to the floor with flexed foot.",
+        },
+        "sensory_cues": [
+            {"area": "standing_leg", "cue": "Micro-bend the knee without locking as you press through the heel and " "ball of the foot."},
+            {"area": "torso", "cue": "Stack shoulders over hips like a sideways Tadasana."},
+        ],
+        "typical_entries": ["p_triangle_left", "p_extended_side_angle_left"],
+        "typical_exits": [
+            "p_triangle_left",
+            "p_warrior_2_left",
+            "p_side_plank_left",
+            "p_mountain",
+        ],
+    },
+    {
+        "anatomical_signature": {
+            "is_inverted": False,
+            "spinal_shape": "neutral",
+            "weight_bearing_points": ["standing_foot", "bottom_hand_optional"],
+            "laterality": {"type": "asymmetrical", "active_side": "right", "paired_pose": "p_half_moon_left"},
+            "requires_counter_pose": False,
+            "recommended_counter_poses": [],
+        },
+        "intensity_profile": {
+            "overall_exertion": 4,
+            "balance_requirement": 5,
+            "muscular_load": {"core": 4, "upper_body": 3, "lower_body": 3},
+            "mobility_load": {"posterior_chain": 3, "hips_and_pelvis": 3, "spine": 2, "shoulders_and_chest": 3},
+        },
+        "chronic_pain": [
+            {
+                "action": "adjust",
+                "condition": "lower_back_pain",
+                "reason": "Rotating the open hip upward can torque the lumbar spine.",
+                "recommended_modification": "hand_on_block",
+            }
+        ],
+        "client_id": "p_half_moon_right",
+        "category": "standing",
+        "common_mistakes": [
+            "Dropping the chest toward the floor",
+            "Hyperextending the standing knee",
+            "Turning the lifted hip too far open",
+        ],
+        "contraindications": [
+            {
+                "action": "modify",
+                "condition": "vertigo",
+                "reason": "Single-leg balance with head rotation challenges equilibrium.",
+                "recommended_modification": "wall_support",
+            }
+        ],
+        "drishti": {"alternatives": ["straight_ahead"], "primary": "top_hand"},
+        "modifications": [
+            {
+                "instruction": "Place your bottom hand on a block under the shoulder to lift the " "torso.",
+                "name": "Hand on Block",
+                "target_area": "lower_back",
+            },
+            {
+                "instruction": "Stand with your back foot against a wall for balance support.",
+                "name": "Wall Support",
+                "target_area": "balance",
+            },
+        ],
+        "name": "Half Moon Pose (Right Leg Standing)",
+        "sanskrit_name": "Ardha Chandrasana",
+        "aliases": ["Half Moon Right"],
+        "pose_intent": ["Improve balance and proprioception", "Strengthen the standing leg and gluteus medius", "Open the hips and chest in rotation"],
+        "progression": {
+            "advanced": "Gaze upward toward the top hand with the arms in one vertical line.",
+            "beginner": "Use a wall or chair for the lifted leg and hand.",
+            "intermediate": "Float the top leg parallel to the floor with flexed foot.",
+        },
+        "sensory_cues": [
+            {"area": "standing_leg", "cue": "Micro-bend the knee without locking as you press through the heel and " "ball of the foot."},
+            {"area": "torso", "cue": "Stack shoulders over hips like a sideways Tadasana."},
+        ],
+        "typical_entries": ["p_triangle_right", "p_extended_side_angle_right"],
+        "typical_exits": [
+            "p_triangle_right",
+            "p_warrior_2_right",
+            "p_side_plank_right",
+            "p_mountain",
+        ],
+    },
+    {
+        "anatomical_signature": {
+            "is_inverted": False,
+            "spinal_shape": "extension",
+            "weight_bearing_points": ["knees", "shins", "feet", "hands_to_heels"],
+            "laterality": {"type": "symmetrical", "active_side": "neutral"},
+            "requires_counter_pose": True,
+            "recommended_counter_poses": ["p_childs_pose"],
+        },
+        "intensity_profile": {
+            "overall_exertion": 4,
+            "balance_requirement": 2,
+            "muscular_load": {"core": 3, "upper_body": 2, "lower_body": 3},
+            "mobility_load": {"posterior_chain": 2, "hips_and_pelvis": 3, "spine": 5, "shoulders_and_chest": 5},
+        },
+        "chronic_pain": [
+            {
+                "action": "modify",
+                "condition": "lower_back_pain",
+                "reason": "Compression in the lumbar spine if the thighs are not aligned.",
+                "recommended_modification": "toes_tucked",
+            }
+        ],
+        "client_id": "p_camel_pose",
+        "category": "standing",
+        "common_mistakes": [
+            "Leading with the head instead of lifting from the sternum",
+            "Squeezing the glutes excessively",
+            "Knees wider than hips without support",
+        ],
+        "contraindications": [
+            {"action": "avoid", "condition": "neck_injury", "reason": "Extreme cervical extension under load.", "recommended_modification": "chin_to_chest"},
+            {
+                "action": "modify_or_avoid",
+                "condition": "hypertension",
+                "reason": "Strong backbend can elevate heart rate and blood pressure.",
+                "recommended_modification": "supported_bridge",
+            },
+        ],
+        "drishti": {"alternatives": ["third_eye"], "primary": "ceiling"},
+        "modifications": [
+            {
+                "instruction": "Tuck your toes under to lift the heels closer to your hands.",
+                "name": "Toes Tucked",
+                "target_area": "lower_back",
+            },
+            {
+                "instruction": "Place blocks beside your ankles and rest your hands on the blocks " "instead of the heels.",
+                "name": "Hands on Blocks",
+                "target_area": "shoulders",
+            },
+        ],
+        "name": "Camel Pose",
+        "sanskrit_name": "Ustrasana",
+        "aliases": ["Ustrasana"],
+        "pose_intent": ["Open the entire front body", "Stretch hip flexors and abdominals", "Stimulate the respiratory and endocrine systems"],
+        "progression": {
+            "advanced": "Reach back to grasp the heels with thighs vertical and hips over knees.",
+            "beginner": "Hands on the low back for support, minimal backbend.",
+            "intermediate": "One hand at a time to each heel with the chest lifting.",
+        },
+        "sensory_cues": [
+            {"area": "heart", "cue": "Lift the sternum first; let the head follow last."},
+            {"area": "thighs", "cue": "Hug the inner thighs toward the midline for stability."},
+        ],
+        "typical_entries": ["p_table_top", "p_childs_pose"],
+        "typical_exits": ["p_childs_pose", "p_table_top", "p_forward_fold"],
     },
 ]

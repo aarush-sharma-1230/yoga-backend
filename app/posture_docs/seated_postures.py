@@ -40,7 +40,7 @@ SEATED_POSTURES = [
             {"area": "shoulders", "cue": "Let your shoulders melt down away from your ears."},
         ],
         "typical_entries": ["p_staff_pose"],
-        "typical_exits": ["p_seated_forward_fold", "p_table_top", "p_staff_pose"],
+        "typical_exits": ["p_seated_forward_fold", "p_table_top", "p_staff_pose", "p_butterfly_pose"],
     },
     {
         "anatomical_signature": {"is_inverted": False, "spinal_shape": "neutral", "weight_bearing_points": ["sit_bones", "heels", "palms (lightly)"], "laterality": {"type": "symmetrical", "active_side": "neutral"}, "requires_counter_pose": False, "recommended_counter_poses": []},
@@ -89,7 +89,14 @@ SEATED_POSTURES = [
             {"area": "spine", "cue": "Feel the crown of your head reaching up as your tailbone roots down."},
         ],
         "typical_entries": ["p_downward_dog", "p_easy_pose"],
-        "typical_exits": ["p_seated_forward_fold", "p_head_to_knee_left", "p_head_to_knee_right", "p_easy_pose"],
+        "typical_exits": [
+            "p_seated_forward_fold",
+            "p_head_to_knee_left",
+            "p_head_to_knee_right",
+            "p_easy_pose",
+            "p_boat_pose",
+            "p_butterfly_pose",
+        ],
     },
     {
         "anatomical_signature": {"is_inverted": False, "spinal_shape": "flexion", "weight_bearing_points": ["sit_bones", "heels", "calves"], "laterality": {"type": "symmetrical", "active_side": "neutral"}, "requires_counter_pose": False, "recommended_counter_poses": []},
@@ -426,5 +433,145 @@ SEATED_POSTURES = [
         ],
         "typical_entries": ["p_downward_dog", "p_table_top"],
         "typical_exits": ["p_downward_dog", "p_table_top"],
+    },
+    {
+        "anatomical_signature": {
+            "is_inverted": False,
+            "spinal_shape": "neutral",
+            "weight_bearing_points": ["sit_bones"],
+            "laterality": {"type": "symmetrical", "active_side": "neutral"},
+            "requires_counter_pose": False,
+            "recommended_counter_poses": [],
+        },
+        "intensity_profile": {
+            "overall_exertion": 4,
+            "balance_requirement": 3,
+            "muscular_load": {"core": 5, "upper_body": 2, "lower_body": 2},
+            "mobility_load": {"posterior_chain": 2, "hips_and_pelvis": 2, "spine": 2, "shoulders_and_chest": 2},
+        },
+        "chronic_pain": [
+            {
+                "action": "adjust",
+                "condition": "lower_back_pain",
+                "reason": "Weak hip flexors cause the lumbar spine to round.",
+                "recommended_modification": "feet_on_floor",
+            }
+        ],
+        "client_id": "p_boat_pose",
+        "category": "seated",
+        "common_mistakes": [
+            "Rounding the spine to lift the legs higher",
+            "Holding the breath",
+            "Shrugging the shoulders toward the ears",
+        ],
+        "contraindications": [
+            {
+                "action": "modify",
+                "condition": "neck_injury",
+                "reason": "Holding the arms forward can fatigue neck stabilizers.",
+                "recommended_modification": "hands_on_floor",
+            },
+            {
+                "action": "modify",
+                "condition": "pregnancy",
+                "reason": "Strong abdominal contraction and balance demands in later pregnancy.",
+                "recommended_modification": "staff_pose",
+            },
+        ],
+        "drishti": {"alternatives": ["toes"], "primary": "straight_ahead"},
+        "modifications": [
+            {
+                "instruction": "Keep your knees bent and shins parallel to the floor, holding " "behind the thighs.",
+                "name": "Half Boat",
+                "target_area": "core",
+            },
+            {
+                "instruction": "Place your feet on the floor with knees bent and hands behind you " "for support.",
+                "name": "Feet on Floor",
+                "target_area": "lower_back",
+            },
+        ],
+        "name": "Boat Pose",
+        "sanskrit_name": "Navasana",
+        "aliases": ["Half Boat", "Full Boat"],
+        "pose_intent": ["Strengthen the deep hip flexors and transverse abdominis", "Improve balance on the sit bones", "Build stamina for arm balances"],
+        "progression": {
+            "advanced": "Lower to hover inches above the floor and rise back up without touching " "down.",
+            "beginner": "Toes on the mat with knees bent, spine long.",
+            "intermediate": "Legs extended with arms parallel to the floor.",
+        },
+        "sensory_cues": [
+            {"area": "core", "cue": "Draw the front ribs toward the pelvis to keep the spine long."},
+            {"area": "legs", "cue": "Squeeze inner thighs together as if holding a block."},
+        ],
+        "typical_entries": ["p_staff_pose", "p_seated_forward_fold"],
+        "typical_exits": ["p_staff_pose", "p_seated_forward_fold", "p_bridge"],
+    },
+    {
+        "anatomical_signature": {
+            "is_inverted": False,
+            "spinal_shape": "neutral",
+            "weight_bearing_points": ["sit_bones", "outer_edges_of_feet"],
+            "laterality": {"type": "symmetrical", "active_side": "neutral"},
+            "requires_counter_pose": False,
+            "recommended_counter_poses": [],
+        },
+        "intensity_profile": {
+            "overall_exertion": 2,
+            "balance_requirement": 1,
+            "muscular_load": {"core": 2, "upper_body": 1, "lower_body": 1},
+            "mobility_load": {"posterior_chain": 1, "hips_and_pelvis": 4, "spine": 1, "shoulders_and_chest": 1},
+        },
+        "chronic_pain": [
+            {
+                "action": "adjust",
+                "condition": "knee_pain",
+                "reason": "Forced external rotation stresses the medial collateral ligament.",
+                "recommended_modification": "feet_further_away",
+            }
+        ],
+        "client_id": "p_butterfly_pose",
+        "category": "seated",
+        "common_mistakes": [
+            "Forcing knees toward the floor",
+            "Rounding the spine excessively",
+            "Gripping the feet and collapsing the chest",
+        ],
+        "contraindications": [
+            {
+                "action": "modify",
+                "condition": "groin_strain",
+                "reason": "Deep abduction can aggravate adductor attachments.",
+                "recommended_modification": "supported_knees",
+            }
+        ],
+        "drishti": {"alternatives": ["closed_eyes"], "primary": "toes"},
+        "modifications": [
+            {
+                "instruction": "Place blocks or cushions under each thigh so the knees are supported.",
+                "name": "Supported Knees",
+                "target_area": "hips",
+            },
+            {
+                "instruction": "Move the feet farther from the groin to reduce rotation at the knees.",
+                "name": "Feet Further Away",
+                "target_area": "knees",
+            },
+        ],
+        "name": "Butterfly Pose",
+        "sanskrit_name": "Baddha Konasana",
+        "aliases": ["Bound Angle Pose", "Cobbler's Pose"],
+        "pose_intent": ["Open the inner thighs and groins", "Prepare the hips for wide-legged seated poses", "Stimulate abdominal organs"],
+        "progression": {
+            "advanced": "Fold forward with a long spine, forehead toward the feet.",
+            "beginner": "Sit on a blanket with spine vertical.",
+            "intermediate": "Gently pulse the knees without forcing range.",
+        },
+        "sensory_cues": [
+            {"area": "hips", "cue": "Imagine the inner groins softening toward the floor on each exhale."},
+            {"area": "feet", "cue": "Press the outer edges of the feet together evenly."},
+        ],
+        "typical_entries": ["p_easy_pose", "p_staff_pose"],
+        "typical_exits": ["p_easy_pose", "p_staff_pose", "p_seated_forward_fold"],
     },
 ]
