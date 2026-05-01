@@ -1,6 +1,9 @@
+import jwt
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi import encoders
+from contextlib import asynccontextmanager
+
 from app.health import health_router
 from app.auth import auth_router
 from app.query import query_router
@@ -16,7 +19,18 @@ import os
 
 encoders.jsonable_encoder = jsonable_encoder
 
-app = FastAPI(title="Yoga API", version="1.0")
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Create indexes for authentication collections."""
+
+    db = MongoDB().get_database()
+    await db["refresh_tokens"].create_index("token_hash", unique=True)
+    await db["users"].create_index("google_sub", unique=True, sparse=True)
+    yield
+
+
+app = FastAPI(title="Yoga API", version="1.0", lifespan=lifespan)
 load_dotenv()
 MongoDB()
 
@@ -36,6 +50,16 @@ async def custom_exception_handler(request: Request, exc: CustomException):
     return JSONResponse(
         status_code=500,
         content={"detail": f"{exc.name}"},
+    )
+
+
+@app.exception_handler(jwt.PyJWTError)
+async def pyjwt_exception_handler(request: Request, exc: jwt.PyJWTError):
+    """Bearer access JWT validation runs in dependencies; return a generic 401 response."""
+
+    return JSONResponse(
+        status_code=401,
+        content={"detail": "Authentication failed."},
     )
 
 

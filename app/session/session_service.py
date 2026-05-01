@@ -6,6 +6,8 @@ from motor.motor_asyncio import AsyncIOMotorDatabase
 from bson import ObjectId
 from datetime import datetime
 
+from fastapi import HTTPException, status
+
 from app.llms.openai_client import (
     DEFAULT_YOGA_TTS_INSTRUCTIONS,
     ENERGETIC_YOGA_TTS_INSTRUCTIONS,
@@ -44,6 +46,15 @@ class SessionService:
         if not session:
             raise RuntimeError("The given session was not found")
 
+        return session
+
+    async def require_session_owned_by_user(self, session_id: str, user_id: str) -> dict:
+        """Return the session document or raise 403 if it does not belong to ``user_id``."""
+
+        session = await self.get_session_by_id(session_id)
+        stored = session.get("user_id")
+        if stored is None or str(stored) != str(user_id):
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Forbidden")
         return session
 
     async def _set_sequence_posture_correction(
@@ -575,7 +586,7 @@ class SessionService:
         postures = sequence["postures"]
 
         return {
-            "user_id": user_id,
+            "user_id": ObjectId(user_id),
             "sequence": sequence,
             "created_on": current_timestamp,
             "total_number_of_postures": len(postures),
@@ -593,6 +604,9 @@ class SessionService:
         """
         trace("Session starting now", session_id=None)
         sequence = await self.get_sequence_by_id(sequence_id)
+        seq_uid = sequence.get("user_id")
+        if seq_uid is None or str(seq_uid) != str(user_id):
+            raise ValueError("Sequence not found or access denied")
         postures = sequence["postures"]
 
         session_doc = self._create_session_document(user_id, sequence)

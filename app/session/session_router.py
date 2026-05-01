@@ -1,5 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import StreamingResponse
+
+from app.auth.auth_service import AuthService
+from app.auth.auth_service import get_access_context, get_current_user_id
+from app.auth.settings import get_auth_settings
 from app.session.session_service import SessionService
 from app.schemas.pose_landmarks import PoseLandmarksRequest
 from app.schemas.session_state import CurrentSessionStateRequest
@@ -13,6 +17,8 @@ router = APIRouter()
 
 def _map_session_dependency_error(exc: Exception) -> None:
     """Translate service errors into HTTP status codes or CustomException."""
+    if isinstance(exc, HTTPException):
+        raise exc
     if isinstance(exc, ValueError):
         raise HTTPException(status_code=400, detail=str(exc)) from exc
     if isinstance(exc, RuntimeError) and "not found" in str(exc).lower():
@@ -21,16 +27,34 @@ def _map_session_dependency_error(exc: Exception) -> None:
 
 
 @router.post("/session/start")
-async def start_user_session(series_data: SeriesData, service: SessionService = Depends(DependencyInjector.get_session_service)):
+async def start_user_session(
+    series_data: SeriesData,
+    context: tuple[str, float] = Depends(get_access_context),
+    service: SessionService = Depends(DependencyInjector.get_session_service),
+    auth_service: AuthService = Depends(DependencyInjector.get_auth_service),
+):
     """
     Start a new yoga session.
     Pre-generates guidance: `intro` and `ending` as top-level fields; per-posture transition audio under `sequence.postures`.
     """
     try:
+        user_id_str, remaining_sec = context
+        settings = get_auth_settings()
+        min_sec = settings.min_remaining_to_start_minutes * 60
+        if remaining_sec < min_sec:
+            raise HTTPException(
+                status_code=409,
+                detail={
+                    "code": "access_token_expiring",
+                    "message": "Access token does not have enough lifetime left; refresh before starting a session.",
+                },
+            )
         sequence_id = series_data.sequence_id
-        user_name = "Aarush"
-        user_id = ObjectId("67d5632a3a9bdddef290e127")  # TODO: Get from authentication
-        return await service.start_user_session(user_id=user_id, sequence_id=sequence_id, user_name=user_name)
+        user = await auth_service.get_profile(user_id_str)
+        user_name = user.get("full_name") or "Friend"
+        return await service.start_user_session(user_id=user_id_str, sequence_id=sequence_id, user_name=user_name)
+    except HTTPException:
+        raise
     except Exception as e:
         raise CustomException(str(e))
 
@@ -39,6 +63,7 @@ async def start_user_session(series_data: SeriesData, service: SessionService = 
 async def submit_pose_landmarks(
     session_id: str,
     body: PoseLandmarksRequest,
+    user_id: str = Depends(get_current_user_id),
     service: SessionService = Depends(DependencyInjector.get_session_service),
 ):
     """
@@ -46,6 +71,7 @@ async def submit_pose_landmarks(
     tailored to the session and user profile.
     """
     try:
+        await service.require_session_owned_by_user(session_id, user_id)
         return await service.submit_pose_landmarks(session_id, body)
     except Exception as e:
         _map_session_dependency_error(e)
@@ -55,6 +81,7 @@ async def submit_pose_landmarks(
 async def update_current_session_state(
     session_id: str,
     body: CurrentSessionStateRequest,
+    user_id: str = Depends(get_current_user_id),
     service: SessionService = Depends(DependencyInjector.get_session_service),
 ):
     """
@@ -63,6 +90,7 @@ async def update_current_session_state(
     Use `session_play_status` `"abandoned"` when the user leaves the session without completing it.
     """
     try:
+        await service.require_session_owned_by_user(session_id, user_id)
         return await service.update_current_session_state(session_id, body)
     except Exception as e:
         _map_session_dependency_error(e)
@@ -71,6 +99,7 @@ async def update_current_session_state(
 @router.post("/session/{session_id}/start_over")
 async def start_over_session(
     session_id: str,
+    user_id: str = Depends(get_current_user_id),
     service: SessionService = Depends(DependencyInjector.get_session_service),
 ):
     """
@@ -78,26 +107,34 @@ async def start_over_session(
     sequence posture so the user can restart from the chart.
     """
     try:
+        await service.require_session_owned_by_user(session_id, user_id)
         return await service.start_over_session(session_id)
     except Exception as e:
         _map_session_dependency_error(e)
 
 
 @router.get("/session/latest_incomplete")
-async def get_latest_incomplete_session(service: SessionService = Depends(DependencyInjector.get_session_service)):
+async def get_latest_incomplete_session(
+    user_id: str = Depends(get_current_user_id),
+    service: SessionService = Depends(DependencyInjector.get_session_service),
+):
     """
     Return the latest session for the user when it is ``not_started`` or ``in_progress``; if the latest
     session is ``completed``, ``abandoned``, or the user has no sessions, ``session`` is null.
     """
-    user_id = ObjectId("67d5632a3a9bdddef290e127")  # TODO: Get from authentication
-    session = await service.get_latest_incomplete_session_for_user(user_id)
+    session = await service.get_latest_incomplete_session_for_user(ObjectId(user_id))
     return {"session": session}
 
 
 @router.get("/session/{session_id}")
-async def get_session(session_id: str, service: SessionService = Depends(DependencyInjector.get_session_service)):
+async def get_session(
+    session_id: str,
+    user_id: str = Depends(get_current_user_id),
+    service: SessionService = Depends(DependencyInjector.get_session_service),
+):
     """Return session info by session_id. Omits legacy `instructions` if present; intro/ending are top-level on the document."""
     try:
+        await service.require_session_owned_by_user(session_id, user_id)
         return await service.get_session_info(session_id)
     except Exception as e:
         _map_session_dependency_error(e)
@@ -107,6 +144,7 @@ async def get_session(session_id: str, service: SessionService = Depends(Depende
 async def get_audio(
     session_id: str,
     message_id: str,
+    user_id: str = Depends(get_current_user_id),
     service: SessionService = Depends(DependencyInjector.get_session_service),
 ):
     """
@@ -114,6 +152,7 @@ async def get_audio(
     `instruction_message_id` / `sensory_message_id` from the session document.
     """
     try:
+        await service.require_session_owned_by_user(session_id, user_id)
         chunk_stream = service.get_audio_chunks(session_id=session_id, message_id=message_id)
         return StreamingResponse(chunk_stream, media_type="audio/mpeg")
     except Exception as e:

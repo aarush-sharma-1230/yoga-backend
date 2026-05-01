@@ -1,5 +1,6 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 
+from app.auth.auth_service import get_current_user_id
 from app.dependency_injector import DependencyInjector
 from app.globals.errors import CustomException
 from app.schemas.sequence_requests import (
@@ -12,19 +13,23 @@ from app.sequence.sequence_service import SequenceService
 
 router = APIRouter()
 
-USER_ID_TEMP = "67d5632a3a9bdddef290e127"
-
 
 @router.post("/sequence/get_sequences")
-async def get_sequences(service: SequenceService = Depends(DependencyInjector.get_sequence_service)):
+async def get_sequences(
+    service: SequenceService = Depends(DependencyInjector.get_sequence_service),
+    user_id: str = Depends(get_current_user_id),
+):
     try:
-        return await service.get_sequences(user_id=USER_ID_TEMP)
+        return await service.get_sequences(user_id=user_id)
     except Exception as e:
         raise CustomException(str(e))
 
 
 @router.get("/sequence/get_postures")
-async def get_postures(service: SequenceService = Depends(DependencyInjector.get_sequence_service)):
+async def get_postures(
+    service: SequenceService = Depends(DependencyInjector.get_sequence_service),
+    user_id: str = Depends(get_current_user_id),
+):
     """Get all postures from the postures collection."""
     try:
         return await service.get_postures()
@@ -33,7 +38,10 @@ async def get_postures(service: SequenceService = Depends(DependencyInjector.get
 
 
 @router.get("/sequence/get_themes")
-async def get_themes(service: SequenceService = Depends(DependencyInjector.get_sequence_service)):
+async def get_themes(
+    service: SequenceService = Depends(DependencyInjector.get_sequence_service),
+    user_id: str = Depends(get_current_user_id),
+):
     """Get all themes from the themes collection."""
     try:
         return await service.get_themes()
@@ -42,9 +50,18 @@ async def get_themes(service: SequenceService = Depends(DependencyInjector.get_s
 
 
 @router.post("/sequence/get_sequence")
-async def get_sequence(sequence_data: SequenceData, service: SequenceService = Depends(DependencyInjector.get_sequence_service)):
+async def get_sequence(
+    sequence_data: SequenceData,
+    service: SequenceService = Depends(DependencyInjector.get_sequence_service),
+    user_id: str = Depends(get_current_user_id),
+):
     try:
-        return await service.get_sequence(sequence_data.sequence_id)
+        return await service.get_sequence(sequence_data.sequence_id, user_id)
+    except ValueError as e:
+        msg = str(e).lower()
+        if "access denied" in msg:
+            raise HTTPException(status_code=403, detail=str(e))
+        raise HTTPException(status_code=404, detail=str(e))
     except Exception as e:
         raise CustomException(str(e))
 
@@ -53,6 +70,7 @@ async def get_sequence(sequence_data: SequenceData, service: SequenceService = D
 async def generate_sequence(
     data: GenerateSequenceData,
     service: SequenceService = Depends(DependencyInjector.get_sequence_service),
+    user_id: str = Depends(get_current_user_id),
 ):
     """
     Generate a personalized yoga sequence for the user.
@@ -64,7 +82,7 @@ async def generate_sequence(
     """
     try:
         return await service.generate_sequence(
-            user_id=USER_ID_TEMP,
+            user_id=user_id,
             practice_theme_id=data.practice_theme_id,
             duration_minutes=data.duration_minutes,
             user_notes=data.user_notes,
@@ -78,13 +96,14 @@ async def generate_sequence(
 async def create_manual_sequence(
     data: CreateManualSequenceData,
     service: SequenceService = Depends(DependencyInjector.get_sequence_service),
+    user_id: str = Depends(get_current_user_id),
 ):
     """Create a manual sequence from user-selected posture client_ids."""
     try:
         return await service.create_manual_sequence(
             name=data.name,
             posture_client_ids=data.posture_client_ids,
-            user_id=USER_ID_TEMP,
+            user_id=user_id,
         )
     except Exception as e:
         raise CustomException(str(e))
@@ -94,6 +113,7 @@ async def create_manual_sequence(
 async def update_sequence(
     data: UpdateSequenceData,
     service: SequenceService = Depends(DependencyInjector.get_sequence_service),
+    user_id: str = Depends(get_current_user_id),
 ):
     """Update a sequence's name and ordered postures (same shape as stored in DB)."""
     try:
@@ -101,7 +121,7 @@ async def update_sequence(
             sequence_id=data.sequence_id,
             name=data.name,
             postures=data.postures,
-            user_id=USER_ID_TEMP,
+            user_id=user_id,
         )
     except Exception as e:
         raise CustomException(str(e))

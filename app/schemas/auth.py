@@ -1,6 +1,6 @@
 """Auth-related request/response Pydantic models."""
 
-from typing import Literal, Optional
+from typing import Any, Literal, Optional
 
 from pydantic import BaseModel, EmailStr
 
@@ -25,8 +25,10 @@ class CreateUser(BaseModel):
     password: str
 
 
-class GetUserData(BaseModel):
-    user_id: str
+class GoogleLoginRequest(BaseModel):
+    """Google Identity Services ID token from the client."""
+
+    id_token: str
 
 
 class HardPriorityStrategy(BaseModel):
@@ -41,3 +43,29 @@ class MediumPriorityStrategy(BaseModel):
     activity_level: Optional[ActivityLevel] = None
     primary_goal: list[PrimaryGoal]
     user_notes: Optional[str] = None
+
+
+def default_user_profile() -> dict[str, Any]:
+    """
+    Nested profile shape for new users: strategies match persisted models; summaries are empty strings.
+
+    Orchestration and prompts read ``hard_priority_strategy``, ``medium_priority_strategy``,
+    ``hard_priority_summary``, and ``medium_priority_summary`` from the user document.
+    """
+
+    return {
+        "hard_priority_strategy": HardPriorityStrategy(
+            medical_conditions=[],
+            chronic_pain_areas=[],
+            recent_surgery=None,
+            user_notes=None,
+        ).model_dump(),
+        "medium_priority_strategy": MediumPriorityStrategy(
+            experience_level=None,
+            activity_level=None,
+            primary_goal=[],
+            user_notes=None,
+        ).model_dump(),
+        "hard_priority_summary": "",
+        "medium_priority_summary": "",
+    }

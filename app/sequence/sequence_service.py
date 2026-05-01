@@ -65,11 +65,14 @@ class SequenceService:
         themes = await self.db["themes"].find().to_list(length=None)
         return {"status": True, "result": themes}
 
-    async def get_sequence(self, sequence_id: str):
-        """Return the sequence document as stored; postures are not re-fetched from the catalogue."""
+    async def get_sequence(self, sequence_id: str, user_id: str):
+        """Return the sequence document if it exists and belongs to the user."""
+
         sequence = await self.db["sequences"].find_one({"_id": ObjectId(sequence_id)})
         if not sequence:
             raise ValueError(f"Sequence not found: {sequence_id}")
+        if not self._sequence_owned_by_user(sequence, user_id):
+            raise ValueError("Sequence not found or access denied")
         return {"status": True, "result": sequence}
 
     def canonical_posture_row(self, posture_doc: dict, *, posture_intent: str, recommended_modification: str) -> dict:
