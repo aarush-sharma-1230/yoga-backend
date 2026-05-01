@@ -141,6 +141,10 @@ class AuthService:
             {"_id": ObjectId(user_id)},
             {"full_name": 1, "email": 1, "profile": 1},
         )
+
+        if not user_obj:
+            raise RuntimeError("User not found")
+            
         return {"status": True, "user": user_obj}
 
     async def save_hard_priority_strategy(self, user_id: str, strategy: HardPriorityStrategy) -> dict:
