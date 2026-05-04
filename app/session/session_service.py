@@ -1,4 +1,5 @@
 import asyncio
+import logging
 import os
 import uuid
 from pathlib import Path
@@ -27,10 +28,11 @@ from app.session.transition_request import build_transition_request
 
 
 class SessionService:
-    def __init__(self, db: AsyncIOMotorDatabase, yoga_coordinator, posture_correction_agent):
+    def __init__(self, db: AsyncIOMotorDatabase, yoga_coordinator, posture_correction_agent, llm_cost_service=None):
         self.db = db
         self.yoga_coordinator = yoga_coordinator
         self.posture_correction_agent = posture_correction_agent
+        self.llm_cost_service = llm_cost_service
 
     async def get_sequence_by_id(self, sequence_id: str):
         sequence = await self.db["sequences"].find_one({"_id": ObjectId(sequence_id)})
@@ -81,6 +83,7 @@ class SessionService:
         """
         session = await self.get_session_by_id(session_id)
         postures = (session.get("sequence") or {}).get("postures") or []
+        user_id_str = str(session["user_id"]) if session.get("user_id") is not None else None
         posture_index = SessionService._posture_index_for_client_id(postures, body.posture_client_id)
         if posture_index is None:
             raise ValueError(
@@ -91,6 +94,13 @@ class SessionService:
             session_id=session_id,
             payload=body,
         )
+        micro = int(result.pop("llm_cost_micro_usd", 0))
+        if self.llm_cost_service and user_id_str and micro > 0:
+            try:
+                await self.llm_cost_service.commit_delta_micro_usd(user_id_str, micro)
+            except Exception:
+                logging.exception("llm_cost commit after pose correction failed")
+
         instruction = result.get("instruction")
         if not instruction:
             return {"status": True, "result": {"instruction": None, "message_id": None, "audio_path": None}}
@@ -480,12 +490,15 @@ class SessionService:
 
         return str(audio_path)
 
-    async def _generate_intro(self, sequence_name: str, session_id: str, user_name: str, user_id: str | None = None) -> None:
+    async def _generate_intro(
+        self, sequence_name: str, session_id: str, user_name: str, user_id: str | None = None
+    ) -> int:
         """Generate intro copy and TTS; store a single flat `intro` object (same shape as `ending`, not `steps`)."""
         prompt = get_introduction_prompt(sequence_name=sequence_name, user_name=user_name)
         response = await self.yoga_coordinator.generate_intro_or_ending(prompt=prompt, user_id=user_id)
         text = response["text"]
         message_id = response["message_id"]
+        micro = int(response.get("llm_cost_micro_usd") or 0)
         audio_chunks = self.yoga_coordinator.generate_audio_from_text(
             text, instructions=ENERGETIC_YOGA_TTS_INSTRUCTIONS
         )
@@ -497,9 +510,11 @@ class SessionService:
             {"_id": ObjectId(session_id)},
             {"$set": {"intro": doc}},
         )
+        return micro
 
-    async def _generate_transitions(self, postures: list, session_id: str, user_id: str | None = None) -> None:
+    async def _generate_transitions(self, postures: list, session_id: str, user_id: str | None = None) -> int:
         """Generate transition guidance steps and audio; persist on embedded sequence.postures[idx].guidance_steps."""
+        total_micro = 0
         client_ids = self._client_ids_from_stored_postures(postures)
         posture_docs = {}
         if client_ids:
@@ -515,6 +530,7 @@ class SessionService:
                 continue
 
             response = await self.yoga_coordinator.generate_transition_guidance(req, user_id=user_id)
+            total_micro += int(response.get("llm_cost_micro_usd") or 0)
             base_message_id = response["message_id"]
             raw_steps = response["steps"]
             target_row = postures[idx]
@@ -558,12 +574,15 @@ class SessionService:
                 {"$set": {f"sequence.postures.{idx}.guidance_steps": guidance_steps}},
             )
 
-    async def _generate_ending_note(self, sequence_name: str, session_id: str, user_id: str | None = None) -> None:
+        return total_micro
+
+    async def _generate_ending_note(self, sequence_name: str, session_id: str, user_id: str | None = None) -> int:
         """Generate ending copy and TTS; store a single flat `ending` object (identical keys to `intro`, not `steps`)."""
         prompt = get_ending_prompt(sequence_name=sequence_name)
         response = await self.yoga_coordinator.generate_intro_or_ending(prompt=prompt, user_id=user_id)
         text = response["text"]
         message_id = response["message_id"]
+        micro = int(response.get("llm_cost_micro_usd") or 0)
         audio_chunks = self.yoga_coordinator.generate_audio_from_text(text)
         audio_path = self._save_audio_to_file(session_id, message_id, audio_chunks)
         doc = self._bookend_spoken_document(text, message_id, audio_path)
@@ -573,12 +592,24 @@ class SessionService:
             {"_id": ObjectId(session_id)},
             {"$set": {"ending": doc, "generation_status": "completed"}},
         )
+        return micro
 
-    async def _generate_remaining_guidance_background(self, session_id: str, postures: list, sequence_name: str, user_name: str, user_id: str | None = None) -> None:
-        """Generate transitions and ending text, then generate audio in background."""
-        await self._generate_intro(sequence_name, session_id, user_name, user_id)
-        await self._generate_transitions(postures, session_id, user_id)
-        await self._generate_ending_note(sequence_name, session_id, user_id)
+    async def _generate_remaining_guidance_background(
+        self, session_id: str, postures: list, sequence_name: str, user_name: str, user_id: str | None = None
+    ) -> None:
+        """Generate intro, transitions, and ending; persist spend once when the full pipeline succeeds."""
+        try:
+            intro_micro = await self._generate_intro(sequence_name, session_id, user_name, user_id)
+            transitions_micro = await self._generate_transitions(postures, session_id, user_id)
+            ending_micro = await self._generate_ending_note(sequence_name, session_id, user_id)
+            total = intro_micro + transitions_micro + ending_micro
+            if self.llm_cost_service and user_id and total > 0:
+                try:
+                    await self.llm_cost_service.commit_delta_micro_usd(str(user_id), total)
+                except Exception:
+                    logging.exception("llm_cost commit after session guidance failed")
+        except Exception:
+            logging.exception("session guidance background task failed")
 
     def _create_session_document(self, user_id: str, sequence: dict) -> dict:
         """Create session document; `intro` and `ending` are set when background generation completes."""

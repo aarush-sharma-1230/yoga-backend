@@ -14,6 +14,7 @@ from motor.motor_asyncio import AsyncIOMotorDatabase
 
 from app.auth.settings import get_auth_settings
 from app.schemas.auth import CreateUser, HardPriorityStrategy, MediumPriorityStrategy, default_user_profile
+from app.usage.llm_cost_service import LlmCostService
 
 
 def _hash_refresh_token(raw: str) -> str:
@@ -173,6 +174,9 @@ class AuthService:
             {"_id": ObjectId(user_id)},
             {"$set": {"profile.hard_priority_summary": hard_resp["text"]}},
         )
+        micro = int(hard_resp.get("_llm_cost_micro_usd") or 0)
+        if micro > 0:
+            await LlmCostService(self.db).commit_delta_micro_usd(user_id, micro)
 
     async def generate_medium_summary_and_update_profile(self, user_id: str, medium_strategy: dict) -> None:
         """Background task: generate medium-priority summary only."""
@@ -182,6 +186,9 @@ class AuthService:
             {"_id": ObjectId(user_id)},
             {"$set": {"profile.medium_priority_summary": medium_resp["text"]}},
         )
+        micro = int(medium_resp.get("_llm_cost_micro_usd") or 0)
+        if micro > 0:
+            await LlmCostService(self.db).commit_delta_micro_usd(user_id, micro)
 
     async def get_profile(self, user_id: str) -> dict:
         """Fetch user profile by user_id. Returns MongoDB document structure."""

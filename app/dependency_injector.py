@@ -13,6 +13,7 @@ from app.orchestration.nodes import build_node_functions
 from app.query.query_service import QueryService
 from app.session.session_service import SessionService
 from app.sequence.sequence_service import SequenceService
+from app.usage.llm_cost_service import LlmCostService
 from app.websocket.websocket_service import ConnectionManager, WebSocketService
 import os
 from dotenv import load_dotenv
@@ -50,12 +51,21 @@ class DependencyInjector:
     def get_reviewer_agent(openai_client=Depends(get_openai_client)):
         return ReviewerAgent(llm_client=openai_client)
 
+    def get_llm_cost_service(db=Depends(get_database)):
+        return LlmCostService(db)
+
     def get_session_service(
         db=Depends(get_database),
         yoga_coordinator=Depends(get_yoga_coordinator),
         posture_correction_agent=Depends(get_posture_correction_agent),
+        llm_cost_service=Depends(get_llm_cost_service),
     ):
-        return SessionService(db, yoga_coordinator=yoga_coordinator, posture_correction_agent=posture_correction_agent)
+        return SessionService(
+            db,
+            yoga_coordinator=yoga_coordinator,
+            posture_correction_agent=posture_correction_agent,
+            llm_cost_service=llm_cost_service,
+        )
 
     def get_query_service(
         db=Depends(get_database),
@@ -70,9 +80,10 @@ class DependencyInjector:
         summary_agent=Depends(get_summary_agent),
         sequence_composer=Depends(get_sequence_composer),
         reviewer_agent=Depends(get_reviewer_agent),
+        llm_cost_service=Depends(get_llm_cost_service),
     ):
         """Build the orchestration graph and inject it into SequenceService."""
-        sequence_service = SequenceService(db)
+        sequence_service = SequenceService(db, llm_cost_service=llm_cost_service)
 
         node_fns = build_node_functions(
             db=db,

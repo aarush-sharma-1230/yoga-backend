@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import StreamingResponse
 
 from app.auth.auth_service import AuthService
-from app.auth.auth_service import get_access_context, get_current_user_id
+from app.auth.auth_service import get_current_user_id
 from app.auth.settings import get_auth_settings
 from app.session.session_service import SessionService
 from app.schemas.pose_landmarks import PoseLandmarksRequest
@@ -10,6 +10,9 @@ from app.schemas.session_state import CurrentSessionStateRequest
 from app.schemas.session_requests import SeriesData
 from app.dependency_injector import DependencyInjector
 from app.globals.errors import CustomException
+from app.usage.auth_budget_deps import UserBudgetAccess, get_user_budget_access
+from app.usage.budget_http import raise_if_llm_daily_cap_exceeded
+from app.usage.llm_pricing import config_usd_to_micro_usd
 from bson import ObjectId
 
 router = APIRouter()
@@ -29,7 +32,7 @@ def _map_session_dependency_error(exc: Exception) -> None:
 @router.post("/session/start")
 async def start_user_session(
     series_data: SeriesData,
-    context: tuple[str, float] = Depends(get_access_context),
+    access: UserBudgetAccess = Depends(get_user_budget_access),
     service: SessionService = Depends(DependencyInjector.get_session_service),
     auth_service: AuthService = Depends(DependencyInjector.get_auth_service),
 ):
@@ -38,7 +41,8 @@ async def start_user_session(
     Pre-generates guidance: `intro` and `ending` as top-level fields; per-posture transition audio under `sequence.postures`.
     """
     try:
-        user_id_str, remaining_sec = context
+        user_id_str = access.user_id
+        remaining_sec = access.seconds_until_exp
         settings = get_auth_settings()
         min_sec = settings.min_remaining_to_start_minutes * 60
         if remaining_sec < min_sec:
@@ -49,6 +53,12 @@ async def start_user_session(
                     "message": "Access token does not have enough lifetime left; refresh before starting a session.",
                 },
             )
+        cap_micro = config_usd_to_micro_usd(settings.user_daily_llm_usd_cap)
+        raise_if_llm_daily_cap_exceeded(
+            llm_cost=access.llm_cost,
+            cap_micro_usd=cap_micro,
+            limit_usd=settings.user_daily_llm_usd_cap,
+        )
         sequence_id = series_data.sequence_id
         user = await auth_service.get_profile(user_id_str)
         user_name = user.get("full_name") or "Friend"

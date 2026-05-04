@@ -1,3 +1,4 @@
+import logging
 from datetime import datetime
 
 from bson import ObjectId
@@ -13,6 +14,11 @@ from app.schemas.custom_sequence import (
 from app.schemas.stored_sequence_posture import StoredSequencePostureItem
 from app.schemas.request_review import ReviewQuestionAnswered
 from app.orchestration.runner import run_sequence_generation
+from app.usage.request_llm_cost_context import (
+    get_request_llm_cost_micro_total,
+    start_request_llm_cost_tracking,
+    stop_request_llm_cost_tracking,
+)
 
 DEFAULT_MANUAL_HOLD_SECONDS = 60
 
@@ -29,9 +35,11 @@ class SequenceService:
         self,
         db: AsyncIOMotorDatabase,
         compiled_graph=None,
+        llm_cost_service=None,
     ):
         self.db = db
         self.compiled_graph = compiled_graph
+        self.llm_cost_service = llm_cost_service
 
     async def get_sequences(self, user_id: str):
         pipeline = [
@@ -190,16 +198,29 @@ class SequenceService:
         are injected for the composer; sequence review still runs.
         """
         if not self.compiled_graph:
-            raise RuntimeError("Sequence generation graph is not configured")
+            raise RuntimeError("Sequence generation is not configured")
 
-        return await run_sequence_generation(
-            compiled_graph=self.compiled_graph,
-            user_id=user_id,
-            practice_theme_id=practice_theme_id,
-            duration_minutes=duration_minutes,
-            user_notes=user_notes,
-            questions=questions,
-        )
+        start_request_llm_cost_tracking()
+        try:
+            out = await run_sequence_generation(
+                compiled_graph=self.compiled_graph,
+                user_id=user_id,
+                practice_theme_id=practice_theme_id,
+                duration_minutes=duration_minutes,
+                user_notes=user_notes,
+                questions=questions,
+            )
+        finally:
+            total_micro = get_request_llm_cost_micro_total()
+            stop_request_llm_cost_tracking()
+
+        if self.llm_cost_service and total_micro > 0:
+            try:
+                await self.llm_cost_service.commit_delta_micro_usd(user_id, total_micro)
+            except Exception:
+                logging.exception("llm_cost commit after sequence generation failed")
+
+        return out
 
     def _sequence_owned_by_user(self, sequence_doc: dict, user_id: str) -> bool:
         """Return True if the sequence document belongs to the given user id string."""

@@ -18,6 +18,7 @@ class AuthSettings:
     cookie_secure: bool
     cookie_samesite: str
     min_remaining_to_start_minutes: int
+    user_daily_llm_usd_cap: float
 
 
 def _parse_bool(raw: str | None, default: bool) -> bool:
@@ -50,6 +51,7 @@ def get_auth_settings() -> AuthSettings:
     if cookie_samesite not in ("lax", "strict", "none"):
         cookie_samesite = "lax"
     min_remaining = int(os.getenv("MIN_REMAINING_TO_START_MINUTES", "10"))
+    user_daily_llm_usd_cap = float(os.getenv("USER_DAILY_LLM_USD_CAP", "0.1"))
 
     return AuthSettings(
         jwt_secret=jwt_secret.strip(),
@@ -61,4 +63,5 @@ def get_auth_settings() -> AuthSettings:
         cookie_secure=cookie_secure,
         cookie_samesite=cookie_samesite,
         min_remaining_to_start_minutes=min_remaining,
+        user_daily_llm_usd_cap=user_daily_llm_usd_cap,
     )

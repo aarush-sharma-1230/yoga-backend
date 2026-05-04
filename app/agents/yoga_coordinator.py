@@ -40,10 +40,12 @@ class YogaCoordinator:
         dp = await self._get_developer_prompt(user_id)
         response = await asyncio.to_thread(self.llm_client.generate_text, prompt=prompt, developer_prompt=dp, model=self.model)
         text = self._extract_text(response)
+        micro = self.llm_client.micro_usd_from_responses_dict(response, self.model)
         return {
             **response,
             "text": text,
             "message_id": response.get("output", [{}])[0].get("id"),
+            "llm_cost_micro_usd": micro,
         }
 
     async def generate_transition_guidance(
@@ -62,7 +64,7 @@ class YogaCoordinator:
             if ctx.target_posture_intent == POSTURE_INTENT_VINYASA_LOOP
             else TransitionGuidanceOutput
         )
-        parsed, message_id = await asyncio.to_thread(
+        parsed, message_id, micro_usd = await asyncio.to_thread(
             self.llm_client.generate_with_schema_meta,
             prompt=prompt,
             developer_prompt=dp,
@@ -81,6 +83,7 @@ class YogaCoordinator:
         return {
             "message_id": message_id,
             "steps": [s.model_dump() for s in steps],
+            "llm_cost_micro_usd": micro_usd,
         }
 
     def generate_audio_from_text(self, text: str, *, instructions: str | None = None):

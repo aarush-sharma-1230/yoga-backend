@@ -1,7 +1,5 @@
 import json
-import traceback
 import uuid
-import os
 from typing import Type, TypeVar
 
 import openai
@@ -9,8 +7,57 @@ from openai import OpenAI
 from pydantic import BaseModel
 
 from app.logs.api_call_logger import log_api_call
+from app.usage import llm_pricing
+from app.usage.request_llm_cost_context import add_request_llm_cost_micro, is_request_llm_cost_tracking
 
 T = TypeVar("T", bound=BaseModel)
+
+
+def _float_usd_to_micro_usd(value: float | None) -> int | None:
+    """Convert vendor-reported total cost in USD to micro-USD (single boundary conversion)."""
+    if value is None or value < 0:
+        return None
+    return int(round(float(value) * 1_000_000))
+
+
+def compute_llm_cost_micro_usd(
+    *,
+    input_tokens: int | None = None,
+    output_tokens: int | None = None,
+    reasoning_tokens: int | None = None,
+    model: str,
+    input_usd_per_million: float | None = None,
+    output_usd_per_million: float | None = None,
+    reasoning_usd_per_million: float | None = None,
+    api_reported_total_micro_usd: int | None = None,
+) -> int:
+    """
+    Compute billed cost for one LLM call as integer micro-USD.
+
+    When ``api_reported_total_micro_usd`` is set (non-negative), it wins. Otherwise cost is
+    ``input_tokens * R_in + output_tokens * R_out + reasoning_tokens * R_reason`` where each
+    ``R`` is USD charged per **million** tokens of that kind (rates are not converted to USD
+    first; the product is already micro-USD because ``tokens * (USD/M)`` equals micro-USD
+    when ``USD/M`` is dollars per million tokens).
+
+    ``model`` is reserved for future per-model rate tables.
+    """
+    _ = model
+    if api_reported_total_micro_usd is not None and api_reported_total_micro_usd >= 0:
+        return api_reported_total_micro_usd
+
+    r_in = input_usd_per_million if input_usd_per_million is not None else llm_pricing.INPUT_USD_PER_MILLION_TOKENS
+    r_out = output_usd_per_million if output_usd_per_million is not None else llm_pricing.OUTPUT_USD_PER_MILLION_TOKENS
+    r_reas = (
+        reasoning_usd_per_million
+        if reasoning_usd_per_million is not None
+        else llm_pricing.REASONING_USD_PER_MILLION_TOKENS
+    )
+    inp = int(input_tokens or 0)
+    out = int(output_tokens or 0)
+    reas = int(reasoning_tokens or 0)
+    total_micro = inp * r_in + out * r_out + reas * r_reas
+    return int(round(total_micro))
 
 DEFAULT_YOGA_TTS_INSTRUCTIONS = (
     "Speak as a calm, experienced yoga teacher guiding a live class. Use a warm, unhurried pace, "
@@ -28,6 +75,8 @@ DEFAULT_TTS_VOICE = "sage"
 
 
 class OpenAIClient:
+    """OpenAI chat / responses / TTS client with optional per-request micro-USD accumulation."""
+
     def __init__(self, openai_api_key: str):
         self.is_text_enabled = True
         self.is_audio_enabled = True
@@ -38,6 +87,72 @@ class OpenAIClient:
         openai.api_key = openai_api_key
         self._client = OpenAI(api_key=openai_api_key)
 
+    @staticmethod
+    def _api_reported_micro_usd_from_usage_mapping(usage: dict | None) -> int | None:
+        """Return vendor-reported total cost in micro-USD from a ``usage``-like dict, if present."""
+        if not usage or not isinstance(usage, dict):
+            return None
+        for key in ("total_cost", "cost", "total_cost_usd"):
+            v = usage.get(key)
+            micro = _float_usd_to_micro_usd(v) if isinstance(v, (int, float)) else None
+            if micro is not None:
+                return micro
+        return None
+
+    @staticmethod
+    def _api_reported_micro_usd_from_response_dict(resp_dict: dict) -> int | None:
+        top = resp_dict.get("cost")
+        micro = _float_usd_to_micro_usd(top) if isinstance(top, (int, float)) else None
+        if micro is not None:
+            return micro
+        usage = resp_dict.get("usage")
+        if isinstance(usage, dict):
+            return OpenAIClient._api_reported_micro_usd_from_usage_mapping(usage)
+        return None
+
+    @staticmethod
+    def _api_reported_micro_usd_from_chat_usage(usage) -> int | None:
+        if usage is None:
+            return None
+        for attr in ("total_cost", "cost"):
+            if hasattr(usage, attr):
+                v = getattr(usage, attr, None)
+                micro = _float_usd_to_micro_usd(v) if isinstance(v, (int, float)) else None
+                if micro is not None:
+                    return micro
+        return None
+
+    def micro_usd_from_responses_dict(self, resp_dict: dict, model: str) -> int:
+        """Public estimate for a Responses API dict (same rules as ``generate_text``)."""
+        return self._micro_usd_for_responses_dict(resp_dict, model)
+
+    def _micro_usd_for_chat_completion(self, completion, model: str) -> int:
+        inp, out, reasoning = self._extract_usage_from_chat_completion(completion)
+        usage = getattr(completion, "usage", None)
+        api_micro = self._api_reported_micro_usd_from_chat_usage(usage)
+        return compute_llm_cost_micro_usd(
+            input_tokens=inp,
+            output_tokens=out,
+            reasoning_tokens=reasoning,
+            model=model,
+            api_reported_total_micro_usd=api_micro,
+        )
+
+    def _micro_usd_for_responses_dict(self, resp_dict: dict, model: str) -> int:
+        inp, out, reasoning = self._extract_usage_from_response_dict(resp_dict)
+        api_micro = self._api_reported_micro_usd_from_response_dict(resp_dict)
+        return compute_llm_cost_micro_usd(
+            input_tokens=inp,
+            output_tokens=out,
+            reasoning_tokens=reasoning,
+            model=model,
+            api_reported_total_micro_usd=api_micro,
+        )
+
+    def _track_micro_usd(self, micro: int) -> None:
+        if is_request_llm_cost_tracking():
+            add_request_llm_cost_micro(micro)
+
     def generate_with_schema_meta(
         self,
         prompt: str,
@@ -45,10 +160,11 @@ class OpenAIClient:
         response_format: Type[T],
         model: str,
         temperature: float = 0.5,
-    ) -> tuple[T, str]:
+    ) -> tuple[T, str, int]:
         """
-        Parse chat completion into the given schema. Returns (parsed_model, message_id).
-        Does not reshape into legacy instruction rows; callers own validation.
+        Parse chat completion into the given schema.
+
+        Returns ``(parsed_model, message_id, micro_usd)`` for this call's estimated dollar cost.
         """
         messages = [
             {"role": "system", "content": developer_prompt},
@@ -62,7 +178,7 @@ class OpenAIClient:
         )
         parsed = completion.choices[0].message.parsed
         message_id = getattr(completion, "id", None) or f"msg_{uuid.uuid4().hex}"
-        input_tokens, output_tokens = self._extract_usage_from_chat_completion(completion)
+        input_tokens, output_tokens, _reasoning = self._extract_usage_from_chat_completion(completion)
         output_str = parsed.model_dump_json(indent=2) if hasattr(parsed, "model_dump_json") else str(parsed)
         self._log_api_call(
             "generate_with_schema",
@@ -72,7 +188,9 @@ class OpenAIClient:
             output_tokens,
             output=output_str,
         )
-        return parsed, message_id
+        micro = self._micro_usd_for_chat_completion(completion, model)
+        self._track_micro_usd(micro)
+        return parsed, message_id, micro
 
     def generate_with_schema(
         self,
@@ -83,7 +201,7 @@ class OpenAIClient:
         temperature: float = 0.5,
     ) -> T:
         """Generate structured output conforming to the given Pydantic schema."""
-        parsed, _message_id = self.generate_with_schema_meta(
+        parsed, _message_id, _micro = self.generate_with_schema_meta(
             prompt=prompt,
             developer_prompt=developer_prompt,
             response_format=response_format,
@@ -98,12 +216,17 @@ class OpenAIClient:
         developer_prompt: str,
         model: str,
         temperature: float = 0.7,
-    ) -> str:
+    ) -> dict:
+        """
+        Call the Responses API and return the response dict.
+
+        When request-level cost tracking is enabled, accumulates micro-USD for this call.
+        """
         if self.is_text_enabled:
             input = [{"role": "developer", "content": developer_prompt}, {"role": "user", "content": prompt}]
             response = openai.responses.create(model=model, input=input, temperature=temperature)
             resp_dict = response.to_dict()
-            input_tokens, output_tokens = self._extract_usage_from_response_dict(resp_dict)
+            input_tokens, output_tokens, _reasoning = self._extract_usage_from_response_dict(resp_dict)
             self._log_api_call(
                 "generate_text",
                 developer_prompt,
@@ -112,7 +235,10 @@ class OpenAIClient:
                 output_tokens,
                 output=json.dumps(resp_dict, indent=2),
             )
+            micro = self._micro_usd_for_responses_dict(resp_dict, model)
+            self._track_micro_usd(micro)
             return resp_dict
+        return {}
 
     def generate_audio(
         self,
@@ -137,23 +263,31 @@ class OpenAIClient:
                 for chunk in response.iter_bytes():
                     yield chunk
 
-    def _extract_usage_from_chat_completion(self, completion) -> tuple[int | None, int | None]:
-        """Extract input and output token counts from a ChatCompletion."""
+    def _extract_usage_from_chat_completion(self, completion) -> tuple[int | None, int | None, int | None]:
+        """Extract input, output, and optional reasoning token counts from a ChatCompletion."""
         usage = getattr(completion, "usage", None)
         if not usage:
-            return (None, None)
+            return (None, None, None)
         input_tokens = getattr(usage, "prompt_tokens", None)
         output_tokens = getattr(usage, "completion_tokens", None)
-        return (input_tokens, output_tokens)
+        reasoning = getattr(usage, "reasoning_tokens", None)
+        if reasoning is None and hasattr(usage, "model_dump"):
+            try:
+                udict = usage.model_dump()
+                reasoning = udict.get("reasoning_tokens")
+            except (TypeError, AttributeError):
+                reasoning = None
+        return (input_tokens, output_tokens, reasoning)
 
-    def _extract_usage_from_response_dict(self, resp_dict: dict) -> tuple[int | None, int | None]:
-        """Extract input and output token counts from a Responses API response dict."""
+    def _extract_usage_from_response_dict(self, resp_dict: dict) -> tuple[int | None, int | None, int | None]:
+        """Extract input, output, and optional reasoning token counts from a Responses API response dict."""
         usage = resp_dict.get("usage") or (resp_dict.get("output") or [{}])[0].get("usage")
         if not isinstance(usage, dict):
-            return (None, None)
+            return (None, None, None)
         input_tokens = usage.get("input_tokens") or usage.get("prompt_tokens")
         output_tokens = usage.get("output_tokens") or usage.get("completion_tokens")
-        return (input_tokens, output_tokens)
+        reasoning = usage.get("reasoning_tokens")
+        return (input_tokens, output_tokens, reasoning)
 
     def _log_api_call(
         self,
