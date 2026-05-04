@@ -138,7 +138,7 @@ class PostureCorrectionAgent:
 
         developer_prompt = await self._get_developer_prompt(user_id_str)
 
-        parsed, message_id, micro_usd = await asyncio.to_thread(
+        parsed, message_id = await asyncio.to_thread(
             self.llm_client.generate_with_schema_meta,
             prompt=user_prompt,
             developer_prompt=developer_prompt,
@@ -154,5 +154,4 @@ class PostureCorrectionAgent:
         return {
             "instruction": text,
             "message_id": message_id,
-            "llm_cost_micro_usd": micro_usd,
         }

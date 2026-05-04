@@ -40,11 +40,9 @@ class SummaryAgent:
             developer_prompt=developer_prompt,
         )
         text = self._extract_text(response)
-        micro = self.llm_client.micro_usd_from_responses_dict(response, self.model)
         return {
             "text": text,
             "message_id": response.get("output", [{}])[0].get("id"),
-            "_llm_cost_micro_usd": micro,
         }
 
     async def generate_session_briefing(

@@ -15,6 +15,11 @@ from motor.motor_asyncio import AsyncIOMotorDatabase
 from app.auth.settings import get_auth_settings
 from app.schemas.auth import CreateUser, HardPriorityStrategy, MediumPriorityStrategy, default_user_profile
 from app.usage.llm_cost_service import LlmCostService
+from app.usage.request_llm_cost_context import (
+    get_request_llm_cost_micro_total,
+    start_request_llm_cost_tracking,
+    stop_request_llm_cost_tracking,
+)
 
 
 def _hash_refresh_token(raw: str) -> str:
@@ -169,26 +174,34 @@ class AuthService:
     async def generate_hard_summary_and_update_profile(self, user_id: str, hard_strategy: dict) -> None:
         """Background task: generate hard-priority summary only."""
 
-        hard_resp = await self.summary_agent.generate_summary(hard_strategy, "hard")
-        await self.db["users"].update_one(
-            {"_id": ObjectId(user_id)},
-            {"$set": {"profile.hard_priority_summary": hard_resp["text"]}},
-        )
-        micro = int(hard_resp.get("_llm_cost_micro_usd") or 0)
-        if micro > 0:
-            await LlmCostService(self.db).commit_delta_micro_usd(user_id, micro)
+        start_request_llm_cost_tracking()
+        try:
+            hard_resp = await self.summary_agent.generate_summary(hard_strategy, "hard")
+            await self.db["users"].update_one(
+                {"_id": ObjectId(user_id)},
+                {"$set": {"profile.hard_priority_summary": hard_resp["text"]}},
+            )
+        finally:
+            total_micro = get_request_llm_cost_micro_total()
+            stop_request_llm_cost_tracking()
+        if total_micro > 0:
+            await LlmCostService(self.db).commit_delta_micro_usd(user_id, total_micro)
 
     async def generate_medium_summary_and_update_profile(self, user_id: str, medium_strategy: dict) -> None:
         """Background task: generate medium-priority summary only."""
 
-        medium_resp = await self.summary_agent.generate_summary(medium_strategy, "medium")
-        await self.db["users"].update_one(
-            {"_id": ObjectId(user_id)},
-            {"$set": {"profile.medium_priority_summary": medium_resp["text"]}},
-        )
-        micro = int(medium_resp.get("_llm_cost_micro_usd") or 0)
-        if micro > 0:
-            await LlmCostService(self.db).commit_delta_micro_usd(user_id, micro)
+        start_request_llm_cost_tracking()
+        try:
+            medium_resp = await self.summary_agent.generate_summary(medium_strategy, "medium")
+            await self.db["users"].update_one(
+                {"_id": ObjectId(user_id)},
+                {"$set": {"profile.medium_priority_summary": medium_resp["text"]}},
+            )
+        finally:
+            total_micro = get_request_llm_cost_micro_total()
+            stop_request_llm_cost_tracking()
+        if total_micro > 0:
+            await LlmCostService(self.db).commit_delta_micro_usd(user_id, total_micro)
 
     async def get_profile(self, user_id: str) -> dict:
         """Fetch user profile by user_id. Returns MongoDB document structure."""

@@ -13,13 +13,6 @@ from app.usage.request_llm_cost_context import add_request_llm_cost_micro, is_re
 T = TypeVar("T", bound=BaseModel)
 
 
-def _float_usd_to_micro_usd(value: float | None) -> int | None:
-    """Convert vendor-reported total cost in USD to micro-USD (single boundary conversion)."""
-    if value is None or value < 0:
-        return None
-    return int(round(float(value) * 1_000_000))
-
-
 def compute_llm_cost_micro_usd(
     *,
     input_tokens: int | None = None,
@@ -29,23 +22,16 @@ def compute_llm_cost_micro_usd(
     input_usd_per_million: float | None = None,
     output_usd_per_million: float | None = None,
     reasoning_usd_per_million: float | None = None,
-    api_reported_total_micro_usd: int | None = None,
 ) -> int:
     """
-    Compute billed cost for one LLM call as integer micro-USD.
+    Compute billed cost for one LLM call as integer micro-USD from token counts and per-million rates.
 
-    When ``api_reported_total_micro_usd`` is set (non-negative), it wins. Otherwise cost is
-    ``input_tokens * R_in + output_tokens * R_out + reasoning_tokens * R_reason`` where each
-    ``R`` is USD charged per **million** tokens of that kind (rates are not converted to USD
-    first; the product is already micro-USD because ``tokens * (USD/M)`` equals micro-USD
-    when ``USD/M`` is dollars per million tokens).
+    Formula: ``round(input * R_in + output * R_out + reasoning * R_reason)`` where each ``R`` is
+    USD per **million** tokens of that kind (so the sum is already micro-USD for that unit).
 
     ``model`` is reserved for future per-model rate tables.
     """
     _ = model
-    if api_reported_total_micro_usd is not None and api_reported_total_micro_usd >= 0:
-        return api_reported_total_micro_usd
-
     r_in = input_usd_per_million if input_usd_per_million is not None else llm_pricing.INPUT_USD_PER_MILLION_TOKENS
     r_out = output_usd_per_million if output_usd_per_million is not None else llm_pricing.OUTPUT_USD_PER_MILLION_TOKENS
     r_reas = (
@@ -87,66 +73,22 @@ class OpenAIClient:
         openai.api_key = openai_api_key
         self._client = OpenAI(api_key=openai_api_key)
 
-    @staticmethod
-    def _api_reported_micro_usd_from_usage_mapping(usage: dict | None) -> int | None:
-        """Return vendor-reported total cost in micro-USD from a ``usage``-like dict, if present."""
-        if not usage or not isinstance(usage, dict):
-            return None
-        for key in ("total_cost", "cost", "total_cost_usd"):
-            v = usage.get(key)
-            micro = _float_usd_to_micro_usd(v) if isinstance(v, (int, float)) else None
-            if micro is not None:
-                return micro
-        return None
-
-    @staticmethod
-    def _api_reported_micro_usd_from_response_dict(resp_dict: dict) -> int | None:
-        top = resp_dict.get("cost")
-        micro = _float_usd_to_micro_usd(top) if isinstance(top, (int, float)) else None
-        if micro is not None:
-            return micro
-        usage = resp_dict.get("usage")
-        if isinstance(usage, dict):
-            return OpenAIClient._api_reported_micro_usd_from_usage_mapping(usage)
-        return None
-
-    @staticmethod
-    def _api_reported_micro_usd_from_chat_usage(usage) -> int | None:
-        if usage is None:
-            return None
-        for attr in ("total_cost", "cost"):
-            if hasattr(usage, attr):
-                v = getattr(usage, attr, None)
-                micro = _float_usd_to_micro_usd(v) if isinstance(v, (int, float)) else None
-                if micro is not None:
-                    return micro
-        return None
-
-    def micro_usd_from_responses_dict(self, resp_dict: dict, model: str) -> int:
-        """Public estimate for a Responses API dict (same rules as ``generate_text``)."""
-        return self._micro_usd_for_responses_dict(resp_dict, model)
-
     def _micro_usd_for_chat_completion(self, completion, model: str) -> int:
         inp, out, reasoning = self._extract_usage_from_chat_completion(completion)
-        usage = getattr(completion, "usage", None)
-        api_micro = self._api_reported_micro_usd_from_chat_usage(usage)
         return compute_llm_cost_micro_usd(
             input_tokens=inp,
             output_tokens=out,
             reasoning_tokens=reasoning,
             model=model,
-            api_reported_total_micro_usd=api_micro,
         )
 
     def _micro_usd_for_responses_dict(self, resp_dict: dict, model: str) -> int:
         inp, out, reasoning = self._extract_usage_from_response_dict(resp_dict)
-        api_micro = self._api_reported_micro_usd_from_response_dict(resp_dict)
         return compute_llm_cost_micro_usd(
             input_tokens=inp,
             output_tokens=out,
             reasoning_tokens=reasoning,
             model=model,
-            api_reported_total_micro_usd=api_micro,
         )
 
     def _track_micro_usd(self, micro: int) -> None:
@@ -160,11 +102,12 @@ class OpenAIClient:
         response_format: Type[T],
         model: str,
         temperature: float = 0.5,
-    ) -> tuple[T, str, int]:
+    ) -> tuple[T, str]:
         """
         Parse chat completion into the given schema.
 
-        Returns ``(parsed_model, message_id, micro_usd)`` for this call's estimated dollar cost.
+        Returns ``(parsed_model, message_id)``. When request-level cost tracking is active,
+        ``OpenAIClient`` records micro-USD for this call via ``request_llm_cost_context``.
         """
         messages = [
             {"role": "system", "content": developer_prompt},
@@ -190,7 +133,7 @@ class OpenAIClient:
         )
         micro = self._micro_usd_for_chat_completion(completion, model)
         self._track_micro_usd(micro)
-        return parsed, message_id, micro
+        return parsed, message_id
 
     def generate_with_schema(
         self,
@@ -201,7 +144,7 @@ class OpenAIClient:
         temperature: float = 0.5,
     ) -> T:
         """Generate structured output conforming to the given Pydantic schema."""
-        parsed, _message_id, _micro = self.generate_with_schema_meta(
+        parsed, _message_id = self.generate_with_schema_meta(
             prompt=prompt,
             developer_prompt=developer_prompt,
             response_format=response_format,
