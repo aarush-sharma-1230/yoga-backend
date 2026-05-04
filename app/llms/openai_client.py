@@ -7,8 +7,8 @@ from openai import OpenAI
 from pydantic import BaseModel
 
 from app.logs.api_call_logger import log_api_call
-from app.usage import llm_pricing
-from app.usage.request_llm_cost_context import add_request_llm_cost_micro, is_request_llm_cost_tracking
+from app.usage import constants
+from app.usage.helpers import add_request_llm_cost_micro, is_request_llm_cost_tracking
 
 T = TypeVar("T", bound=BaseModel)
 
@@ -32,12 +32,12 @@ def compute_llm_cost_micro_usd(
     ``model`` is reserved for future per-model rate tables.
     """
     _ = model
-    r_in = input_usd_per_million if input_usd_per_million is not None else llm_pricing.INPUT_USD_PER_MILLION_TOKENS
-    r_out = output_usd_per_million if output_usd_per_million is not None else llm_pricing.OUTPUT_USD_PER_MILLION_TOKENS
+    r_in = input_usd_per_million if input_usd_per_million is not None else constants.INPUT_USD_PER_MILLION_TOKENS
+    r_out = output_usd_per_million if output_usd_per_million is not None else constants.OUTPUT_USD_PER_MILLION_TOKENS
     r_reas = (
         reasoning_usd_per_million
         if reasoning_usd_per_million is not None
-        else llm_pricing.REASONING_USD_PER_MILLION_TOKENS
+        else constants.REASONING_USD_PER_MILLION_TOKENS
     )
     inp = int(input_tokens or 0)
     out = int(output_tokens or 0)
@@ -107,7 +107,7 @@ class OpenAIClient:
         Parse chat completion into the given schema.
 
         Returns ``(parsed_model, message_id)``. When request-level cost tracking is active,
-        ``OpenAIClient`` records micro-USD for this call via ``request_llm_cost_context``.
+        ``OpenAIClient`` records micro-USD for this call via request-level cost tracking helpers.
         """
         messages = [
             {"role": "system", "content": developer_prompt},

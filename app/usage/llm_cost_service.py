@@ -8,8 +8,7 @@ from typing import Any
 from bson import ObjectId
 from motor.motor_asyncio import AsyncIOMotorDatabase
 
-
-WINDOW_HOURS = 24
+from app.usage.constants import WINDOW_HOURS
 
 
 def llm_window_exhausted(llm_cost: dict[str, Any] | None, cap_micro_usd: int, now: datetime) -> bool:

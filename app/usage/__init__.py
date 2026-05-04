@@ -1,1 +1,1 @@
-"""LLM usage accounting: pricing, per-request accumulation, and user spend persistence."""
+"""LLM usage: ``constants`` (rates, caps), ``helpers`` (tracking, HTTP, deps), ``llm_cost_service`` (Mongo)."""

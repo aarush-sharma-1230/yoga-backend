@@ -1,8 +1,10 @@
-"""Per-million-token rates (USD) for LLM cost estimates; edit as pricing changes."""
+"""LLM usage and budget-related constants."""
 
 INPUT_USD_PER_MILLION_TOKENS = 1.0
 OUTPUT_USD_PER_MILLION_TOKENS = 1.0
 REASONING_USD_PER_MILLION_TOKENS = 1.0
+
+WINDOW_HOURS = 24
 
 
 def config_usd_to_micro_usd(usd: float) -> int:
