@@ -16,6 +16,9 @@ def llm_window_exhausted(llm_cost: dict[str, Any] | None, cap_micro_usd: int, no
     Return True when the rolling window is still active and spend has reached the cap.
 
     Missing ``llm_cost`` or an expired ``renews_on`` means the user may proceed (new window on next commit).
+
+    This function uses explicit guards and returns a boolean; it does not catch exceptions or hide
+    invalid ``llm_cost`` shapes beyond treating absent fields as “not exhausted” for gating purposes.
     """
     if cap_micro_usd <= 0:
         return False

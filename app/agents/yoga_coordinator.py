@@ -17,7 +17,6 @@ from app.prompts.active import (
 from app.schemas.custom_sequence import POSTURE_INTENT_VINYASA_LOOP
 from app.schemas.transition_guidance import TransitionGuidanceOutput, VinyasaTransitionGuidanceOutput
 from app.session.transition_request import TransitionRequestContext
-from app.globals.errors import NotFoundError
 
 
 class YogaCoordinator:
@@ -27,13 +26,10 @@ class YogaCoordinator:
         self.model = "gpt-5.4-mini"
 
     async def _get_developer_prompt(self, user_id: Optional[str]) -> str:
-        """Fetch profile, extract context, build developer prompt."""
+        """Fetch profile when ``user_id`` is set, extract context, build developer prompt."""
         user = None
         if user_id:
-            try:
-                user = await self.auth_service.get_profile(str(user_id))
-            except NotFoundError:
-                user = None
+            user = await self.auth_service.get_profile(str(user_id))
         ctx = extract_profile_context(user)
         return get_yoga_coordinator_developer_prompt(ctx)
 

@@ -1,4 +1,3 @@
-import logging
 from datetime import datetime
 
 from bson import ObjectId
@@ -215,10 +214,7 @@ class SequenceService:
             stop_request_llm_cost_tracking()
 
         if self.llm_cost_service and total_micro > 0:
-            try:
-                await self.llm_cost_service.commit_delta_micro_usd(user_id, total_micro)
-            except Exception:
-                logging.exception("llm_cost commit after sequence generation failed")
+            await self.llm_cost_service.commit_delta_micro_usd(user_id, total_micro)
 
         return out
 

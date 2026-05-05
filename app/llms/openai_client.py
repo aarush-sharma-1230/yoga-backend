@@ -6,7 +6,7 @@ import openai
 from openai import APIError, OpenAI
 from pydantic import BaseModel
 
-from app.globals.errors import AIDependencyError
+from app.globals.errors import AIDependencyError, InternalAppError
 
 from app.logs.api_call_logger import log_api_call
 from app.usage import constants
@@ -186,7 +186,7 @@ class OpenAIClient:
             micro = self._micro_usd_for_responses_dict(resp_dict, model)
             self._track_micro_usd(micro)
             return resp_dict
-        return {}
+        raise InternalAppError()
 
     def generate_audio(
         self,
@@ -196,21 +196,22 @@ class OpenAIClient:
         voice: str | None = None,
     ):
         """Stream TTS audio chunks using gpt-4o-mini-tts steering and default yoga delivery instructions."""
-        if self.is_audio_enabled:
-            speech_model = model or self.audio_model
-            speech_voice = voice if voice is not None else self.tts_voice
-            speech_instructions = DEFAULT_YOGA_TTS_INSTRUCTIONS if instructions is None else instructions
-            try:
-                with self._client.audio.speech.with_streaming_response.create(
-                    model=speech_model,
-                    voice=speech_voice,
-                    input=text,
-                    instructions=speech_instructions,
-                ) as response:
-                    for chunk in response.iter_bytes():
-                        yield chunk
-            except APIError as exc:
-                raise AIDependencyError() from exc
+        if not self.is_audio_enabled:
+            raise InternalAppError()
+        speech_model = model or self.audio_model
+        speech_voice = voice if voice is not None else self.tts_voice
+        speech_instructions = DEFAULT_YOGA_TTS_INSTRUCTIONS if instructions is None else instructions
+        try:
+            with self._client.audio.speech.with_streaming_response.create(
+                model=speech_model,
+                voice=speech_voice,
+                input=text,
+                instructions=speech_instructions,
+            ) as response:
+                for chunk in response.iter_bytes():
+                    yield chunk
+        except APIError as exc:
+            raise AIDependencyError() from exc
 
     def _extract_usage_from_chat_completion(self, completion) -> tuple[int | None, int | None, int | None]:
         """Extract input, output, and optional reasoning token counts from a ChatCompletion."""
@@ -221,11 +222,8 @@ class OpenAIClient:
         output_tokens = getattr(usage, "completion_tokens", None)
         reasoning = getattr(usage, "reasoning_tokens", None)
         if reasoning is None and hasattr(usage, "model_dump"):
-            try:
-                udict = usage.model_dump()
-                reasoning = udict.get("reasoning_tokens")
-            except (TypeError, AttributeError):
-                reasoning = None
+            udict = usage.model_dump()
+            reasoning = udict.get("reasoning_tokens")
         return (input_tokens, output_tokens, reasoning)
 
     def _extract_usage_from_response_dict(self, resp_dict: dict) -> tuple[int | None, int | None, int | None]:

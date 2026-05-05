@@ -101,10 +101,7 @@ class SessionService:
             total_micro = get_request_llm_cost_micro_total()
             stop_request_llm_cost_tracking()
         if self.llm_cost_service and user_id_str and total_micro > 0:
-            try:
-                await self.llm_cost_service.commit_delta_micro_usd(user_id_str, total_micro)
-            except Exception:
-                logging.exception("llm_cost commit after pose correction failed")
+            await self.llm_cost_service.commit_delta_micro_usd(user_id_str, total_micro)
 
         instruction = result.get("instruction")
         if not instruction:
@@ -581,13 +578,22 @@ class SessionService:
             await self._generate_ending_note(sequence_name, session_id, user_id)
         except Exception:
             logging.exception("session guidance background task failed")
+            try:
+                await self.db["session"].update_one(
+                    {"_id": ObjectId(session_id)},
+                    {
+                        "$set": {
+                            "generation_status": "failed",
+                            "generation_error": "Guidance generation failed. Please try starting a new session.",
+                        }
+                    },
+                )
+            except Exception:
+                logging.exception("failed to persist generation_status after guidance failure")
         else:
             total = get_request_llm_cost_micro_total()
             if self.llm_cost_service and user_id and total > 0:
-                try:
-                    await self.llm_cost_service.commit_delta_micro_usd(str(user_id), total)
-                except Exception:
-                    logging.exception("llm_cost commit after session guidance failed")
+                await self.llm_cost_service.commit_delta_micro_usd(str(user_id), total)
         finally:
             stop_request_llm_cost_tracking()
 
