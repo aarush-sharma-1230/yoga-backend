@@ -4,6 +4,7 @@ from pathlib import Path
 from datetime import datetime
 
 from app.globals.functions import serialize_mongo_output
+from app.globals.errors import BadRequestError
 
 
 class QueryService:
@@ -40,9 +41,18 @@ class QueryService:
             "result": {"text": llm_response_text, "msgId": llm_response_message_id},
         }
 
+    async def get_user_query_response(self, user_query: str, user_id: str) -> dict:
+        """Return a one-off LLM reply to ``user_query`` for the authenticated user (no session persistence)."""
+
+        llm_response = await self.yoga_coordinator.generate_intro_or_ending(prompt=user_query, user_id=user_id)
+        return {
+            "status": True,
+            "result": {"text": llm_response["text"], "msgId": llm_response.get("message_id")},
+        }
+
     def _validate_transition_query(self, transition_from_idx: int, postures: list):
         if transition_from_idx < -1 or transition_from_idx >= len(postures) - 1:
-            raise ValueError("Invalid transition index")
+            raise BadRequestError()
 
         return True
 

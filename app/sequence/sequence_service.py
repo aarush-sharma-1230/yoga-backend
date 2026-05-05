@@ -4,6 +4,8 @@ from datetime import datetime
 from bson import ObjectId
 from motor.motor_asyncio import AsyncIOMotorDatabase
 
+from app.globals.errors import BadRequestError, ForbiddenError, InternalAppError, NotFoundError
+
 from app.schemas.custom_sequence import (
     POSTURE_INTENT_INTERVAL_SET,
     POSTURE_INTENT_STATIC_HOLD,
@@ -14,7 +16,7 @@ from app.schemas.custom_sequence import (
 from app.schemas.stored_sequence_posture import StoredSequencePostureItem
 from app.schemas.request_review import ReviewQuestionAnswered
 from app.orchestration.runner import run_sequence_generation
-from app.usage.helpers import (
+from app.usage.request_cost_context import (
     get_request_llm_cost_micro_total,
     start_request_llm_cost_tracking,
     stop_request_llm_cost_tracking,
@@ -78,9 +80,9 @@ class SequenceService:
 
         sequence = await self.db["sequences"].find_one({"_id": ObjectId(sequence_id)})
         if not sequence:
-            raise ValueError(f"Sequence not found: {sequence_id}")
+            raise NotFoundError()
         if not self._sequence_owned_by_user(sequence, user_id):
-            raise ValueError("Sequence not found or access denied")
+            raise ForbiddenError()
         return {"status": True, "result": sequence}
 
     def canonical_posture_row(self, posture_doc: dict, *, posture_intent: str, recommended_modification: str) -> dict:
@@ -121,9 +123,7 @@ class SequenceService:
                 ids.add(_norm_cid(item.posture_id))
         return {i for i in ids if i}
 
-    def _stored_posture_from_llm_item(
-        self, item: SequencePostureItem, db_postures: dict[str, dict]
-    ) -> dict | None:
+    def _stored_posture_from_llm_item(self, item: SequencePostureItem, db_postures: dict[str, dict]) -> dict | None:
         """Build one stored sequence row from a validated LLM posture item."""
         if item.posture_intent == POSTURE_INTENT_INTERVAL_SET:
             assert item.work_posture is not None and item.recovery_posture is not None
@@ -198,7 +198,7 @@ class SequenceService:
         are injected for the composer; sequence review still runs.
         """
         if not self.compiled_graph:
-            raise RuntimeError("Sequence generation is not configured")
+            raise InternalAppError()
 
         start_request_llm_cost_tracking()
         try:
@@ -234,7 +234,7 @@ class SequenceService:
         Resolve catalogue postures by client_id in order; each row is static_hold with default hold time.
         """
         if not posture_client_ids:
-            raise ValueError("posture_client_ids cannot be empty")
+            raise BadRequestError()
 
         id_to_posture = {}
         async for doc in self.db["postures"].find({"client_id": {"$in": posture_client_ids}}):
@@ -242,7 +242,7 @@ class SequenceService:
 
         missing_ids = [pid for pid in posture_client_ids if pid not in id_to_posture]
         if missing_ids:
-            raise ValueError(f"Posture IDs not found in database: {missing_ids}")
+            raise BadRequestError()
 
         postures = []
         for pid in posture_client_ids:
@@ -255,9 +255,7 @@ class SequenceService:
             postures.append(row)
         return postures
 
-    async def create_manual_sequence(
-        self, name: str, posture_client_ids: list[str], user_id: str
-    ) -> dict:
+    async def create_manual_sequence(self, name: str, posture_client_ids: list[str], user_id: str) -> dict:
         """
         Create a manual sequence from user-provided posture client_ids.
         Resolves postures from DB, preserving order. Each row is a static_hold with default hold time.
@@ -290,13 +288,13 @@ class SequenceService:
         (static_hold, transitional_hub, interval_set, or vinyasa_loop).
         """
         if not postures:
-            raise ValueError("postures cannot be empty")
+            raise BadRequestError()
 
         existing = await self.db["sequences"].find_one({"_id": ObjectId(sequence_id)})
         if not existing:
-            raise ValueError(f"Sequence not found: {sequence_id}")
+            raise NotFoundError()
         if not self._sequence_owned_by_user(existing, user_id):
-            raise ValueError("Sequence not found or access denied")
+            raise ForbiddenError()
 
         stored = [row.model_dump(by_alias=True, exclude_none=True) for row in postures]
         await self.db["sequences"].update_one(

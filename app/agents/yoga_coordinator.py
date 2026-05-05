@@ -17,6 +17,8 @@ from app.prompts.active import (
 from app.schemas.custom_sequence import POSTURE_INTENT_VINYASA_LOOP
 from app.schemas.transition_guidance import TransitionGuidanceOutput, VinyasaTransitionGuidanceOutput
 from app.session.transition_request import TransitionRequestContext
+from app.globals.errors import NotFoundError
+
 
 class YogaCoordinator:
     def __init__(self, llm_client, auth_service):
@@ -30,8 +32,8 @@ class YogaCoordinator:
         if user_id:
             try:
                 user = await self.auth_service.get_profile(str(user_id))
-            except RuntimeError:
-                pass
+            except NotFoundError:
+                user = None
         ctx = extract_profile_context(user)
         return get_yoga_coordinator_developer_prompt(ctx)
 
@@ -57,11 +59,7 @@ class YogaCoordinator:
         """
         prompt = get_transition_prompt(ctx)
         dp = await self._get_developer_prompt(user_id)
-        response_format = (
-            VinyasaTransitionGuidanceOutput
-            if ctx.target_posture_intent == POSTURE_INTENT_VINYASA_LOOP
-            else TransitionGuidanceOutput
-        )
+        response_format = VinyasaTransitionGuidanceOutput if ctx.target_posture_intent == POSTURE_INTENT_VINYASA_LOOP else TransitionGuidanceOutput
         parsed, message_id = await asyncio.to_thread(
             self.llm_client.generate_with_schema_meta,
             prompt=prompt,
@@ -75,9 +73,7 @@ class YogaCoordinator:
         steps = parsed.steps
         expected = ctx.expected_step_count
         if expected > 0 and len(steps) != expected:
-            raise RuntimeError(
-                f"Transition step count mismatch for index {ctx.target_idx}: expected {expected}, got {len(steps)}"
-            )
+            raise RuntimeError(f"Transition step count mismatch for index {ctx.target_idx}: expected {expected}, got {len(steps)}")
         return {
             "message_id": message_id,
             "steps": [s.model_dump() for s in steps],

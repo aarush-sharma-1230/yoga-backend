@@ -13,13 +13,14 @@ from google.oauth2 import id_token as google_id_token
 from motor.motor_asyncio import AsyncIOMotorDatabase
 
 from app.auth.settings import get_auth_settings
+from app.globals.errors import AuthenticationError, InternalAppError, NotFoundError
 from app.schemas.auth import CreateUser, HardPriorityStrategy, MediumPriorityStrategy, default_user_profile
 from app.usage.llm_cost_service import LlmCostService
-from app.usage.helpers import (
-    get_request_llm_cost_micro_total,
-    start_request_llm_cost_tracking,
-    stop_request_llm_cost_tracking,
-)
+from app.usage.request_cost_context import (
+            get_request_llm_cost_micro_total,
+            start_request_llm_cost_tracking,
+            stop_request_llm_cost_tracking,
+        )
 
 
 def _hash_refresh_token(raw: str) -> str:
@@ -50,16 +51,19 @@ class AuthService:
         """
         Decode and validate an access JWT (signature, expiry, required claims).
 
-        Returns claim dict with string ``_id`` (Mongo ``users._id``). Raises ``jwt.PyJWTError`` if invalid.
+        Returns claim dict with string ``_id`` (Mongo ``users._id``). Raises ``AuthenticationError`` if invalid.
         """
 
         settings = get_auth_settings()
-        payload = jwt.decode(
-            bearer_token,
-            settings.jwt_secret,
-            algorithms=["HS256"],
-            options={"require": ["exp", "iat", "_id"]},
-        )
+        try:
+            payload = jwt.decode(
+                bearer_token,
+                settings.jwt_secret,
+                algorithms=["HS256"],
+                options={"require": ["exp", "iat", "_id"]},
+            )
+        except jwt.PyJWTError as exc:
+            raise AuthenticationError() from exc
         payload["_id"] = str(payload["_id"])
         return payload
 
@@ -68,7 +72,7 @@ class AuthService:
         """
         Decode a Bearer token and return ``(user_id, seconds_until_exp)``.
 
-        Raises ``jwt.PyJWTError`` if invalid or expired.
+        Raises ``AuthenticationError`` if invalid or expired.
         """
 
         payload = AuthService.decode_access_token_payload(bearer_token)
@@ -84,7 +88,7 @@ class AuthService:
         """
         Validate a Bearer access JWT for HTTP; return ``(user_id, seconds_until_exp)``.
 
-        Raises ``jwt.PyJWTError`` if the token is invalid or expired.
+        Raises ``AuthenticationError`` if the token is invalid or expired.
         """
 
         return self._bearer_context_from_token(bearer_token)
@@ -109,7 +113,10 @@ class AuthService:
         Returns ``{"access_token", "refresh_token_raw"}``.
         """
 
-        idinfo = await asyncio.to_thread(self._verify_google_id_token_sync, id_token)
+        try:
+            idinfo = await asyncio.to_thread(self._verify_google_id_token_sync, id_token)
+        except ValueError as exc:
+            raise AuthenticationError() from exc
 
         google_sub = idinfo["sub"]
         email = idinfo.get("email")
@@ -122,15 +129,17 @@ class AuthService:
 
         return {"access_token": access, "refresh_token_raw": raw_refresh}
 
-    async def refresh_session(self, raw_refresh_cookie: str | None) -> dict | None:
+    async def refresh_session(self, raw_refresh_cookie: str | None) -> dict:
         """
-        Rotate refresh cookie and return new access and refresh raw values, or ``None`` if invalid.
+        Rotate refresh cookie and return new access and refresh raw values.
+
+        Raises ``AuthenticationError`` when the refresh token is missing, unknown, or expired.
         """
 
         settings = get_auth_settings()
         result = await self.exchange_refresh_token(raw_refresh_cookie, settings.refresh_ttl_days)
         if not result:
-            return None
+            raise AuthenticationError()
         user_id, new_raw = result
         access = self._create_access_token(user_id)
         return {"access_token": access, "refresh_token_raw": new_raw}
@@ -149,8 +158,8 @@ class AuthService:
         )
 
         if not user_obj:
-            raise RuntimeError("User not found")
-            
+            raise NotFoundError()
+
         return {"status": True, "user": user_obj}
 
     async def save_hard_priority_strategy(self, user_id: str, strategy: HardPriorityStrategy) -> dict:
@@ -207,7 +216,7 @@ class AuthService:
         """Fetch user profile by user_id. Returns MongoDB document structure."""
         user = await self.db["users"].find_one({"_id": ObjectId(user_id)}, {"password": 0})
         if not user:
-            raise RuntimeError("User not found")
+            raise NotFoundError()
         return user
 
     async def upsert_user_from_google(self, google_sub: str, email: str, full_name: str | None) -> dict:
@@ -224,7 +233,7 @@ class AuthService:
         )
         doc = await self.db["users"].find_one({"google_sub": google_sub})
         if not doc:
-            raise RuntimeError("Failed to upsert Google user")
+            raise InternalAppError()
         return doc
 
     async def _insert_refresh_token(self, user_id: str, refresh_ttl_days: int) -> str:

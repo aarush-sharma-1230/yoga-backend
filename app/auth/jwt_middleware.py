@@ -12,8 +12,7 @@ attaching to the request object). Import ``jwt_access_payload`` and add
 
 from typing import Any
 
-import jwt
-from fastapi import Depends, HTTPException, Request, status
+from fastapi import Depends, Request
 from fastapi.security import HTTPAuthorizationCredentials
 
 from app.auth.auth_service import AuthService, security
@@ -26,15 +25,9 @@ async def jwt_access_payload(
     """
     Require a valid Bearer access JWT; expose claims on ``request.state.user`` and return them.
 
-    Raises ``401`` if the token is missing, malformed, or expired.
+    Raises ``AuthenticationError`` if the token is missing, malformed, or expired.
     """
 
-    try:
-        payload = AuthService.decode_access_token_payload(credentials.credentials)
-    except jwt.PyJWTError:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Authentication failed.",
-        )
+    payload = AuthService.decode_access_token_payload(credentials.credentials)
     request.state.user = payload
     return payload

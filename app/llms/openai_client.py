@@ -3,12 +3,14 @@ import uuid
 from typing import Type, TypeVar
 
 import openai
-from openai import OpenAI
+from openai import APIError, OpenAI
 from pydantic import BaseModel
+
+from app.globals.errors import AIDependencyError
 
 from app.logs.api_call_logger import log_api_call
 from app.usage import constants
-from app.usage.helpers import add_request_llm_cost_micro, is_request_llm_cost_tracking
+from app.usage.request_cost_context import add_request_llm_cost_micro, is_request_llm_cost_tracking
 
 T = TypeVar("T", bound=BaseModel)
 
@@ -34,16 +36,13 @@ def compute_llm_cost_micro_usd(
     _ = model
     r_in = input_usd_per_million if input_usd_per_million is not None else constants.INPUT_USD_PER_MILLION_TOKENS
     r_out = output_usd_per_million if output_usd_per_million is not None else constants.OUTPUT_USD_PER_MILLION_TOKENS
-    r_reas = (
-        reasoning_usd_per_million
-        if reasoning_usd_per_million is not None
-        else constants.REASONING_USD_PER_MILLION_TOKENS
-    )
+    r_reas = reasoning_usd_per_million if reasoning_usd_per_million is not None else constants.REASONING_USD_PER_MILLION_TOKENS
     inp = int(input_tokens or 0)
     out = int(output_tokens or 0)
     reas = int(reasoning_tokens or 0)
     total_micro = inp * r_in + out * r_out + reas * r_reas
     return int(round(total_micro))
+
 
 DEFAULT_YOGA_TTS_INSTRUCTIONS = (
     "Speak as a calm, experienced yoga teacher guiding a live class. Use a warm, unhurried pace, "
@@ -113,12 +112,15 @@ class OpenAIClient:
             {"role": "system", "content": developer_prompt},
             {"role": "user", "content": prompt},
         ]
-        completion = self._client.chat.completions.parse(
-            model=model,
-            messages=messages,
-            response_format=response_format,
-            temperature=temperature,
-        )
+        try:
+            completion = self._client.chat.completions.parse(
+                model=model,
+                messages=messages,
+                response_format=response_format,
+                temperature=temperature,
+            )
+        except APIError as exc:
+            raise AIDependencyError() from exc
         parsed = completion.choices[0].message.parsed
         message_id = getattr(completion, "id", None) or f"msg_{uuid.uuid4().hex}"
         input_tokens, output_tokens, _reasoning = self._extract_usage_from_chat_completion(completion)
@@ -167,7 +169,10 @@ class OpenAIClient:
         """
         if self.is_text_enabled:
             input = [{"role": "developer", "content": developer_prompt}, {"role": "user", "content": prompt}]
-            response = openai.responses.create(model=model, input=input, temperature=temperature)
+            try:
+                response = openai.responses.create(model=model, input=input, temperature=temperature)
+            except APIError as exc:
+                raise AIDependencyError() from exc
             resp_dict = response.to_dict()
             input_tokens, output_tokens, _reasoning = self._extract_usage_from_response_dict(resp_dict)
             self._log_api_call(
@@ -194,17 +199,18 @@ class OpenAIClient:
         if self.is_audio_enabled:
             speech_model = model or self.audio_model
             speech_voice = voice if voice is not None else self.tts_voice
-            speech_instructions = (
-                DEFAULT_YOGA_TTS_INSTRUCTIONS if instructions is None else instructions
-            )
-            with self._client.audio.speech.with_streaming_response.create(
-                model=speech_model,
-                voice=speech_voice,
-                input=text,
-                instructions=speech_instructions,
-            ) as response:
-                for chunk in response.iter_bytes():
-                    yield chunk
+            speech_instructions = DEFAULT_YOGA_TTS_INSTRUCTIONS if instructions is None else instructions
+            try:
+                with self._client.audio.speech.with_streaming_response.create(
+                    model=speech_model,
+                    voice=speech_voice,
+                    input=text,
+                    instructions=speech_instructions,
+                ) as response:
+                    for chunk in response.iter_bytes():
+                        yield chunk
+            except APIError as exc:
+                raise AIDependencyError() from exc
 
     def _extract_usage_from_chat_completion(self, completion) -> tuple[int | None, int | None, int | None]:
         """Extract input, output, and optional reasoning token counts from a ChatCompletion."""

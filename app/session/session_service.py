@@ -7,7 +7,7 @@ from motor.motor_asyncio import AsyncIOMotorDatabase
 from bson import ObjectId
 from datetime import datetime
 
-from fastapi import HTTPException, status
+from app.globals.errors import BadRequestError, ForbiddenError, InternalAppError, NotFoundError
 
 from app.llms.openai_client import (
     DEFAULT_YOGA_TTS_INSTRUCTIONS,
@@ -25,7 +25,7 @@ from app.session.session_trace_logger import trace
 from app.schemas.pose_landmarks import PoseLandmarksRequest
 from app.schemas.session_state import CurrentSessionStateRequest
 from app.session.transition_request import build_transition_request
-from app.usage.helpers import (
+from app.usage.request_cost_context import (
     get_request_llm_cost_micro_total,
     start_request_llm_cost_tracking,
     stop_request_llm_cost_tracking,
@@ -43,7 +43,7 @@ class SessionService:
         sequence = await self.db["sequences"].find_one({"_id": ObjectId(sequence_id)})
 
         if not sequence:
-            raise RuntimeError("The given sequence was not found")
+            raise NotFoundError()
 
         return sequence
 
@@ -51,7 +51,7 @@ class SessionService:
         session = await self.db["session"].find_one({"_id": ObjectId(session_id)})
 
         if not session:
-            raise RuntimeError("The given session was not found")
+            raise NotFoundError()
 
         return session
 
@@ -61,12 +61,10 @@ class SessionService:
         session = await self.get_session_by_id(session_id)
         stored = session.get("user_id")
         if stored is None or str(stored) != str(user_id):
-            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Forbidden")
+            raise ForbiddenError()
         return session
 
-    async def _set_sequence_posture_correction(
-        self, session_id: str, posture_index: int, text: str, audio_path: str
-    ) -> None:
+    async def _set_sequence_posture_correction(self, session_id: str, posture_index: int, text: str, audio_path: str) -> None:
         """Persist pose correction under sequence.postures[i].posture_correction for GET .../audio/{message_id}."""
         await self.db["session"].update_one(
             {"_id": ObjectId(session_id)},
@@ -91,9 +89,7 @@ class SessionService:
         user_id_str = str(session["user_id"]) if session.get("user_id") is not None else None
         posture_index = SessionService._posture_index_for_client_id(postures, body.posture_client_id)
         if posture_index is None:
-            raise ValueError(
-                f"No posture in this session's sequence matches posture_client_id={body.posture_client_id!r}."
-            )
+            raise BadRequestError(f"No posture in this session's sequence matches posture_client_id={body.posture_client_id!r}.")
 
         start_request_llm_cost_tracking()
         try:
@@ -157,10 +153,7 @@ class SessionService:
         """
         session = await self.get_session_by_id(session_id)
         postures = (session.get("sequence") or {}).get("postures") or []
-        postures_cleaned = [
-            {k: v for k, v in p.items() if k != "posture_correction"} if isinstance(p, dict) else p
-            for p in postures
-        ]
+        postures_cleaned = [{k: v for k, v in p.items() if k != "posture_correction"} if isinstance(p, dict) else p for p in postures]
         session_status = {
             "session_play_status": "not_started",
             "current_position": None,
@@ -186,7 +179,7 @@ class SessionService:
         Legacy `instructions` is omitted if present.
         """
         session = await self.get_session_by_id(session_id)
-       
+
         return {"status": True, "result": session}
 
     async def get_latest_incomplete_session_for_user(self, user_id: ObjectId | str) -> dict | None:
@@ -205,7 +198,7 @@ class SessionService:
         sequence = doc.get("sequence") or {}
         sequence_name = sequence.get("name") or ""
         session_status = doc.get("session_status") or {}
-        
+
         return {"_id": str(doc["_id"]), "name": sequence_name, "sequence": sequence, "session_status": session_status}
 
     @staticmethod
@@ -323,7 +316,7 @@ class SessionService:
                         "message_id": message_id,
                     }
 
-        raise RuntimeError("The given instruction was not found")
+        raise NotFoundError()
 
     async def _stream_chunks_from_file(self, file_path: Path, chunk_size: int = 8192):
         """Async generator that reads a file and yields raw bytes in fixed-size chunks."""
@@ -364,9 +357,7 @@ class SessionService:
         """
         queue = asyncio.Queue()
         sentinel = object()
-        task = asyncio.create_task(
-            asyncio.to_thread(self._generate_audio_and_enqueue, text, file_path, queue, sentinel, instructions)
-        )
+        task = asyncio.create_task(asyncio.to_thread(self._generate_audio_and_enqueue, text, file_path, queue, sentinel, instructions))
 
         while True:
             chunk = await queue.get()
@@ -377,9 +368,7 @@ class SessionService:
         await task
         await self._persist_instruction_audio_path(session_id, message_id, file_path)
 
-    async def _on_demand_tts_instructions(
-        self, session_id: str, target: dict, session: dict | None = None
-    ) -> str | None:
+    async def _on_demand_tts_instructions(self, session_id: str, target: dict, session: dict | None = None) -> str | None:
         """Resolve OpenAI Speech steering when regenerating a missing clip (intro energetic; instruction from row)."""
         kind = target.get("kind")
         if kind == "intro":
@@ -405,9 +394,7 @@ class SessionService:
                 posture_docs[doc["client_id"]] = doc
         return self._transition_tts_instructions_for_target(row, posture_docs)
 
-    async def _stream_audio_when_missing(
-        self, session_id: str, message_id: str, target: dict, audio_path: Path, session: dict | None = None
-    ):
+    async def _stream_audio_when_missing(self, session_id: str, message_id: str, target: dict, audio_path: Path, session: dict | None = None):
         """
         Async generator for the case when the audio file does not exist yet.
         Validates target has text, creates directory, generates and streams audio.
@@ -415,13 +402,11 @@ class SessionService:
         text = target.get("text")
 
         if not text:
-            raise RuntimeError("Instruction has no text to generate audio from")
+            raise InternalAppError()
 
         audio_path.parent.mkdir(parents=True, exist_ok=True)
         tts_instructions = await self._on_demand_tts_instructions(session_id, target, session)
-        async for chunk in self._stream_generated_audio(
-            session_id, message_id, text, audio_path, instructions=tts_instructions
-        ):
+        async for chunk in self._stream_generated_audio(session_id, message_id, text, audio_path, instructions=tts_instructions):
             yield chunk
 
     async def _persist_instruction_audio_path(self, session_id: str, message_id: str, file_path: Path) -> None:
@@ -437,7 +422,7 @@ class SessionService:
             elif clip == "sensory":
                 path_key = "sensory_audio_path"
             else:
-                raise RuntimeError("guidance_step missing guidance_clip for audio path update")
+                raise InternalAppError()
             await self.db["session"].update_one(
                 {"_id": ObjectId(session_id)},
                 {"$set": {f"sequence.postures.{pi}.guidance_steps.{si}.{path_key}": str(file_path)}},
@@ -458,13 +443,13 @@ class SessionService:
         if payload.get("kind") == "pose_correction":
             pi = payload.get("posture_index")
             if pi is None:
-                raise RuntimeError("pose_correction payload missing posture_index for audio path update")
+                raise InternalAppError()
             await self.db["session"].update_one(
                 {"_id": ObjectId(session_id)},
                 {"$set": {f"sequence.postures.{pi}.posture_correction.audio_path": str(file_path)}},
             )
             return
-        raise RuntimeError("Unknown instruction payload kind for audio path update")
+        raise InternalAppError()
 
     async def get_audio_chunks(self, session_id: str, message_id: str):
         """
@@ -482,9 +467,7 @@ class SessionService:
         session = await self.get_session_by_id(session_id)
         target = self._find_instruction(session, message_id)
 
-        async for chunk in self._stream_audio_when_missing(
-            session_id, message_id, target, audio_path, session
-        ):
+        async for chunk in self._stream_audio_when_missing(session_id, message_id, target, audio_path, session):
             yield chunk
 
     def _save_audio_to_file(self, session_id: str, message_id: str, audio_chunks) -> str:
@@ -499,17 +482,13 @@ class SessionService:
 
         return str(audio_path)
 
-    async def _generate_intro(
-        self, sequence_name: str, session_id: str, user_name: str, user_id: str | None = None
-    ) -> None:
+    async def _generate_intro(self, sequence_name: str, session_id: str, user_name: str, user_id: str | None = None) -> None:
         """Generate intro copy and TTS; store a single flat `intro` object (same shape as `ending`, not `steps`)."""
         prompt = get_introduction_prompt(sequence_name=sequence_name, user_name=user_name)
         response = await self.yoga_coordinator.generate_intro_or_ending(prompt=prompt, user_id=user_id)
         text = response["text"]
         message_id = response["message_id"]
-        audio_chunks = self.yoga_coordinator.generate_audio_from_text(
-            text, instructions=ENERGETIC_YOGA_TTS_INSTRUCTIONS
-        )
+        audio_chunks = self.yoga_coordinator.generate_audio_from_text(text, instructions=ENERGETIC_YOGA_TTS_INSTRUCTIONS)
         audio_path = self._save_audio_to_file(session_id, message_id, audio_chunks)
         doc = self._bookend_spoken_document(text, message_id, audio_path)
 
@@ -553,9 +532,7 @@ class SessionService:
 
                 if inst_text:
                     iid = f"{base_message_id}_step{i}_instruction"
-                    ichunks = self.yoga_coordinator.generate_audio_from_text(
-                        inst_text, instructions=transition_instructions
-                    )
+                    ichunks = self.yoga_coordinator.generate_audio_from_text(inst_text, instructions=transition_instructions)
                     row["instruction_message_id"] = iid
                     row["instruction_audio_path"] = self._save_audio_to_file(session_id, iid, ichunks)
                 else:
@@ -595,9 +572,7 @@ class SessionService:
             {"$set": {"ending": doc, "generation_status": "completed"}},
         )
 
-    async def _generate_remaining_guidance_background(
-        self, session_id: str, postures: list, sequence_name: str, user_name: str, user_id: str | None = None
-    ) -> None:
+    async def _generate_remaining_guidance_background(self, session_id: str, postures: list, sequence_name: str, user_name: str, user_id: str | None = None) -> None:
         """Generate intro, transitions, and ending; accumulate LLM cost via ContextVar; commit on full success."""
         start_request_llm_cost_tracking()
         try:
@@ -642,14 +617,11 @@ class SessionService:
         sequence = await self.get_sequence_by_id(sequence_id)
         seq_uid = sequence.get("user_id")
         if seq_uid is None or str(seq_uid) != str(user_id):
-            raise ValueError("Sequence not found or access denied")
+            raise ForbiddenError()
         postures = sequence["postures"]
 
         session_doc = self._create_session_document(user_id, sequence)
         session_created = await self.db["session"].insert_one(session_doc)
-
-        if not session_created:
-            raise RuntimeError("Failed to create session")
 
         session_id_str = str(session_created.inserted_id)
 
