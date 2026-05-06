@@ -1,6 +1,6 @@
 """Authentication routes: Google OIDC, refresh cookie rotation, and user profile APIs."""
 
-from fastapi import APIRouter, BackgroundTasks, Depends, Request, Response
+from fastapi import APIRouter, Depends, Request, Response
 
 from app.auth.auth_service import AuthService, get_current_user_id
 from app.auth.jwt_middleware import jwt_access_payload
@@ -54,37 +54,23 @@ async def get_user_data(
 @router.post("/user/profile/hard_priority")
 async def save_hard_priority_strategy(
     strategy: HardPriorityStrategy,
-    background_tasks: BackgroundTasks,
     service: AuthService = Depends(DependencyInjector.get_auth_service),
     user_id: str = Depends(get_current_user_id),
 ):
-    """Save medical / safety (hard priority) strategy; LLM hard summary is generated in the background."""
+    """Save medical / safety (hard priority) strategy and LLM hard summary in one request."""
 
-    result = await service.save_hard_priority_strategy(user_id=user_id, strategy=strategy)
-    background_tasks.add_task(
-        service.generate_hard_summary_and_update_profile,
-        user_id,
-        strategy.model_dump(),
-    )
-    return result
+    return await service.save_hard_priority_strategy(user_id=user_id, strategy=strategy)
 
 
 @router.post("/user/profile/medium_priority")
 async def save_medium_priority_strategy(
     strategy: MediumPriorityStrategy,
-    background_tasks: BackgroundTasks,
     service: AuthService = Depends(DependencyInjector.get_auth_service),
     user_id: str = Depends(get_current_user_id),
 ):
-    """Save goals / experience (medium priority) strategy; LLM medium summary is generated in the background."""
+    """Save goals / experience (medium priority) strategy and LLM medium summary in one request."""
 
-    result = await service.save_medium_priority_strategy(user_id=user_id, strategy=strategy)
-    background_tasks.add_task(
-        service.generate_medium_summary_and_update_profile,
-        user_id,
-        strategy.model_dump(),
-    )
-    return result
+    return await service.save_medium_priority_strategy(user_id=user_id, strategy=strategy)
 
 
 @router.get("/user/profile")

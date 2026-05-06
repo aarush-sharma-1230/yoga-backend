@@ -155,55 +155,51 @@ class AuthService:
 
         return {"status": True, "user": user_obj}
 
+    async def _generate_priority_summary(self, user_id: str, strategy_dict: dict, kind: str) -> str:
+        """Run the profile summary LLM for ``kind`` (``\"hard\"`` or ``\"medium\"``) and record usage."""
+
+        start_request_llm_cost_tracking()
+        try:
+            resp = await self.summary_agent.generate_summary(strategy_dict, kind)
+            summary_text = resp["text"]
+        finally:
+            total_micro = get_request_llm_cost_micro_total()
+            stop_request_llm_cost_tracking()
+        if total_micro > 0:
+            await LlmCostService(self.db).commit_delta_micro_usd(user_id, total_micro)
+        return summary_text
+
     async def save_hard_priority_strategy(self, user_id: str, strategy: HardPriorityStrategy) -> dict:
-        """Persist medical / safety strategy only. LLM hard summary runs in a background task."""
+        """Persist medical / safety strategy and its LLM summary after generation succeeds."""
+
         doc = strategy.model_dump()
+        summary_text = await self._generate_priority_summary(user_id, doc, "hard")
         await self.db["users"].update_one(
             {"_id": ObjectId(user_id)},
-            {"$set": {"profile.hard_priority_strategy": doc}},
+            {
+                "$set": {
+                    "profile.hard_priority_strategy": doc,
+                    "profile.hard_priority_summary": summary_text,
+                }
+            },
         )
         return {"status": True}
 
     async def save_medium_priority_strategy(self, user_id: str, strategy: MediumPriorityStrategy) -> dict:
-        """Persist goals / experience strategy only. LLM medium summary runs in a background task."""
+        """Persist goals / experience strategy and its LLM summary after generation succeeds."""
+
         doc = strategy.model_dump()
+        summary_text = await self._generate_priority_summary(user_id, doc, "medium")
         await self.db["users"].update_one(
             {"_id": ObjectId(user_id)},
-            {"$set": {"profile.medium_priority_strategy": doc}},
+            {
+                "$set": {
+                    "profile.medium_priority_strategy": doc,
+                    "profile.medium_priority_summary": summary_text,
+                }
+            },
         )
         return {"status": True}
-
-    async def generate_hard_summary_and_update_profile(self, user_id: str, hard_strategy: dict) -> None:
-        """Background task: generate hard-priority summary only."""
-
-        start_request_llm_cost_tracking()
-        try:
-            hard_resp = await self.summary_agent.generate_summary(hard_strategy, "hard")
-            await self.db["users"].update_one(
-                {"_id": ObjectId(user_id)},
-                {"$set": {"profile.hard_priority_summary": hard_resp["text"]}},
-            )
-        finally:
-            total_micro = get_request_llm_cost_micro_total()
-            stop_request_llm_cost_tracking()
-        if total_micro > 0:
-            await LlmCostService(self.db).commit_delta_micro_usd(user_id, total_micro)
-
-    async def generate_medium_summary_and_update_profile(self, user_id: str, medium_strategy: dict) -> None:
-        """Background task: generate medium-priority summary only."""
-
-        start_request_llm_cost_tracking()
-        try:
-            medium_resp = await self.summary_agent.generate_summary(medium_strategy, "medium")
-            await self.db["users"].update_one(
-                {"_id": ObjectId(user_id)},
-                {"$set": {"profile.medium_priority_summary": medium_resp["text"]}},
-            )
-        finally:
-            total_micro = get_request_llm_cost_micro_total()
-            stop_request_llm_cost_tracking()
-        if total_micro > 0:
-            await LlmCostService(self.db).commit_delta_micro_usd(user_id, total_micro)
 
     async def get_profile(self, user_id: str) -> dict:
         """Fetch user profile by user_id. Returns MongoDB document structure."""
