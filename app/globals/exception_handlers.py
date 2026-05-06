@@ -1,4 +1,4 @@
-"""Register FastAPI exception handlers: Sentry for unhandled errors only; consistent JSON error bodies."""
+"""Register FastAPI exception handlers: selective Sentry reporting; consistent JSON error bodies."""
 
 from __future__ import annotations
 
@@ -15,9 +15,19 @@ from pymongo.errors import DuplicateKeyError
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from app.globals.error_payload import error_envelope, json_response_for_app_error
-from app.globals.errors import AppError, OpenAIAccountQuotaError
+from app.globals.errors import AIDependencyError, AppError, OpenAIAccountQuotaError
 
 logger = logging.getLogger(__name__)
+
+
+def _should_report_app_error_to_sentry(exc: AppError) -> bool:
+    """
+    Send only OpenAI upstream/API failures to Sentry.
+
+    Other ``AppError`` subclasses are intentional domain responses (validation, auth, etc.).
+    ``OpenAIAccountQuotaError`` is provider billing and is excluded here (handled separately).
+    """
+    return isinstance(exc, AIDependencyError) or isinstance(exc, OpenAIAccountQuotaError)
 
 
 def _init_sentry() -> None:
@@ -50,10 +60,14 @@ def register_exception_handlers(app: FastAPI) -> None:
     @app.exception_handler(OpenAIAccountQuotaError)
     async def openai_account_quota_handler(request: Request, exc: OpenAIAccountQuotaError) -> JSONResponse:
         """Provider billing/quota: same JSON shape as other errors; omit Sentry (operator-side)."""
+        if _should_report_app_error_to_sentry(exc):
+            sentry_sdk.capture_exception(exc)
         return json_response_for_app_error(exc)
 
     @app.exception_handler(AppError)
     async def app_error_handler(request: Request, exc: AppError) -> JSONResponse:
+        if _should_report_app_error_to_sentry(exc):
+            sentry_sdk.capture_exception(exc)
         return json_response_for_app_error(exc)
 
     @app.exception_handler(StarletteHTTPException)
