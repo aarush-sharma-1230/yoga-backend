@@ -6,7 +6,7 @@ from app.auth.auth_service import AuthService, get_current_user_id
 from app.auth.jwt_middleware import jwt_access_payload
 from app.auth.helpers import set_refresh_cookie
 from app.auth.settings import get_auth_settings
-from app.schemas.auth import CreateUser, GoogleLoginRequest, HardPriorityStrategy, MediumPriorityStrategy
+from app.schemas.auth import GoogleLoginRequest, HardPriorityStrategy, MediumPriorityStrategy
 from app.dependency_injector import DependencyInjector
 
 router = APIRouter()
@@ -38,14 +38,6 @@ async def refresh_session(
     out = await service.refresh_session(raw)
     set_refresh_cookie(response, out["refresh_token_raw"], settings)
     return {"access_token": out["access_token"], "token_type": "bearer"}
-
-
-@router.post("/user/user_registration")
-async def user_registration(
-    user: CreateUser,
-    service: AuthService = Depends(DependencyInjector.get_auth_service),
-):
-    return await service.create_user(user)
 
 
 @router.post("/user/get_user_data")

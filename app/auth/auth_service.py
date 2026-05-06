@@ -14,7 +14,7 @@ from motor.motor_asyncio import AsyncIOMotorDatabase
 
 from app.auth.settings import get_auth_settings
 from app.globals.errors import AuthenticationError, InternalAppError, NotFoundError
-from app.schemas.auth import CreateUser, HardPriorityStrategy, MediumPriorityStrategy, default_user_profile
+from app.schemas.auth import HardPriorityStrategy, MediumPriorityStrategy, default_user_profile
 from app.usage.llm_cost_service import LlmCostService
 from app.usage.request_cost_context import (
             get_request_llm_cost_micro_total,
@@ -144,13 +144,6 @@ class AuthService:
         access = self._create_access_token(user_id)
         return {"access_token": access, "refresh_token_raw": new_raw}
 
-    async def create_user(self, user: CreateUser):
-        user_obj = user.model_dump()
-        user_obj["profile"] = default_user_profile()
-        result = await self.db["users"].insert_one(user_obj)
-
-        return {"status": True, "user_id": str(result.inserted_id)}
-
     async def get_user_data(self, user_id: str):
         user_obj = await self.db["users"].find_one(
             {"_id": ObjectId(user_id)},
@@ -228,7 +221,18 @@ class AuthService:
             set_doc["full_name"] = full_name
         await self.db["users"].update_one(
             {"google_sub": google_sub},
-            {"$set": set_doc, "$setOnInsert": {"profile": default_user_profile(), "created_at": now}},
+            {
+                "$set": set_doc,
+                "$setOnInsert": {
+                    "profile": default_user_profile(),
+                    "created_on": now,
+                    "llm_cost": {
+        "curr_window": 0,
+        "total": 0,
+        "renews_on": None,
+    },
+                },
+            },
             upsert=True,
         )
         doc = await self.db["users"].find_one({"google_sub": google_sub})
@@ -247,7 +251,7 @@ class AuthService:
                 "user_id": ObjectId(user_id),
                 "token_hash": digest,
                 "expires_at": expires_at,
-                "created_at": datetime.now(timezone.utc),
+                "created_on": datetime.now(timezone.utc),
             }
         )
         return raw

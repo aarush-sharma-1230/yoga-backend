@@ -11,7 +11,7 @@ from app.schemas.session_requests import SeriesData
 from app.dependency_injector import DependencyInjector
 from app.globals.errors import AccessTokenTooShortLifetimeError
 from app.usage.constants import config_usd_to_micro_usd
-from app.usage.helpers import UserBudgetAccess, get_user_budget_access, raise_if_llm_daily_cap_exceeded
+from app.usage.helpers import UserBudgetAccess, enforce_user_llm_budget, get_user_budget_access
 from bson import ObjectId
 
 router = APIRouter()
@@ -35,7 +35,7 @@ async def start_user_session(
     if remaining_sec < min_sec:
         raise AccessTokenTooShortLifetimeError()
     cap_micro = config_usd_to_micro_usd(settings.user_daily_llm_usd_cap)
-    raise_if_llm_daily_cap_exceeded(
+    enforce_user_llm_budget(
         llm_cost=access.llm_cost,
         cap_micro_usd=cap_micro,
         limit_usd=settings.user_daily_llm_usd_cap,

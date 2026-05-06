@@ -9,7 +9,7 @@ from datetime import datetime
 
 from app.globals.errors import BadRequestError, ForbiddenError, InternalAppError, NotFoundError
 
-from app.llms.openai_client import (
+from app.llms.openai_policy import (
     DEFAULT_YOGA_TTS_INSTRUCTIONS,
     ENERGETIC_YOGA_TTS_INSTRUCTIONS,
 )

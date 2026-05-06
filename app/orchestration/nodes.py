@@ -15,7 +15,6 @@ from datetime import datetime
 from typing import Any
 
 from bson import ObjectId
-from openai import RateLimitError
 
 from app.orchestration.graph import MAX_SEQUENCE_REVIEW_ROUNDS
 from app.orchestration.profile import ProfileContext, build_profiler_profile_bundle
@@ -89,24 +88,14 @@ def build_node_functions(
 
     async def composer_node(state: SequenceGraphState) -> dict:
         """Run the SequenceComposer to generate a structured sequence."""
-        try:
-            output: CustomSequenceOutput = await sequence_composer.compose_sequence(
-                response_format=CustomSequenceOutput,
-                session_briefing=state["session_briefing"],
-                duration_minutes=state["duration_minutes"],
-                theme=state["theme"],
-                review_qa_context=state.get("review_qa_context"),
-                sequence_review_feedback=state.get("sequence_review_feedback"),
-            )
-        except RateLimitError as exc:
-            return {
-                "composer_output": None,
-                "error": (
-                    "OpenAI rate limit or quota exceeded (check billing and plan at "
-                    "https://platform.openai.com/account/billing). "
-                    "Sequence generation was not completed."
-                ),
-            }
+        output: CustomSequenceOutput = await sequence_composer.compose_sequence(
+            response_format=CustomSequenceOutput,
+            session_briefing=state["session_briefing"],
+            duration_minutes=state["duration_minutes"],
+            theme=state["theme"],
+            review_qa_context=state.get("review_qa_context"),
+            sequence_review_feedback=state.get("sequence_review_feedback"),
+        )
 
         return {
             "composer_output": output.model_dump(),

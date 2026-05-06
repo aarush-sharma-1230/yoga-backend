@@ -2,7 +2,7 @@
 
 from typing import Any, Literal, Optional
 
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel
 
 MedicalCondition = Literal[
     "hypertension",
@@ -17,12 +17,6 @@ ChronicPainArea = Literal["neck", "shoulders", "lower_back", "wrists", "knees", 
 ExperienceLevel = Literal["beginner", "intermediate", "advanced"]
 ActivityLevel = Literal["sedentary", "active", "fleet"]
 PrimaryGoal = Literal["flexibility", "strength", "stress_relief", "spiritual"]
-
-
-class CreateUser(BaseModel):
-    full_name: str
-    email: EmailStr
-    password: str
 
 
 class GoogleLoginRequest(BaseModel):
