@@ -37,7 +37,7 @@ async def refresh_session(
     raw = request.cookies.get(settings.refresh_cookie_name)
     out = await service.refresh_session(raw)
     set_refresh_cookie(response, out["refresh_token_raw"], settings)
-    return {"access_token": out["access_token"], "token_type": "bearer"}
+    return {"access_token": out["access_token"]}
 
 
 @router.post("/user/get_user_data")

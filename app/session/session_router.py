@@ -9,7 +9,6 @@ from app.schemas.pose_landmarks import PoseLandmarksRequest
 from app.schemas.session_state import CurrentSessionStateRequest
 from app.schemas.session_requests import SeriesData
 from app.dependency_injector import DependencyInjector
-from app.globals.errors import AccessTokenTooShortLifetimeError
 from app.usage.constants import config_usd_to_micro_usd
 from app.usage.helpers import UserBudgetAccess, enforce_user_llm_budget, get_user_budget_access
 from bson import ObjectId
@@ -29,11 +28,7 @@ async def start_user_session(
     Pre-generates guidance: `intro` and `ending` as top-level fields; per-posture transition audio under `sequence.postures`.
     """
     user_id_str = access.user_id
-    remaining_sec = access.seconds_until_exp
     settings = get_auth_settings()
-    min_sec = settings.min_remaining_to_start_minutes * 60
-    if remaining_sec < min_sec:
-        raise AccessTokenTooShortLifetimeError()
     cap_micro = config_usd_to_micro_usd(settings.user_daily_llm_usd_cap)
     enforce_user_llm_budget(
         llm_cost=access.llm_cost,

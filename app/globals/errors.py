@@ -77,21 +77,6 @@ class ConflictError(AppError):
     default_detail = "This resource already exists."
 
 
-class AccessTokenTooShortLifetimeError(AppError):
-    """Bearer token expires before the minimum required for the operation."""
-
-    status_code = 409
-    error_code = "access_token_expiring"
-
-    def __init__(self) -> None:
-        super().__init__(
-            {
-                "code": "access_token_expiring",
-                "message": "Access token does not have enough lifetime left; refresh before starting a session.",
-            }
-        )
-
-
 class LlmBudgetExceededError(AppError):
     """
     User's configured LLM spend / usage cap for the window has been reached.

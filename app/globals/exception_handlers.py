@@ -1,4 +1,4 @@
-"""Register FastAPI exception handlers: Sentry reporting and consistent JSON error bodies."""
+"""Register FastAPI exception handlers: Sentry for unhandled errors only; consistent JSON error bodies."""
 
 from __future__ import annotations
 
@@ -54,12 +54,10 @@ def register_exception_handlers(app: FastAPI) -> None:
 
     @app.exception_handler(AppError)
     async def app_error_handler(request: Request, exc: AppError) -> JSONResponse:
-        sentry_sdk.capture_exception(exc)
         return json_response_for_app_error(exc)
 
     @app.exception_handler(StarletteHTTPException)
     async def starlette_http_exception_handler(request: Request, exc: StarletteHTTPException) -> JSONResponse:
-        sentry_sdk.capture_exception(exc)
         code = _http_exception_code(exc.status_code)
         if isinstance(exc.detail, dict):
             inner = dict(exc.detail)
@@ -74,7 +72,6 @@ def register_exception_handlers(app: FastAPI) -> None:
 
     @app.exception_handler(RequestValidationError)
     async def validation_handler(request: Request, exc: RequestValidationError) -> JSONResponse:
-        sentry_sdk.capture_exception(exc)
         issues = [{"loc": list(err.get("loc", ())), "msg": err.get("msg", "")} for err in exc.errors()]
         body = error_envelope(
             code="validation_error",
@@ -85,19 +82,16 @@ def register_exception_handlers(app: FastAPI) -> None:
 
     @app.exception_handler(jwt.PyJWTError)
     async def jwt_handler(request: Request, exc: jwt.PyJWTError) -> JSONResponse:
-        sentry_sdk.capture_exception(exc)
         body = error_envelope(code="authentication_failed", message="Authentication failed.")
         return JSONResponse(status_code=401, content=body)
 
     @app.exception_handler(InvalidId)
     async def invalid_object_id_handler(request: Request, exc: InvalidId) -> JSONResponse:
-        sentry_sdk.capture_exception(exc)
         body = error_envelope(code="bad_request", message="The request could not be completed.")
         return JSONResponse(status_code=400, content=body)
 
     @app.exception_handler(DuplicateKeyError)
     async def duplicate_key_handler(request: Request, exc: DuplicateKeyError) -> JSONResponse:
-        sentry_sdk.capture_exception(exc)
         body = error_envelope(code="conflict", message="This resource already exists.")
         return JSONResponse(status_code=409, content=body)
 

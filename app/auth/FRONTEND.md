@@ -26,8 +26,4 @@
 
 Required: `JWT_SECRET`, `GOOGLE_CLIENT_ID` (Web client ID, used as ID token `aud`).
 
-Optional: `ACCESS_TTL_MINUTES`, `REFRESH_TTL_DAYS`, `REFRESH_COOKIE_NAME`, `REFRESH_COOKIE_PATH`, `COOKIE_SECURE`, `COOKIE_SAMESITE`, `MIN_REMAINING_TO_START_MINUTES`.
-
-## Session start gate
-
-- `POST /session/start` returns **409** with `detail.code` = `access_token_expiring` if the access token has less than `MIN_REMAINING_TO_START_MINUTES` of lifetime left. Call `/auth/refresh` first, then retry.
+Optional: `ACCESS_TTL_MINUTES`, `REFRESH_TTL_DAYS`, `REFRESH_COOKIE_NAME`, `REFRESH_COOKIE_PATH`, `COOKIE_SECURE`, `COOKIE_SAMESITE`.
