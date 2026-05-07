@@ -29,7 +29,7 @@ class YogaCoordinator:
         """Fetch profile when ``user_id`` is set, extract context, build developer prompt."""
         user = None
         if user_id:
-            user = await self.auth_service.get_profile(str(user_id))
+            user = (await self.auth_service.get_user_data(str(user_id)))["user"]
         ctx = extract_profile_context(user)
         return get_yoga_coordinator_developer_prompt(ctx)
 

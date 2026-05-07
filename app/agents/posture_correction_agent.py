@@ -35,7 +35,7 @@ class PostureCorrectionAgent:
         user = None
         if user_id:
             with suppress(RuntimeError):
-                user = await self.auth_service.get_profile(str(user_id))
+                user = (await self.auth_service.get_user_data(str(user_id)))["user"]
         ctx = extract_profile_context(user)
         return get_posture_correction_developer_prompt(ctx)
 

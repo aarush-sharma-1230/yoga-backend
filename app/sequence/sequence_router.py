@@ -1,10 +1,10 @@
 from fastapi import APIRouter, Depends
 
-from app.auth.auth_service import get_current_user_id
 from app.auth.settings import get_auth_settings
+from app.middlewares.auth import get_current_user
 from app.dependency_injector import DependencyInjector
 from app.usage.constants import config_usd_to_micro_usd
-from app.usage.helpers import UserBudgetAccess, enforce_user_llm_budget, get_user_budget_access
+from app.usage.helpers import enforce_user_llm_budget
 from app.schemas.sequence_requests import (
     CreateManualSequenceData,
     GenerateSequenceData,
@@ -19,15 +19,15 @@ router = APIRouter()
 @router.post("/sequence/get_sequences")
 async def get_sequences(
     service: SequenceService = Depends(DependencyInjector.get_sequence_service),
-    user_id: str = Depends(get_current_user_id),
+    user: dict = Depends(get_current_user),
 ):
-    return await service.get_sequences(user_id=user_id)
+    return await service.get_sequences(user_id=str(user["_id"]))
 
 
 @router.get("/sequence/get_postures")
 async def get_postures(
     service: SequenceService = Depends(DependencyInjector.get_sequence_service),
-    user_id: str = Depends(get_current_user_id),
+    _user: dict = Depends(get_current_user),
 ):
     """Get all postures from the postures collection."""
     return await service.get_postures()
@@ -36,7 +36,7 @@ async def get_postures(
 @router.get("/sequence/get_themes")
 async def get_themes(
     service: SequenceService = Depends(DependencyInjector.get_sequence_service),
-    user_id: str = Depends(get_current_user_id),
+    _user: dict = Depends(get_current_user),
 ):
     """Get all themes from the themes collection."""
     return await service.get_themes()
@@ -46,16 +46,16 @@ async def get_themes(
 async def get_sequence(
     sequence_data: SequenceData,
     service: SequenceService = Depends(DependencyInjector.get_sequence_service),
-    user_id: str = Depends(get_current_user_id),
+    user: dict = Depends(get_current_user),
 ):
-    return await service.get_sequence(sequence_data.sequence_id, user_id)
+    return await service.get_sequence(sequence_data.sequence_id, str(user["_id"]))
 
 
 @router.post("/sequence/generate")
 async def generate_sequence(
     data: GenerateSequenceData,
     service: SequenceService = Depends(DependencyInjector.get_sequence_service),
-    access: UserBudgetAccess = Depends(get_user_budget_access),
+    user: dict = Depends(get_current_user),
 ):
     """
     Generate a personalized yoga sequence for the user.
@@ -68,12 +68,12 @@ async def generate_sequence(
     settings = get_auth_settings()
     cap_micro = config_usd_to_micro_usd(settings.user_daily_llm_usd_cap)
     enforce_user_llm_budget(
-        llm_cost=access.llm_cost,
+        llm_cost=user.get("llm_cost"),
         cap_micro_usd=cap_micro,
         limit_usd=settings.user_daily_llm_usd_cap,
     )
     return await service.generate_sequence(
-        user_id=access.user_id,
+        user_id=str(user["_id"]),
         practice_theme_id=data.practice_theme_id,
         duration_minutes=data.duration_minutes,
         user_notes=data.user_notes,
@@ -85,13 +85,13 @@ async def generate_sequence(
 async def create_manual_sequence(
     data: CreateManualSequenceData,
     service: SequenceService = Depends(DependencyInjector.get_sequence_service),
-    user_id: str = Depends(get_current_user_id),
+    user: dict = Depends(get_current_user),
 ):
     """Create a manual sequence from user-selected posture client_ids."""
     return await service.create_manual_sequence(
         name=data.name,
         posture_client_ids=data.posture_client_ids,
-        user_id=user_id,
+        user_id=str(user["_id"]),
     )
 
 
@@ -99,12 +99,12 @@ async def create_manual_sequence(
 async def update_sequence(
     data: UpdateSequenceData,
     service: SequenceService = Depends(DependencyInjector.get_sequence_service),
-    user_id: str = Depends(get_current_user_id),
+    user: dict = Depends(get_current_user),
 ):
     """Update a sequence's name and ordered postures (same shape as stored in DB)."""
     return await service.update_sequence(
         sequence_id=data.sequence_id,
         name=data.name,
         postures=data.postures,
-        user_id=user_id,
+        user_id=str(user["_id"]),
     )

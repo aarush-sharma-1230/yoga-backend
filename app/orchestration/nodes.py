@@ -50,8 +50,8 @@ def build_node_functions(
 
     async def profiler_node(state: SequenceGraphState) -> dict:
         """Load user profile and theme from DB; extract profile bundle in one pass."""
-        user = await auth_service.get_profile(str(state["user_id"]))
-        bundle = build_profiler_profile_bundle(user)
+        user_payload = await auth_service.get_user_data(str(state["user_id"]))
+        bundle = build_profiler_profile_bundle(user_payload["user"])
 
         theme_id = state["practice_theme_id"]
         try:

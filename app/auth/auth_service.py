@@ -2,16 +2,15 @@ import asyncio
 import hashlib
 import secrets
 from datetime import datetime, timedelta, timezone
-from typing import Any
 
 import jwt
 from bson import ObjectId
-from fastapi import Depends
-from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from google.auth.transport import requests as google_requests
 from google.oauth2 import id_token as google_id_token
 from motor.motor_asyncio import AsyncIOMotorDatabase
+from pymongo import ReturnDocument
 
+from app.auth.helpers import default_user_profile
 from app.auth.settings import get_auth_settings
 from app.globals.errors import AuthenticationError, InternalAppError, NotFoundError
 from app.schemas.auth import (
@@ -20,8 +19,7 @@ from app.schemas.auth import (
     USER_MEDICAL_PROFILE_FIELD,
     USER_MEDICAL_PROFILE_SUMMARY_FIELD,
     UserGoals,
-    UserMedicalProfile,
-    default_user_profile,
+    UserMedicalProfile
 )
 from app.usage.llm_cost_service import LlmCostService
 from app.usage.request_cost_context import (
@@ -42,70 +40,16 @@ class AuthService:
         self.db = db
         self.summary_agent = summary_agent
 
-    def _create_access_token(self, user_id: str) -> str:
+    def _create_access_token(self, user_id: str, access_ttl_minutes: int, jwt_secret: str) -> str:
         """Encode a new access JWT for Mongo ``users._id`` string ``user_id``."""
 
-        settings = get_auth_settings()
         now = datetime.now(timezone.utc)
         payload = {
             "_id": user_id,
             "iat": now,
-            "exp": now + timedelta(minutes=settings.access_ttl_minutes),
+            "exp": now + timedelta(minutes=access_ttl_minutes),
         }
-        return jwt.encode(payload, settings.jwt_secret, algorithm="HS256")
-
-    @staticmethod
-    def decode_access_token_payload(bearer_token: str) -> dict[str, Any]:
-        """
-        Decode and validate an access JWT (signature, expiry, required claims).
-
-        Returns claim dict with string ``_id`` (Mongo ``users._id``). Raises ``AuthenticationError`` if invalid.
-        """
-
-        settings = get_auth_settings()
-        try:
-            payload = jwt.decode(
-                bearer_token,
-                settings.jwt_secret,
-                algorithms=["HS256"],
-                options={"require": ["exp", "iat", "_id"]},
-            )
-        except jwt.PyJWTError as exc:
-            raise AuthenticationError() from exc
-        payload["_id"] = str(payload["_id"])
-        return payload
-
-    @staticmethod
-    def _bearer_context_from_token(bearer_token: str) -> tuple[str, float]:
-        """
-        Decode a Bearer token and return ``(user_id, seconds_until_exp)``.
-
-        Raises ``AuthenticationError`` if invalid or expired.
-        """
-
-        payload = AuthService.decode_access_token_payload(bearer_token)
-        exp = payload["exp"]
-        if isinstance(exp, datetime):
-            exp_ts = exp.timestamp()
-        else:
-            exp_ts = float(exp)
-        now_ts = datetime.now(timezone.utc).timestamp()
-        return payload["_id"], exp_ts - now_ts
-
-    def authenticated_access_context(self, bearer_token: str) -> tuple[str, float]:
-        """
-        Validate a Bearer access JWT for HTTP; return ``(user_id, seconds_until_exp)``.
-
-        Raises ``AuthenticationError`` if the token is invalid or expired.
-        """
-
-        return self._bearer_context_from_token(bearer_token)
-
-    @staticmethod
-    def user_id_from_access_context(access_context: tuple[str, float]) -> str:
-        """Return Mongo ``users._id`` string from the tuple returned by ``authenticated_access_context``."""
-
-        return access_context[0]
+        return jwt.encode(payload, jwt_secret, algorithm="HS256")
 
     def _verify_google_id_token_sync(self, id_token: str) -> dict:
         settings = get_auth_settings()
@@ -123,19 +67,21 @@ class AuthService:
 
         try:
             idinfo = await asyncio.to_thread(self._verify_google_id_token_sync, id_token)
+
+            google_sub = idinfo["sub"]
+            email = idinfo.get("email")
+            full_name = idinfo.get("name")
+            user_doc = await self.upsert_user_from_google(google_sub, email, full_name)
+
+            uid = str(user_doc["_id"])
+            settings = get_auth_settings()
+            access = self._create_access_token(uid, settings.access_ttl_minutes, settings.jwt_secret)
+            raw_refresh = await self._insert_refresh_token(uid, settings.refresh_ttl_days)
+
+            return {"access_token": access, "refresh_token_raw": raw_refresh}
+
         except ValueError as exc:
             raise AuthenticationError() from exc
-
-        google_sub = idinfo["sub"]
-        email = idinfo.get("email")
-        full_name = idinfo.get("name")
-        user_doc = await self.upsert_user_from_google(google_sub, email, full_name)
-        uid = str(user_doc["_id"])
-        settings = get_auth_settings()
-        access = self._create_access_token(uid)
-        raw_refresh = await self.create_refresh_token_for_user(uid, settings.refresh_ttl_days)
-
-        return {"access_token": access, "refresh_token_raw": raw_refresh}
 
     async def refresh_session(self, raw_refresh_cookie: str | None) -> dict:
         """
@@ -145,17 +91,23 @@ class AuthService:
         """
 
         settings = get_auth_settings()
+
         result = await self.exchange_refresh_token(raw_refresh_cookie, settings.refresh_ttl_days)
-        if not result:
-            raise AuthenticationError()
         user_id, new_raw = result
-        access = self._create_access_token(user_id)
+
+        access = self._create_access_token(user_id, settings.access_ttl_minutes, settings.jwt_secret)
         return {"access_token": access, "refresh_token_raw": new_raw}
 
-    async def get_user_data(self, user_id: str):
+    async def get_user_data(self, user_id: str) -> dict:
+        """
+        Load a projection of the user document by id for callers outside FastAPI routes.
+
+        Returns ``{"status": True, "user": {...}}`` where ``user`` includes ``full_name``, ``email``, and ``profile``.
+        """
+
         user_obj = await self.db["users"].find_one(
             {"_id": ObjectId(user_id)},
-            {"full_name": 1, "email": 1, "profile": 1},
+            {"password": 0},
         )
 
         if not user_obj:
@@ -173,8 +125,10 @@ class AuthService:
         finally:
             total_micro = get_request_llm_cost_micro_total()
             stop_request_llm_cost_tracking()
+
         if total_micro > 0:
             await LlmCostService(self.db).commit_delta_micro_usd(user_id, total_micro)
+
         return summary_text
 
     async def save_user_medical_profile(self, user_id: str, profile: UserMedicalProfile) -> dict:
@@ -209,21 +163,13 @@ class AuthService:
         )
         return {"status": True}
 
-    async def get_profile(self, user_id: str) -> dict:
-        """Fetch user profile by user_id. Returns MongoDB document structure."""
-        user = await self.db["users"].find_one({"_id": ObjectId(user_id)}, {"password": 0})
-        if not user:
-            raise NotFoundError()
-        return user
-
     async def upsert_user_from_google(self, google_sub: str, email: str, full_name: str | None) -> dict:
         """Create or update a user row keyed by stable Google ``sub``."""
 
         now = datetime.now(timezone.utc)
-        set_doc: dict = {"google_sub": google_sub, "email": email}
-        if full_name:
-            set_doc["full_name"] = full_name
-        await self.db["users"].update_one(
+        set_doc: dict = {"google_sub": google_sub, "email": email, "full_name": full_name}
+
+        doc = await self.db["users"].find_one_and_update(
             {"google_sub": google_sub},
             {
                 "$set": set_doc,
@@ -231,15 +177,16 @@ class AuthService:
                     "profile": default_user_profile(),
                     "created_on": now,
                     "llm_cost": {
-        "curr_window": 0,
-        "total": 0,
-        "renews_on": None,
-    },
+                        "curr_window": 0,
+                        "total": 0,
+                        "renews_on": None,
+                    },
                 },
             },
             upsert=True,
+            return_document=ReturnDocument.AFTER,
         )
-        doc = await self.db["users"].find_one({"google_sub": google_sub})
+
         if not doc:
             raise InternalAppError()
         return doc
@@ -258,56 +205,30 @@ class AuthService:
                 "created_on": datetime.now(timezone.utc),
             }
         )
+
         return raw
-
-    async def create_refresh_token_for_user(self, user_id: str, refresh_ttl_days: int) -> str:
-        """Issue a new refresh token row and return the raw cookie value."""
-
-        return await self._insert_refresh_token(user_id, refresh_ttl_days)
 
     async def exchange_refresh_token(self, raw_cookie: str | None, refresh_ttl_days: int) -> tuple[str, str] | None:
         """
-        Validate the refresh cookie value, rotate storage, and return ``(user_id, new_raw_refresh)``.
-
-        Returns ``None`` if the token is missing, unknown, or expired.
-        """
+        Validate the refresh cookie value, rotate storage, and return ``(user_id, new_raw_refresh)`` """
 
         if not raw_cookie or not raw_cookie.strip():
-            return None
+            raise AuthenticationError()
+
         digest = _hash_refresh_token(raw_cookie.strip())
         doc = await self.db["refresh_tokens"].find_one({"token_hash": digest})
         if not doc:
-            return None
+            raise AuthenticationError()
+
         exp = doc.get("expires_at")
         if exp is not None:
             if exp.tzinfo is None:
                 exp = exp.replace(tzinfo=timezone.utc)
             if exp < datetime.now(timezone.utc):
                 await self.db["refresh_tokens"].delete_one({"_id": doc["_id"]})
-                return None
+                raise AuthenticationError()
+
         user_id = str(doc["user_id"])
         await self.db["refresh_tokens"].delete_one({"_id": doc["_id"]})
         new_raw = await self._insert_refresh_token(user_id, refresh_ttl_days)
         return user_id, new_raw
-
-
-from app.dependency_injector import DependencyInjector
-
-security = HTTPBearer(auto_error=True)
-
-
-async def get_access_context(
-    credentials: HTTPAuthorizationCredentials = Depends(security),
-    auth_service: AuthService = Depends(DependencyInjector.get_auth_service),
-) -> tuple[str, float]:
-    """Return ``(user_id, seconds_until_exp)`` for the current Bearer token."""
-
-    return auth_service.authenticated_access_context(credentials.credentials)
-
-
-async def get_current_user_id(
-    context: tuple[str, float] = Depends(get_access_context),
-) -> str:
-    """Return authenticated Mongo ``users._id`` as string."""
-
-    return AuthService.user_id_from_access_context(context)
