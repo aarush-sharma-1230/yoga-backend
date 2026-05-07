@@ -35,7 +35,7 @@ def get_auth_settings() -> AuthSettings:
     google_client_id = os.getenv("GOOGLE_CLIENT_ID")
     access_ttl = int(os.getenv("ACCESS_TTL_MINUTES"))
     refresh_ttl_days = int(os.getenv("REFRESH_TTL_DAYS"))
-    cookie_secure = _parse_bool(os.getenv("COOKIE_SECURE"), default=False)
+    cookie_secure = _parse_bool(os.getenv("COOKIE_SECURE"))
     cookie_samesite = os.getenv("COOKIE_SAMESITE", "lax").lower()
     user_daily_llm_usd_cap = float(os.getenv("USER_DAILY_LLM_USD_CAP"))
 
