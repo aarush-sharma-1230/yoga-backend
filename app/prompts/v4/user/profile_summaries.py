@@ -40,8 +40,6 @@ def get_session_briefing_prompt(
         sections.append(f"User medical profile summary: {ctx.user_medical_profile_summary}")
     if ctx.user_goals_summary:
         sections.append(f"User goals summary: {ctx.user_goals_summary}")
-    if ctx.laws_context:
-        sections.append(f"\n{ctx.laws_context}")
 
     sections.append("")
     sections.append("## SESSION REQUEST")

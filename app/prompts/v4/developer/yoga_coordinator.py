@@ -17,10 +17,6 @@ USER MEDICAL PROFILE SUMMARY: {ctx.user_medical_profile_summary}
 USER GOALS SUMMARY: {ctx.user_goals_summary}
 </PRACTITIONER_PROFILE>
 
-<MEDICAL_LAWS_CONTEXT>
-{ctx.laws_context}
-</MEDICAL_LAWS_CONTEXT>
-
 ## 1. SCRIPT ARCHITECTURE (STEPS)
 The user prompt describes how many **steps** you must return and which JSON shape to use.
 

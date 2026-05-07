@@ -26,7 +26,7 @@ class GeminiService:
         model: str = "gemini-2.5-flash",
         temperature: float = 0.7,
     ) -> dict:
-        dp = developer_prompt if developer_prompt is not None else get_yoga_coordinator_developer_prompt(ProfileContext("", "", ""))
+        dp = developer_prompt if developer_prompt is not None else get_yoga_coordinator_developer_prompt(ProfileContext("", ""))
         if not self.is_api_enabled or not self.client:
             text = "This is a mock response from Gemini API."
             return {

@@ -44,43 +44,6 @@ USER_GOALS_FIELD = "user_goals"
 USER_MEDICAL_PROFILE_SUMMARY_FIELD = "user_medical_profile_summary"
 USER_GOALS_SUMMARY_FIELD = "user_goals_summary"
 
-_LEGACY_HARD_STRATEGY_FIELD = "hard_priority_strategy"
-_LEGACY_MEDIUM_STRATEGY_FIELD = "medium_priority_strategy"
-_LEGACY_HARD_SUMMARY_FIELD = "hard_priority_summary"
-_LEGACY_MEDIUM_SUMMARY_FIELD = "medium_priority_summary"
-
-
-def resolve_user_medical_profile(profile: dict[str, Any]) -> dict[str, Any]:
-    """Return persisted medical profile dict, preferring current keys with legacy fallback."""
-
-    return (
-        profile.get(USER_MEDICAL_PROFILE_FIELD)
-        or profile.get(_LEGACY_HARD_STRATEGY_FIELD)
-        or {}
-    )
-
-
-def resolve_user_goals(profile: dict[str, Any]) -> dict[str, Any]:
-    """Return persisted goals dict, preferring current keys with legacy fallback."""
-
-    return profile.get(USER_GOALS_FIELD) or profile.get(_LEGACY_MEDIUM_STRATEGY_FIELD) or {}
-
-
-def resolve_user_medical_profile_summary(profile: dict[str, Any]) -> str:
-    """Return LLM summary for medical profile, preferring current keys with legacy fallback."""
-
-    return (
-        profile.get(USER_MEDICAL_PROFILE_SUMMARY_FIELD)
-        or profile.get(_LEGACY_HARD_SUMMARY_FIELD)
-        or ""
-    )
-
-
-def resolve_user_goals_summary(profile: dict[str, Any]) -> str:
-    """Return LLM summary for goals, preferring current keys with legacy fallback."""
-
-    return profile.get(USER_GOALS_SUMMARY_FIELD) or profile.get(_LEGACY_MEDIUM_SUMMARY_FIELD) or ""
-
 
 def default_user_profile() -> dict[str, Any]:
     """

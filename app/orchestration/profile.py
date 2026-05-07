@@ -5,11 +5,9 @@ from __future__ import annotations
 from dataclasses import asdict, dataclass
 from typing import Any, Optional
 
-from app.prompts.v4.medical_conditions_laws import get_yoga_laws_context
 from app.schemas.auth import (
-    resolve_user_goals_summary,
-    resolve_user_medical_profile,
-    resolve_user_medical_profile_summary,
+    USER_GOALS_SUMMARY_FIELD,
+    USER_MEDICAL_PROFILE_SUMMARY_FIELD,
 )
 
 
@@ -19,26 +17,18 @@ class ProfileContext:
 
     user_medical_profile_summary: str
     user_goals_summary: str
-    laws_context: str
 
 
 def extract_profile_bundle(user_doc: Optional[dict]) -> ProfileContext:
-    """
-    Read a user document once and return ``ProfileContext`` (summaries and rule-derived laws text).
-
-    Uses stored ``user_medical_profile`` only server-side for ``get_yoga_laws_context``;
-    it is not exposed to downstream prompts as raw structured data.
-    """
+    """Read a user document once and return stored profile summaries for prompts."""
     if not user_doc:
-        return ProfileContext("", "", "")
+        return ProfileContext("", "")
 
     profile = user_doc.get("profile") or {}
-    medical_profile = resolve_user_medical_profile(profile)
-    medical_summary = resolve_user_medical_profile_summary(profile)
-    goals_summary = resolve_user_goals_summary(profile)
-    laws_context = get_yoga_laws_context(medical_profile)
+    medical_summary = profile.get(USER_MEDICAL_PROFILE_SUMMARY_FIELD) or ""
+    goals_summary = profile.get(USER_GOALS_SUMMARY_FIELD) or ""
 
-    return ProfileContext(medical_summary, goals_summary, laws_context)
+    return ProfileContext(medical_summary, goals_summary)
 
 
 def build_profiler_profile_bundle(user_doc: Optional[dict]) -> dict[str, Any]:

@@ -21,10 +21,6 @@ from app.schemas.auth import (
     USER_MEDICAL_PROFILE_SUMMARY_FIELD,
     UserGoals,
     UserMedicalProfile,
-    _LEGACY_HARD_STRATEGY_FIELD,
-    _LEGACY_HARD_SUMMARY_FIELD,
-    _LEGACY_MEDIUM_STRATEGY_FIELD,
-    _LEGACY_MEDIUM_SUMMARY_FIELD,
     default_user_profile,
 )
 from app.usage.llm_cost_service import LlmCostService
@@ -192,11 +188,7 @@ class AuthService:
                 "$set": {
                     f"profile.{USER_MEDICAL_PROFILE_FIELD}": doc,
                     f"profile.{USER_MEDICAL_PROFILE_SUMMARY_FIELD}": summary_text,
-                },
-                "$unset": {
-                    f"profile.{_LEGACY_HARD_STRATEGY_FIELD}": "",
-                    f"profile.{_LEGACY_HARD_SUMMARY_FIELD}": "",
-                },
+                }
             },
         )
         return {"status": True}
@@ -212,11 +204,7 @@ class AuthService:
                 "$set": {
                     f"profile.{USER_GOALS_FIELD}": doc,
                     f"profile.{USER_GOALS_SUMMARY_FIELD}": summary_text,
-                },
-                "$unset": {
-                    f"profile.{_LEGACY_MEDIUM_STRATEGY_FIELD}": "",
-                    f"profile.{_LEGACY_MEDIUM_SUMMARY_FIELD}": "",
-                },
+                }
             },
         )
         return {"status": True}
