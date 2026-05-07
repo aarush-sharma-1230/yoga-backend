@@ -25,41 +25,84 @@ class GoogleLoginRequest(BaseModel):
     id_token: str
 
 
-class HardPriorityStrategy(BaseModel):
+class UserMedicalProfile(BaseModel):
     medical_conditions: list[MedicalCondition]
     chronic_pain_areas: list[ChronicPainArea]
     recent_surgery: Optional[bool] = None
     user_notes: Optional[str] = None
 
 
-class MediumPriorityStrategy(BaseModel):
+class UserGoals(BaseModel):
     experience_level: Optional[ExperienceLevel] = None
     activity_level: Optional[ActivityLevel] = None
     primary_goal: list[PrimaryGoal]
     user_notes: Optional[str] = None
 
 
+USER_MEDICAL_PROFILE_FIELD = "user_medical_profile"
+USER_GOALS_FIELD = "user_goals"
+USER_MEDICAL_PROFILE_SUMMARY_FIELD = "user_medical_profile_summary"
+USER_GOALS_SUMMARY_FIELD = "user_goals_summary"
+
+_LEGACY_HARD_STRATEGY_FIELD = "hard_priority_strategy"
+_LEGACY_MEDIUM_STRATEGY_FIELD = "medium_priority_strategy"
+_LEGACY_HARD_SUMMARY_FIELD = "hard_priority_summary"
+_LEGACY_MEDIUM_SUMMARY_FIELD = "medium_priority_summary"
+
+
+def resolve_user_medical_profile(profile: dict[str, Any]) -> dict[str, Any]:
+    """Return persisted medical profile dict, preferring current keys with legacy fallback."""
+
+    return (
+        profile.get(USER_MEDICAL_PROFILE_FIELD)
+        or profile.get(_LEGACY_HARD_STRATEGY_FIELD)
+        or {}
+    )
+
+
+def resolve_user_goals(profile: dict[str, Any]) -> dict[str, Any]:
+    """Return persisted goals dict, preferring current keys with legacy fallback."""
+
+    return profile.get(USER_GOALS_FIELD) or profile.get(_LEGACY_MEDIUM_STRATEGY_FIELD) or {}
+
+
+def resolve_user_medical_profile_summary(profile: dict[str, Any]) -> str:
+    """Return LLM summary for medical profile, preferring current keys with legacy fallback."""
+
+    return (
+        profile.get(USER_MEDICAL_PROFILE_SUMMARY_FIELD)
+        or profile.get(_LEGACY_HARD_SUMMARY_FIELD)
+        or ""
+    )
+
+
+def resolve_user_goals_summary(profile: dict[str, Any]) -> str:
+    """Return LLM summary for goals, preferring current keys with legacy fallback."""
+
+    return profile.get(USER_GOALS_SUMMARY_FIELD) or profile.get(_LEGACY_MEDIUM_SUMMARY_FIELD) or ""
+
+
 def default_user_profile() -> dict[str, Any]:
     """
-    Nested profile shape for new users: strategies match persisted models; summaries are empty strings.
+    Nested profile shape for new users: nested objects match persisted models; summaries are empty strings.
 
-    Orchestration and prompts read ``hard_priority_strategy``, ``medium_priority_strategy``,
-    ``hard_priority_summary``, and ``medium_priority_summary`` from the user document.
+    Orchestration and prompts read ``user_medical_profile``, ``user_goals``,
+    ``user_medical_profile_summary``, and ``user_goals_summary`` from the user document.
     """
 
     return {
-        "hard_priority_strategy": HardPriorityStrategy(
+        USER_MEDICAL_PROFILE_FIELD: UserMedicalProfile(
             medical_conditions=[],
             chronic_pain_areas=[],
             recent_surgery=None,
             user_notes=None,
         ).model_dump(),
-        "medium_priority_strategy": MediumPriorityStrategy(
+        USER_GOALS_FIELD: UserGoals(
             experience_level=None,
             activity_level=None,
             primary_goal=[],
             user_notes=None,
         ).model_dump(),
-        "hard_priority_summary": "",
-        "medium_priority_summary": "",
+        USER_MEDICAL_PROFILE_SUMMARY_FIELD: "",
+        USER_GOALS_SUMMARY_FIELD: "",
     }

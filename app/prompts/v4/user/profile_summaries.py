@@ -36,10 +36,10 @@ def get_session_briefing_prompt(
     )
     sections.append("")
     sections.append("## PRACTITIONER PROFILE")
-    if ctx.hard_priority_summary:
-        sections.append(f"Medical & safety summary: {ctx.hard_priority_summary}")
-    if ctx.medium_priority_summary:
-        sections.append(f"Goals & experience summary: {ctx.medium_priority_summary}")
+    if ctx.user_medical_profile_summary:
+        sections.append(f"User medical profile summary: {ctx.user_medical_profile_summary}")
+    if ctx.user_goals_summary:
+        sections.append(f"User goals summary: {ctx.user_goals_summary}")
     if ctx.laws_context:
         sections.append(f"\n{ctx.laws_context}")
 
@@ -70,11 +70,11 @@ def get_session_briefing_prompt(
     return "\n".join(sections)
 
 
-def get_hard_priority_summary_prompt(hard_priority_strategy: dict) -> str:
-    """Build prompt to summarize HardPriorityStrategy (medical/contraindication) for session use."""
+def get_user_medical_profile_summary_prompt(user_medical_profile: dict) -> str:
+    """Build prompt to summarize user medical profile (medical/contraindication) for session use."""
     template = """Your task is to write a brief, actionable summary of a yoga practitioner's health and safety constraints.
 
-INPUT (JSON):
+USER MEDICAL PROFILE (JSON):
 {strategy_json}
 
 CONTEXT:
@@ -92,16 +92,16 @@ REQUIREMENTS:
 
 OUTPUT:
 A single paragraph of plain text, no bullet points."""
-    strategy_json = json.dumps(hard_priority_strategy, indent=2)
+    strategy_json = json.dumps(user_medical_profile, indent=2)
     prompt_template = PromptTemplate(template=template)
     return prompt_template.format(strategy_json=strategy_json)
 
 
-def get_medium_priority_summary_prompt(medium_priority_strategy: dict) -> str:
-    """Build prompt to summarize MediumPriorityStrategy (experience, goals) for session use."""
+def get_user_goals_summary_prompt(user_goals: dict) -> str:
+    """Build prompt to summarize user goals (experience, activity, primary goals) for session use."""
     template = """Your task is to write a brief, actionable summary of a yoga practitioner's experience and goals.
 
-INPUT (JSON):
+USER GOALS (JSON):
 {strategy_json}
 
 CONTEXT:
@@ -119,6 +119,6 @@ REQUIREMENTS:
 
 OUTPUT:
 A single paragraph of plain text, no bullet points."""
-    strategy_json = json.dumps(medium_priority_strategy, indent=2)
+    strategy_json = json.dumps(user_goals, indent=2)
     prompt_template = PromptTemplate(template=template)
     return prompt_template.format(strategy_json=strategy_json)

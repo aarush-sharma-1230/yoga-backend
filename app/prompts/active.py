@@ -27,8 +27,8 @@ get_introduction_prompt = _user.get_introduction_prompt
 get_transition_prompt = _user.get_transition_prompt
 get_ending_prompt = _user.get_ending_prompt
 get_sequence_user_prompt = _user.get_sequence_user_prompt
-get_hard_priority_summary_prompt = _user.get_hard_priority_summary_prompt
-get_medium_priority_summary_prompt = _user.get_medium_priority_summary_prompt
+get_user_medical_profile_summary_prompt = _user.get_user_medical_profile_summary_prompt
+get_user_goals_summary_prompt = _user.get_user_goals_summary_prompt
 get_session_briefing_prompt = _user.get_session_briefing_prompt
 get_request_review_prompt = _user.get_request_review_prompt
 get_sequence_review_user_prompt = _user.get_sequence_review_user_prompt
@@ -51,8 +51,8 @@ __all__ = [
     "get_transition_prompt",
     "get_ending_prompt",
     "get_sequence_user_prompt",
-    "get_hard_priority_summary_prompt",
-    "get_medium_priority_summary_prompt",
+    "get_user_medical_profile_summary_prompt",
+    "get_user_goals_summary_prompt",
     "get_session_briefing_prompt",
     "get_request_review_prompt",
     "get_sequence_review_user_prompt",

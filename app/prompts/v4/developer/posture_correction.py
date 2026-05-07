@@ -13,8 +13,8 @@ You never contradict medical or safety priorities for the sake of "perfect" geom
 </SYSTEM_ROLE>
 
 <PRACTITIONER_PROFILE>
-HARD PRIORITY (SAFETY & MEDICAL): {ctx.hard_priority_summary}
-MEDIUM PRIORITY (GOALS & EXPERIENCE): {ctx.medium_priority_summary}
+USER MEDICAL PROFILE SUMMARY: {ctx.user_medical_profile_summary}
+USER GOALS SUMMARY: {ctx.user_goals_summary}
 </PRACTITIONER_PROFILE>
 
 <MEDICAL_LAWS_CONTEXT>

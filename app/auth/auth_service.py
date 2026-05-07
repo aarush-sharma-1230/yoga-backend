@@ -14,7 +14,19 @@ from motor.motor_asyncio import AsyncIOMotorDatabase
 
 from app.auth.settings import get_auth_settings
 from app.globals.errors import AuthenticationError, InternalAppError, NotFoundError
-from app.schemas.auth import HardPriorityStrategy, MediumPriorityStrategy, default_user_profile
+from app.schemas.auth import (
+    USER_GOALS_FIELD,
+    USER_GOALS_SUMMARY_FIELD,
+    USER_MEDICAL_PROFILE_FIELD,
+    USER_MEDICAL_PROFILE_SUMMARY_FIELD,
+    UserGoals,
+    UserMedicalProfile,
+    _LEGACY_HARD_STRATEGY_FIELD,
+    _LEGACY_HARD_SUMMARY_FIELD,
+    _LEGACY_MEDIUM_STRATEGY_FIELD,
+    _LEGACY_MEDIUM_SUMMARY_FIELD,
+    default_user_profile,
+)
 from app.usage.llm_cost_service import LlmCostService
 from app.usage.request_cost_context import (
             get_request_llm_cost_micro_total,
@@ -155,12 +167,12 @@ class AuthService:
 
         return {"status": True, "user": user_obj}
 
-    async def _generate_priority_summary(self, user_id: str, strategy_dict: dict, kind: str) -> str:
-        """Run the profile summary LLM for ``kind`` (``\"hard\"`` or ``\"medium\"``) and record usage."""
+    async def _generate_priority_summary(self, user_id: str, payload: dict, kind: str) -> str:
+        """Run the profile summary LLM for ``kind`` (medical profile or goals) and record usage."""
 
         start_request_llm_cost_tracking()
         try:
-            resp = await self.summary_agent.generate_summary(strategy_dict, kind)
+            resp = await self.summary_agent.generate_summary(payload, kind)
             summary_text = resp["text"]
         finally:
             total_micro = get_request_llm_cost_micro_total()
@@ -169,34 +181,42 @@ class AuthService:
             await LlmCostService(self.db).commit_delta_micro_usd(user_id, total_micro)
         return summary_text
 
-    async def save_hard_priority_strategy(self, user_id: str, strategy: HardPriorityStrategy) -> dict:
-        """Persist medical / safety strategy and its LLM summary after generation succeeds."""
+    async def save_user_medical_profile(self, user_id: str, profile: UserMedicalProfile) -> dict:
+        """Persist user medical profile and its LLM summary after generation succeeds."""
 
-        doc = strategy.model_dump()
-        summary_text = await self._generate_priority_summary(user_id, doc, "hard")
+        doc = profile.model_dump()
+        summary_text = await self._generate_priority_summary(user_id, doc, "user_medical_profile")
         await self.db["users"].update_one(
             {"_id": ObjectId(user_id)},
             {
                 "$set": {
-                    "profile.hard_priority_strategy": doc,
-                    "profile.hard_priority_summary": summary_text,
-                }
+                    f"profile.{USER_MEDICAL_PROFILE_FIELD}": doc,
+                    f"profile.{USER_MEDICAL_PROFILE_SUMMARY_FIELD}": summary_text,
+                },
+                "$unset": {
+                    f"profile.{_LEGACY_HARD_STRATEGY_FIELD}": "",
+                    f"profile.{_LEGACY_HARD_SUMMARY_FIELD}": "",
+                },
             },
         )
         return {"status": True}
 
-    async def save_medium_priority_strategy(self, user_id: str, strategy: MediumPriorityStrategy) -> dict:
-        """Persist goals / experience strategy and its LLM summary after generation succeeds."""
+    async def save_user_goals(self, user_id: str, goals: UserGoals) -> dict:
+        """Persist user goals and their LLM summary after generation succeeds."""
 
-        doc = strategy.model_dump()
-        summary_text = await self._generate_priority_summary(user_id, doc, "medium")
+        doc = goals.model_dump()
+        summary_text = await self._generate_priority_summary(user_id, doc, "user_goals")
         await self.db["users"].update_one(
             {"_id": ObjectId(user_id)},
             {
                 "$set": {
-                    "profile.medium_priority_strategy": doc,
-                    "profile.medium_priority_summary": summary_text,
-                }
+                    f"profile.{USER_GOALS_FIELD}": doc,
+                    f"profile.{USER_GOALS_SUMMARY_FIELD}": summary_text,
+                },
+                "$unset": {
+                    f"profile.{_LEGACY_MEDIUM_STRATEGY_FIELD}": "",
+                    f"profile.{_LEGACY_MEDIUM_SUMMARY_FIELD}": "",
+                },
             },
         )
         return {"status": True}

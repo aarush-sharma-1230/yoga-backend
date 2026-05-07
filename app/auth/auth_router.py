@@ -6,7 +6,7 @@ from app.auth.auth_service import AuthService, get_current_user_id
 from app.auth.jwt_middleware import jwt_access_payload
 from app.auth.helpers import set_refresh_cookie
 from app.auth.settings import get_auth_settings
-from app.schemas.auth import GoogleLoginRequest, HardPriorityStrategy, MediumPriorityStrategy
+from app.schemas.auth import GoogleLoginRequest, UserGoals, UserMedicalProfile
 from app.dependency_injector import DependencyInjector
 
 router = APIRouter()
@@ -51,26 +51,26 @@ async def get_user_data(
     return await service.get_user_data(user_id)
 
 
-@router.post("/user/profile/hard_priority")
-async def save_hard_priority_strategy(
-    strategy: HardPriorityStrategy,
+@router.post("/user/profile/medical_profile")
+async def save_user_medical_profile(
+    profile: UserMedicalProfile,
     service: AuthService = Depends(DependencyInjector.get_auth_service),
     user_id: str = Depends(get_current_user_id),
 ):
-    """Save medical / safety (hard priority) strategy and LLM hard summary in one request."""
+    """Persist user medical profile and regenerate its LLM summary in one request."""
 
-    return await service.save_hard_priority_strategy(user_id=user_id, strategy=strategy)
+    return await service.save_user_medical_profile(user_id=user_id, profile=profile)
 
 
-@router.post("/user/profile/medium_priority")
-async def save_medium_priority_strategy(
-    strategy: MediumPriorityStrategy,
+@router.post("/user/profile/goals")
+async def save_user_goals(
+    goals: UserGoals,
     service: AuthService = Depends(DependencyInjector.get_auth_service),
     user_id: str = Depends(get_current_user_id),
 ):
-    """Save goals / experience (medium priority) strategy and LLM medium summary in one request."""
+    """Persist user goals (experience, activity, primary goals) and regenerate their LLM summary."""
 
-    return await service.save_medium_priority_strategy(user_id=user_id, strategy=strategy)
+    return await service.save_user_goals(user_id=user_id, goals=goals)
 
 
 @router.get("/user/profile")

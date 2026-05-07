@@ -4,7 +4,7 @@
 def get_yoga_laws_context(profile_data: dict) -> str:
     """
     Generates a targeted 'Laws' string based on the user's medical conditions and pain areas.
-    Expects profile_data to be hard_priority_strategy dict with: medical_conditions, chronic_pain_areas, recent_surgery.
+    Expects profile_data to be a user_medical_profile dict with: medical_conditions, chronic_pain_areas, recent_surgery.
     Returns empty string if no constraints apply.
     """
     meds = profile_data.get("medical_conditions") or []

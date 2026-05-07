@@ -10,10 +10,10 @@ from typing import Any, Dict, Literal
 
 from app.prompts.active import (
     ProfileContext,
-    get_hard_priority_summary_prompt,
-    get_medium_priority_summary_prompt,
     get_session_briefing_prompt,
     get_summary_developer_prompt,
+    get_user_goals_summary_prompt,
+    get_user_medical_profile_summary_prompt,
 )
 
 
@@ -25,13 +25,13 @@ class SummaryAgent:
     async def generate_summary(
         self,
         strategy: dict,
-        summary_type: Literal["hard", "medium"],
+        summary_type: Literal["user_medical_profile", "user_goals"],
     ) -> Dict[str, Any]:
-        """Generate a summary from the given strategy. Fetches prompts and calls LLM."""
-        if summary_type == "hard":
-            user_prompt = get_hard_priority_summary_prompt(strategy)
+        """Generate a summary from the given profile payload. Fetches prompts and calls LLM."""
+        if summary_type == "user_medical_profile":
+            user_prompt = get_user_medical_profile_summary_prompt(strategy)
         else:
-            user_prompt = get_medium_priority_summary_prompt(strategy)
+            user_prompt = get_user_goals_summary_prompt(strategy)
         developer_prompt = get_summary_developer_prompt()
         response = await asyncio.to_thread(
             self.llm_client.generate_text,
