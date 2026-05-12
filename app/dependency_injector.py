@@ -10,11 +10,9 @@ from app.database.mongo import MongoDB
 from app.llms.openai_client import OpenAIClient
 from app.orchestration.graph import build_sequence_graph
 from app.orchestration.nodes import build_node_functions
-from app.query.query_service import QueryService
 from app.session.session_service import SessionService
 from app.sequence.sequence_service import SequenceService
 from app.usage.llm_cost_service import LlmCostService
-from app.websocket.websocket_service import ConnectionManager, WebSocketService
 import os
 from dotenv import load_dotenv
 
@@ -67,13 +65,6 @@ class DependencyInjector:
             llm_cost_service=llm_cost_service,
         )
 
-    def get_query_service(
-        db=Depends(get_database),
-        session_service=Depends(get_session_service),
-        yoga_coordinator=Depends(get_yoga_coordinator),
-    ):
-        return QueryService(db, session_service, yoga_coordinator)
-
     def get_sequence_service(
         db=Depends(get_database),
         auth_service=Depends(get_auth_service),
@@ -97,21 +88,3 @@ class DependencyInjector:
         sequence_service.compiled_graph = compiled_graph
 
         return sequence_service
-
-    def get_websocket_connection_manager():
-        return ConnectionManager()
-
-    def get_websocket_service(
-        db=Depends(get_database),
-        query_service=Depends(get_query_service),
-        connection_manager=Depends(get_websocket_connection_manager),
-        session_service=Depends(get_session_service),
-        yoga_coordinator=Depends(get_yoga_coordinator),
-    ):
-        return WebSocketService(
-            db,
-            query_service=query_service,
-            connection_manager=connection_manager,
-            session_service=session_service,
-            yoga_coordinator=yoga_coordinator,
-        )

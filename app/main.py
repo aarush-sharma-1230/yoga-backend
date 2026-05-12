@@ -5,10 +5,8 @@ from contextlib import asynccontextmanager
 
 from app.health import health_router
 from app.auth import auth_router
-from app.query import query_router
 from app.session import session_router
 from app.sequence import sequence_router
-from app.websocket import websocket_router
 from app.database.mongo import MongoDB
 from app.globals.exception_handlers import register_exception_handlers
 from app.core.json_encoder import jsonable_encoder
@@ -36,10 +34,8 @@ app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_credentials=True, 
 
 app.include_router(health_router.router)
 app.include_router(auth_router.router)
-app.include_router(query_router.router)
 app.include_router(session_router.router)
 app.include_router(sequence_router.router)
-app.include_router(websocket_router.router)
 
 register_exception_handlers(app)
 
