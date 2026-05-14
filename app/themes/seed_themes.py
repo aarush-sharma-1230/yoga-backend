@@ -8,17 +8,29 @@ from pymongo import UpdateOne
 
 from app.themes.themes_data import THEMES
 
-MONGO_URI = os.getenv("MONGO_URI", "mongodb://localhost:27017")
-DATABASE_NAME = os.getenv("MONGO_DB_NAME", "yoga")
-COLLECTION_NAME = "themes"
 
+async def seed_themes_if_empty() -> None:
+    """
+    Upsert all themes when the themes collection has no documents.
 
-async def seed_themes():
-    client = AsyncIOMotorClient(MONGO_URI, serverSelectionTimeoutMS=5000)
+    Uses MONGO_URI and MONGO_DB_NAME from the environment. Skips when the
+    collection is already populated.
+    """
+
+    mongo_uri = os.getenv("MONGO_URI", "mongodb://localhost:27017")
+    database_name = os.getenv("MONGO_DB_NAME", "yoga")
+    collection_name = "themes"
+
+    client = AsyncIOMotorClient(mongo_uri, serverSelectionTimeoutMS=5000)
     try:
         await client.admin.command("ping")
-        db = client[DATABASE_NAME]
-        collection = db[COLLECTION_NAME]
+        db = client[database_name]
+        collection = db[collection_name]
+
+        existing = await collection.find_one({}, projection={"_id": 1})
+        if existing is not None:
+            print("Skipping themes seed: themes collection is non-empty")
+            return
 
         operations = [
             UpdateOne(
@@ -29,6 +41,10 @@ async def seed_themes():
             for t in THEMES
         ]
 
+        if not operations:
+            print("No theme documents to seed")
+            return
+
         result = await collection.bulk_write(operations)
         print(f"Themes seeded: {result.upserted_count} inserted, {result.modified_count} updated")
     finally:
@@ -36,4 +52,4 @@ async def seed_themes():
 
 
 if __name__ == "__main__":
-    asyncio.run(seed_themes())
+    asyncio.run(seed_themes_if_empty())

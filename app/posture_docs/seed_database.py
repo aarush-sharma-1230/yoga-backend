@@ -2,10 +2,12 @@
 Seed yoga postures into MongoDB.
 
 Postures are imported from all_postures (which combines and shuffles all
-category modules). This file upserts them into the database.
+category modules). This file upserts them when the postures collection is empty.
 """
 
 import asyncio
+import os
+
 from motor.motor_asyncio import AsyncIOMotorClient
 from pymongo import UpdateOne
 
@@ -14,27 +16,30 @@ from app.posture_docs.all_postures import ALL_POSTURES
 postures_data = ALL_POSTURES
 
 
-async def seed_database():
+async def seed_postures_if_empty() -> None:
     """
-    Connects to MongoDB using Motor (async) and upserts the yoga postures.
-    Upsert ensures idempotent execution.
-    """
-    # --- MONGODB CONFIGURATION ---
-    MONGO_URI = "mongodb://localhost:27017/"
-    DATABASE_NAME = "yoga"
-    COLLECTION_NAME = "postures"
+    Upsert all postures when the postures collection has no documents.
 
-    client = AsyncIOMotorClient(MONGO_URI, serverSelectionTimeoutMS=5000)
+    Uses MONGO_URI and MONGO_DB_NAME from the environment. Skips when the
+    collection is already populated.
+    """
+
+    mongo_uri = os.getenv("MONGO_URI", "mongodb://localhost:27017")
+    database_name = os.getenv("MONGO_DB_NAME", "yoga")
+    collection_name = "postures"
+
+    client = AsyncIOMotorClient(mongo_uri, serverSelectionTimeoutMS=5000)
 
     try:
-        # Verify connection
         await client.admin.command("ping")
-        print(f"✅ Successfully connected to MongoDB at {MONGO_URI}")
+        db = client[database_name]
+        collection = db[collection_name]
 
-        db = client[DATABASE_NAME]
-        collection = db[COLLECTION_NAME]
+        existing = await collection.find_one({}, projection={"_id": 1})
+        if existing is not None:
+            print("Skipping posture seed: postures collection is non-empty")
+            return
 
-        # Prepare bulk operations
         operations = [
             UpdateOne(
                 {"client_id": posture["client_id"]},
@@ -44,19 +49,16 @@ async def seed_database():
             for posture in postures_data
         ]
 
-        if operations:
-            result = await collection.bulk_write(operations)
-            print(f"✅ Database Seeding Complete!")
-            print(f"   - Documents inserted/upserted: {result.upserted_count}")
-            print(f"   - Documents modified: {result.modified_count}")
-            print(f"   - Total postures processed: {len(postures_data)}")
-            print("\nNote: Request the next batch of postures to continue populating the database.")
+        if not operations:
+            print("No posture documents to seed")
+            return
 
-    except Exception as e:
-        print(f"❌ An error occurred: {e}")
+        result = await collection.bulk_write(operations)
+        print("Posture seeding complete")
+        print(f"  upserted: {result.upserted_count}, modified: {result.modified_count}, total: {len(postures_data)}")
     finally:
         client.close()
 
 
 if __name__ == "__main__":
-    asyncio.run(seed_database())
+    asyncio.run(seed_postures_if_empty())
